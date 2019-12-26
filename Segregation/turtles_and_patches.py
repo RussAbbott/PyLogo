@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from collections import namedtuple
 
+from itertools import cycle
+
+# from math import copysign
 import numpy as np
 
 import pygame as pg
 from pygame import display, event, K_d, K_ESCAPE, KMOD_CTRL, K_q, KEYDOWN, QUIT
 from pygame.color import Color
 from pygame.rect import Rect
-from pygame.sprite import collide_rect, Sprite
+from pygame.sprite import Sprite
 from pygame.surface import Surface
 from pygame.time import Clock
 
@@ -79,77 +82,56 @@ class PatchWorld:
             turtle.draw(screen)
 
 
-# ############################################################ #
-# A simple world and model to test the patches and the turtle. #
-# ############################################################ #
+# # ############################################################ #
+# # A basic world and model to test the patches and the turtle. #
+# # ############################################################ #
 
+class BasicWorld(PatchWorld):
 
-class MyPatch(Patch):
-    def __init__(self, row_col: RowCol):
-        super().__init__(row_col)
-        self.hit_color = Color('green')
-
-
-class MyTurtle(Turtle):
-    def __init__(self):
-        super().__init__()
-        # Each turtle gets a random initial velocity
-        self.vel = PixelVector2(randint(-2, 2), randint(-2, 2))
-
-
-class SimpleWorld(PatchWorld):
-
-    def __init__(self, screen_rect, nbr_turtles=3):
-        super().__init__(MyPatch)
+    def __init__(self, screen_rect, turtle=Turtle, nbr_turtles=25, patch=Patch):
+        super().__init__(patch)
         self.screen_rect = screen_rect
 
         # Create Turtles
-        self.turtles = [MyTurtle() for _ in range(nbr_turtles)]
+        self.turtles = [turtle() for _ in range(nbr_turtles)]
+        self.initalize_turtles()
 
-    # Bounces turtle off the screen edges
+    def initalize_turtles(self):
+        for (turtle, vel) in zip(self.turtles, cycle([PixelVector2(-1, -1), PixelVector2(-1, 1),
+                                                      PixelVector2(1, -1), PixelVector2(1, 1),
+                                                      PixelVector2(0, 0)])):
+            turtle.vel = vel
+
     def move_turtle(self, turtle):
-        turtle_rect = turtle.rect
-        if turtle_rect.right >= self.screen_rect.right-5 or turtle_rect.left <= self.screen_rect.left+5:
-            turtle.vel = turtle.vel._replace(x=turtle.vel.x * (-1))
-        if turtle_rect.top <= self.screen_rect.top+5 or turtle_rect.bottom >= self.screen_rect.bottom-5:
-            turtle.vel = turtle.vel._replace(y=turtle.vel.y * (-1))
+        # Wrap around the screen
+        turtle.pixel_pos = PixelVector2((turtle.pixel_pos.x + turtle.vel.x) % self.screen_rect.w,
+                                        (turtle.pixel_pos.y + turtle.vel.y) % self.screen_rect.h)
+        turtle.rect = Rect((turtle.pixel_pos.x, turtle.pixel_pos.y), (BLOCK_SIDE, BLOCK_SIDE))
 
-        # move_ip is move in place.
-        turtle_rect.move_ip(turtle.vel.x, turtle.vel.y)
-
-        # Don't change both x and y at the same time.
-        if random( ) < 0.003:
-            turtle.vel = turtle.vel._replace(x=randint(-3, 3))
-        elif random( ) < 0.003:
-            turtle.vel = turtle.vel._replace(y=randint(-3, 3))
-
-        # Don't stop and don't move too fast.
-        while turtle.vel.x == 0 == turtle.vel.y or abs(turtle.vel.x) + abs(turtle.vel.y) > 4:
-            if random() < 0.5:
-                turtle.vel = turtle.vel._replace(x=randint(-1, 1))
-            else:
-                turtle.vel = turtle.vel._replace(y=randint(-1, 1))
 
     def update(self):
         """
         Update the world by moving the turtle and indicating the patches that intersect the turtle
         """
         for turtle in self.turtles:
+            switch_vel = pg.time.get_ticks( ) > 3000 and random( ) < 0.05
+            turtle.vel = PixelVector2(randint(-2, 2), randint(-2, 2)) if switch_vel else turtle.vel
             self.move_turtle(turtle)
-        for patch in self.patches.flat:
-            collides = any([collide_rect(patch, turtle) for turtle in self.turtles])
-            fill_color = patch.hit_color if collides else patch.color
-            patch.image.fill(fill_color)
+
+        # No Patch updates
+        # noinspection PyUnusedLocal
+        for _patch in self.patches.flat:
+            pass
 
 
-class SimpleModel:
+class Model:
 
-    def __init__(self):
+    def __init__(self, world=BasicWorld, turtle=Turtle, nbr_turtles=25, patch=Patch, caption="Basic Model"):
         # Leave a border of 1 pixel at the top and left of the patches
         self.width = 801
         self.height = 801
         self.fps = 60
-        
+
         # This is the color of the lines between the patches, implemented as the screen background color.
 
         # self.screen_color = Color('darkslategray')  # (47, 79, 79, 255), same as pygame.colordict.THECOLORS['...']
@@ -159,15 +141,14 @@ class SimpleModel:
 
         # set_mode() creates a Surface for display
         self.screen = display.set_mode((self.width, self.height))
-        display.set_caption("Simple Model")
-        self.simple_world = SimpleWorld(self.screen.get_rect())
-
-        self.clock = Clock( )
+        display.set_caption(caption)
+        self.clock = Clock()
+        self.world = world(self.screen.get_rect(), turtle=turtle, nbr_turtles=nbr_turtles, patch=patch)
 
     # Fill the screen with background color, then draw blocks, then draw turtle on top. Then update the display.
     def draw(self):
         self.screen.fill(self.screen_color)
-        self.simple_world.draw(self.screen)
+        self.world.draw(self.screen)
         display.update()
 
     def run_model(self):
@@ -182,10 +163,11 @@ class SimpleModel:
                                               ev.key == K_d and ev.mod & KMOD_CTRL):
                     return
 
-            self.simple_world.update()
+            self.world.update()
             self.draw()
             self.clock.tick(self.fps)
 
 
 if __name__ == "__main__":
-    SimpleModel().run_model()
+    model = Model()
+    model.run_model()
