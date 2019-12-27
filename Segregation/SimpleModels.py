@@ -1,7 +1,6 @@
 from itertools import cycle
 
 import pygame
-
 from pygame.color import Color
 from pygame.sprite import collide_rect
 
@@ -10,45 +9,16 @@ from random import choice, randint, random
 from turtles_and_patches import BasicWorld, SimEngine, Patch, PixelVector2, RowCol, Turtle
 
 # ############################################################ #
-# A simple world and model to test the patches and the turtle. #
+#     Two simple worlds to test the patches and the turtle.    #
 # ############################################################ #
 
-
-class MyPatch(Patch):
-    def __init__(self, row_col: RowCol):
-        super().__init__(row_col)
-        # Each patch gets a hit_color
-        self.hit_color = Color('green')
-
-
-class MyTurtle(Turtle):
-
-    def move_turtle(self):
-        # Bounce turtle off the screen edges
-        screen_rect = SimEngine.SIM_ENGINE.screen_rect
-        turtle_rect = self.rect
-        if turtle_rect.right >= screen_rect.right - 10 or turtle_rect.left <= screen_rect.left + 10:
-            self.vel = self.vel._replace(x=self.vel.x * (-1))
-        if turtle_rect.top <= screen_rect.top + 10 or turtle_rect.bottom >= screen_rect.bottom - 10:
-            self.vel = self.vel._replace(y=self.vel.y * (-1))
-
-        self.move_by_vel()
-
-        # Don't change both x and y at the same time.
-        if random() < 0.003:
-            self.vel = self.vel._replace(x=randint(-3, 3))
-        elif random() < 0.003:
-            self.vel = self.vel._replace(y=randint(-3, 3))
-
-        # Don't stop and don't move too fast.
-        while self.vel.x == 0 == self.vel.y or abs(self.vel.x) + abs(self.vel.y) > 4:
-            if random() < 0.5:
-                self.vel = self.vel._replace(x=randint(-1, 1))
-            else:
-                self.vel = self.vel._replace(y=randint(-1, 1))
+# ######### SimpleWorld_1 uses the standard Patch and Turtle ######### #
 
 
 class SimpleWorld_1(BasicWorld):
+    """
+    A world of starburst turtles.
+    """
 
     def __init__(self, patch_class=Patch, patches_shape=RowCol(50, 50), turtle_class=Turtle, nbr_turtles=25):
         super().__init__(patch_class=patch_class, patches_shape=patches_shape,
@@ -75,7 +45,47 @@ class SimpleWorld_1(BasicWorld):
             pass
 
 
+# ######### The specialized Patch and Turtle for SimpleWorld_2 ######### #
+
+class SimpleWorld_2_Patch(Patch):
+
+    def __init__(self, row_col: RowCol):
+        super().__init__(row_col)
+        # Each patch gets a hit_color
+        self.hit_color = Color('green')
+
+
+class SimpleWorld_2_Turtle(Turtle):
+
+    def move_turtle(self):
+        # Bounce turtle off the screen edges
+        screen_rect = SimEngine.SIM_ENGINE.screen_rect
+        turtle_rect = self.rect
+        if turtle_rect.right >= screen_rect.right - 10 or turtle_rect.left <= screen_rect.left + 10:
+            self.vel = self.vel._replace(x=self.vel.x * (-1))
+        if turtle_rect.top <= screen_rect.top + 10 or turtle_rect.bottom >= screen_rect.bottom - 10:
+            self.vel = self.vel._replace(y=self.vel.y * (-1))
+
+        self.move_by_vel()
+
+        # Don't change both x and y at the same time.
+        if random() < 0.003:
+            self.vel = self.vel._replace(x=randint(-3, 3))
+        elif random() < 0.003:
+            self.vel = self.vel._replace(y=randint(-3, 3))
+
+        # Don't stop and don't move too fast.
+        while self.vel.x == 0 == self.vel.y or abs(self.vel.x) + abs(self.vel.y) > 4:
+            if random() < 0.5:
+                self.vel = self.vel._replace(x=randint(-1, 1))
+            else:
+                self.vel = self.vel._replace(y=randint(-1, 1))
+
+
 class SimpleWorld_2(BasicWorld):
+    """
+    A world in which the patches change to green when intersecting with a turtle.
+    """
 
     def setup(self):
         super().setup()
@@ -96,18 +106,21 @@ class SimpleWorld_2(BasicWorld):
 
 
 if __name__ == "__main__":
-    # The assignment statements (SimEngine.WORLD = ... and SimEngine.SIM_ENGINE = ...) are
-    # not necessary. They are done in the two __init__'s. The are included here for clarity.
 
-    # Create the world
-    (world, nbr_turtles) = choice([(SimpleWorld_1, 25), (SimpleWorld_2, 3)])
-    SimEngine.WORLD = world(patch_class=MyPatch, turtle_class=MyTurtle, nbr_turtles=nbr_turtles)
+    # Select a world
+    (world_class, turtle_class, nbr_turtles, patch_class) = \
+                                            choice([(SimpleWorld_1, Turtle, 25, Patch),
+                                                    (SimpleWorld_2, SimpleWorld_2_Turtle, 3, SimpleWorld_2_Patch)])
+
+    # The assignment statements (SimEngine.WORLD = ... and SimEngine.SIM_ENGINE = ...)
+    # are not necessary. They are done in the __init__'s. They are included here for clarity.
+    SimEngine.WORLD = world_class(turtle_class=turtle_class, nbr_turtles=nbr_turtles, patch_class=patch_class)
     SimEngine.WORLD.setup()
 
     # Get the name of the world's class to use as a caption.
     # str(world) is: "<class '__main__.SimpleWorldx'>" where x is either 1 or 2.
-    caption = str(world).split(sep='.')[1][:-2]
+    caption = str(world_class).split(sep='.')[1][:-2]  # Selects 'SimpleWorldx'
 
-    # Create the SimEngine
+    # Create and run the SimEngine
     SimEngine.SIM_ENGINE = SimEngine(caption=caption)
     SimEngine.SIM_ENGINE.run_model()
