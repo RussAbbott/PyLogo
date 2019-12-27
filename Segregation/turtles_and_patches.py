@@ -71,10 +71,10 @@ class Turtle(Block):
     def move_turtle(self):
         pass
 
-    def move_turtle_by_vel(self):
-        self.move_turtle_dx_dy(self.vel.x, self.vel.y)
+    def move_by_vel(self):
+        self.move_by_dx_dy(self.vel.x, self.vel.y)
 
-    def move_turtle_dx_dy(self, dx, dy):
+    def move_by_dx_dy(self, dx, dy):
         """
         Computes the turtle pixel_pos based on its current pixel_pos and its velocity.
         Then calls SIM_ENGINE.place_turtle(turtle) to place it on the screen.

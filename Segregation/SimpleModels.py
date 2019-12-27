@@ -32,17 +32,17 @@ class MyTurtle(Turtle):
         if turtle_rect.top <= screen_rect.top + 10 or turtle_rect.bottom >= screen_rect.bottom - 10:
             self.vel = self.vel._replace(y=self.vel.y * (-1))
 
-        self.move_turtle_by_vel()
+        self.move_by_vel()
 
         # Don't change both x and y at the same time.
-        if random( ) < 0.003:
+        if random() < 0.003:
             self.vel = self.vel._replace(x=randint(-3, 3))
-        elif random( ) < 0.003:
+        elif random() < 0.003:
             self.vel = self.vel._replace(y=randint(-3, 3))
 
         # Don't stop and don't move too fast.
         while self.vel.x == 0 == self.vel.y or abs(self.vel.x) + abs(self.vel.y) > 4:
-            if random( ) < 0.5:
+            if random() < 0.5:
                 self.vel = self.vel._replace(x=randint(-1, 1))
             else:
                 self.vel = self.vel._replace(y=randint(-1, 1))
@@ -67,7 +67,7 @@ class SimpleWorld_1(BasicWorld):
         for turtle in self.turtles:
             if pygame.time.get_ticks( ) > 3000 and random( ) < 0.05:
                 turtle.vel = PixelVector2(randint(-2, 2), randint(-2, 2))
-            turtle.move_turtle_by_vel()
+            turtle.move_by_vel()
 
         # No Patch updates
         # noinspection PyUnusedLocal

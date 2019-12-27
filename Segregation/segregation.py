@@ -44,11 +44,10 @@ class SegregationTurtle(Turtle):
           ]
         end
         """
-        # self.turtles_nearby = len([turt for patch in self.patch().neighbors_8()  if turt.color == self.color
-        self.turtles_nearby = set(tur for patch in self.patch( ).neighbors_8() for tur in patch.turtles())
+        self.turtles_nearby = set(tur for patch in self.patch( ).neighbors(n=8) for tur in patch.turtles())
         self.similar_nearby = set(tur for tur in self.turtles_nearby if tur.color == self.color)
         self.others_nearby = self.turtles_nearby - self.similar_nearby
-        self.happy = len(self.similar_nearby) >= SimEngine.WORLD.pct_similar_wanted*len(self.turtles_nearby)/100
+        self.happy = len(self.similar_nearby)/len(self.turtles_nearby) >= SimEngine.WORLD.pct_similar_wanted/100
 
 # turtles-own [
 #   happy?           ; for each turtle, indicates whether at least %-similar-wanted percent of
@@ -63,7 +62,12 @@ class SegregationTurtle(Turtle):
 
 class SegregationWorld(BasicWorld):
 
-    def setup(self, density=90, pct_similar_wanted=40, turtle_class=SegregationTurtle, nbr_turtles=0):
+    def __init__(self, nbr_turtles=0):
+        super().__init__()
+        self.density = None
+        self.pct_similar_wanted = None
+
+    def setup(self, density=90, pct_similar_wanted=40):
         """
         to setup
           clear-all
@@ -83,15 +87,12 @@ class SegregationWorld(BasicWorld):
         end
         """
         self.clear_all()
-        super().setup(turtle_class, nbr_turtles)
-        # noinspection PyAttributeOutsideInit
-        self.pct_similar_wanted = pct_similar_wanted
         for patch in self.patches:
             patch.color = Color('white')
             if random()*100 < density:
                 turtle = SegregationTurtle()
-                turtle.pixel_pos = patch.pixel_pos
                 turtle.color = choice([Color('blue'), Color('orange')])
+                turtle.move_to_patch(patch)
         self.update()
 
     def update(self):
@@ -106,6 +107,7 @@ class SegregationWorld(BasicWorld):
 
 
 if __name__ == "__main__":
-    SimEngine.SIM_ENGINE = SimEngine(world=SegregationWorld, caption="Segregation Model")
-    SimEngine.WORLD.setup(density=90, turtle_class=SegregationTurtle, nbr_turtles=3)
+    SimEngine.SIM_ENGINE = SimEngine(caption="Segregation Model")
+    SimEngine.WORLD = SegregationWorld()
+    SimEngine.WORLD.setup(density=90, pct_similar_wanted=40)
     SimEngine.SIM_ENGINE.run_model()
