@@ -1,14 +1,10 @@
 
-import pygame
-# See https://github.com/pygame/pygame/blob/master/src_py/colordict.py for THECOLORS names.
 from pygame import Color
-# from pygame.colordict import THECOLORS
-from pygame.rect import Rect
-from pygame.sprite import collide_rect, Sprite
-from pygame.surface import Surface
-from pygame.time import Clock
 
-from random import randint
+from random import choice, random
+
+from turtles_and_patches import BasicWorld, SimEngine, Turtle
+
 
 # globals [
 #   percent-similar  ; on the average, what percent of a turtle's neighbors
@@ -16,8 +12,43 @@ from random import randint
 #   percent-unhappy  ; what percent of the turtles are unhappy?
 # ]
 
-percent_similar = None
-percent_unhappy = None
+# percent_similar = None
+# percent_unhappy = None
+
+
+class SegregationTurtle(Turtle):
+    
+    def __init__(self):
+        super().__init__()
+        self.happy = None
+        self.turtles_nearby = None
+        self.similar_nearby = None
+        self.others_nearby = None
+        self.happy = None
+
+    def update(self):
+        """
+        to update-turtles
+          ask turtles [
+            ; in next two lines, we use "neighbors" to test the eight patches
+            ; surrounding the current patch
+            set similar-nearby count (turtles-on neighbors)  with [ color = [ color ] of myself ]
+            set other-nearby count (turtles-on neighbors) with [ color != [ color ] of myself ]
+            set total-nearby similar-nearby + other-nearby
+            set happy? similar-nearby >= (%-similar-wanted * total-nearby / 100)
+            ; add visualization here
+            if visualization = "old" [ set shape "default" set size 1.3 ]
+            if visualization = "square-x" [
+              ifelse happy? [ set shape "square" ] [ set shape "X" ]
+            ]
+          ]
+        end
+        """
+        # self.turtles_nearby = len([turt for patch in self.patch().neighbors_8()  if turt.color == self.color
+        self.turtles_nearby = set(tur for patch in self.patch( ).neighbors_8() for tur in patch.turtles())
+        self.similar_nearby = set(tur for tur in self.turtles_nearby if tur.color == self.color)
+        self.others_nearby = self.turtles_nearby - self.similar_nearby
+        self.happy = len(self.similar_nearby) >= SimEngine.WORLD.pct_similar_wanted*len(self.turtles_nearby)/100
 
 # turtles-own [
 #   happy?           ; for each turtle, indicates whether at least %-similar-wanted percent of
@@ -27,102 +58,54 @@ percent_unhappy = None
 #   total-nearby     ; sum of previous two variables
 # ]
 
-class Block(Sprite):
-
-    block_size = 20
-
-    def __init__(self, screen_rect, color=Color('white')):   # (255, 255, 255, 255)):
-        super().__init__()
-        self.idle_color = color  # white - if not colliding
-        self.hit_color = (0, 255, 0, 255)  # green - if colliding
-
-        block_x = randint(0, screen_rect.w - Block.block_size)
-        block_y = randint(0, screen_rect.h - Block.block_size)
-        block_rect = Rect(block_x, block_y, Block.block_size, Block.block_size)
-
-        self.image = Surface((block_rect.w, block_rect.h))
-        self.color = self.idle_color  # default
-        # Do NOT set color here, decided by collision status!
-        self.rect = block_rect
 
 
-class Player(Block):
 
-    def __init__(self, screen_rect):
-        super().__init__(screen_rect, color=Color('red'))   # (255, 0, 0, 255))
-        self.image.fill(self.color)
+class SegregationWorld(BasicWorld):
 
-
-class World(object):
-
-    def __init__(self, screen_rect, num_blocks=50):
-
-        self.player = Player(screen_rect)
-        self.blocks = [Block(screen_rect) for _ in range(num_blocks)]
-        self.elements = self.blocks + [self.player]
-        self.screen_rect = screen_rect
-
-        # hard-coded player x and y speed for bouncing around
-        self.player_speed_x = 1
-        self.player_speed_y = 1
-
-    # Bounces player off the screen edges
-    # Simply dummy method - no collisions here!
-    def move_player(self):
-        p_rect = self.player.rect
-        if p_rect.right >= self.screen_rect.right or p_rect.left <= self.screen_rect.left:
-            self.player_speed_x *= -1
-        if p_rect.top <= self.screen_rect.top or p_rect.bottom >= self.screen_rect.bottom:
-            self.player_speed_y *= -1
-        # move_ip is move in place.
-        p_rect.move_ip(self.player_speed_x, self.player_speed_y)  # modifies IN PLACE!
+    def setup(self, density=90, pct_similar_wanted=40, turtle_class=SegregationTurtle, nbr_turtles=0):
+        """
+        to setup
+          clear-all
+          ; create turtles on random patches.
+          ask patches [
+            set pcolor white
+            if random 100 < density [   ; set the occupancy density
+              sprout 1 [
+                set color one-of ['blue' 'orange']
+                set size 1
+              ]
+            ]
+          ]
+          update-turtles
+          update-globals
+          reset-ticks
+        end
+        """
+        self.clear_all()
+        super().setup(turtle_class, nbr_turtles)
+        # noinspection PyAttributeOutsideInit
+        self.pct_similar_wanted = pct_similar_wanted
+        for patch in self.patches:
+            patch.color = Color('white')
+            if random()*100 < density:
+                turtle = SegregationTurtle()
+                turtle.pixel_pos = patch.pixel_pos
+                turtle.color = choice([Color('blue'), Color('orange')])
+        self.update()
 
     def update(self):
-        self.move_player()
-        for block in self.blocks:
-            block.color = block.hit_color if collide_rect(block, self.player) else block.idle_color
+        for turtle in self.turtles:
+            turtle.update()
+        # self.move_player()
+        # for block in self.blocks:
+        #     block.color = block.hit_color if collide_rect(block, self.player) else block.idle_color
 
 
-class Game:
 
-    def __init__(self):
-        pygame.init()
-
-        self.width = 800
-        self.height = 800
-        self.fps = 60
-        self.color = Color('black')
-
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        title = "Collision Test"
-        pygame.display.set_caption(title)
-        self.world = World(self.screen.get_rect())
-
-        self.clock = Clock( )
-
-
-    # Clear screen with background color, then draw blocks, then draw player on top. Then update the actual display.
-    def draw(self, blocks):
-        self.screen.fill(self.color)
-        for block in blocks:
-            # update fill to color decided by handle_collisions function...
-            block.image.fill(block.color)
-            self.screen.blit(block.image, block.rect)
-
-        pygame.display.update()
-
-    def run_game(self):
-        while True:
-            e = pygame.event
-            for ev in e.get():
-                # print(e, ev)
-                if ev.type == pygame.QUIT:
-                    return
-
-            self.world.update()
-            self.draw(self.world.elements)
-            self.clock.tick(self.fps)
 
 
 if __name__ == "__main__":
-    Game().run_game()
+    SimEngine.SIM_ENGINE = SimEngine(world=SegregationWorld, caption="Segregation Model")
+    SimEngine.WORLD.setup(density=90, turtle_class=SegregationTurtle, nbr_turtles=3)
+    SimEngine.SIM_ENGINE.run_model()
