@@ -15,8 +15,6 @@ from pygame.time import Clock
 
 from PySimpleGUI import RGB
 
-from typing import Set
-
 
 # Global constants
 RowCol = namedtuple('RowCol', 'row col')
@@ -42,6 +40,10 @@ class Block(Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+
+    def set_color(self, color):
+        self.color = color
+        self.image.fill(color)
         
 
 class Patch(Block):
@@ -50,15 +52,28 @@ class Patch(Block):
         self.row_col = row_col
         self.turtles = set()
 
-    def neighbors(self, n=8):
+    def add_turtle(self, tur):
+        self.turtles.add(tur)
+
+    def neighbors_4(self):
+        return self._neighbors(extra_deltas=[])
+
+    def neighbors_8(self):
+        return self._neighbors(extra_deltas=[(-1, -1), (-1, 1), (1, -1), (1, 1)])
+
+    def _neighbors(self, extra_deltas):
+        """
+        The 4 or 8 neighbors of this patch.
+        Can't write extra_deltas=[]. Default arguments may not be mutable.
+        """
+        rc_deltas = [(0, -1), (-1, 0), (1, 0), (0, 1)] + extra_deltas
         (row, col) = self.row_col
-        n_4 = [(0, -1), (-1, 0), (1, 0), (0, 1)]
-        n_8 = n_4 + [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-        rc_deltas = n_4 if n == 4 else n_8
-        patch_class = type(self)
-        neighbs: Set[patch_class] = set(patch_class(r, c) for (r, c) in rc_deltas
-                                        if SimEngine.WORLD.in_bounds(row+r, col+c))
+        neighbs = [SimEngine.WORLD.patches[row+r, col+c]
+                   for (r, c) in rc_deltas if SimEngine.WORLD.in_bounds(row+r, col+c)]
         return neighbs
+
+    def remove_turtle(self, tur):
+        self.turtles.remove(tur)
 
 
 class Turtle(Block):
@@ -66,7 +81,10 @@ class Turtle(Block):
                  pixel_pos: PixelVector2 = PixelVector2(25*BLOCK_SPACING-1, 25*BLOCK_SPACING-1),
                  color=Color('red')):
         super().__init__(pixel_pos, color)
+        SimEngine.WORLD.turtles.add(self)
+        self.patch().add_turtle(self)
         self.vel = PixelVector2(0, 0)
+
         
     def move_turtle(self):
         pass
@@ -83,19 +101,20 @@ class Turtle(Block):
     def move_to_xy(self, xy: PixelVector2):
         """
         Computes the turtle pixel_pos based on its current pixel_pos and its velocity.
-        Then calls SIM_ENGINE.place_turtle(turtle) to place it on the screen.
-        SIM_ENGINE.place_turtle() wraps around if necessary.
+        Then calls SIM_ENGINE.place_turtle_on_screen(turtle) to place it on the screen.
+        SIM_ENGINE.place_turtle_on_screen() wraps around if necessary.
         Removes the turtle from its current Patch and places it in its new Patch.
         """
-        current_patch: Patch = self.patch( )
-        current_patch.turtles.remove(self)
+        current_patch: Patch = self.patch()
+        current_patch.remove_turtle(self)
         self.pixel_pos = xy
-        SimEngine.SIM_ENGINE.place_turtle(self)
-        new_patch: Patch = self.patch( )
-        new_patch.turtles.add(self)
+        new_patch: Patch = self.patch()
+        new_patch.add_turtle(self)
+        SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
 
     def move_to_patch(self, patch):
         self.move_to_xy(patch.pixel_pos)
+        # patch.turtles.add_turtle(self)
 
     def patch(self) -> Patch:
         (row, col) = SimEngine.WORLD.pixel_pos_to_row_col(self.pixel_pos)
@@ -105,16 +124,16 @@ class Turtle(Block):
 
 class BasicWorld:
 
-    def __init__(self, patch_class=Patch, patches_shape=RowCol(50, 50), turtle_class=Turtle, nbr_turtles=25):
+    def __init__(self, patch_class=Patch, patches_shape=RowCol(51, 51), turtle_class=Turtle, nbr_turtles=25):
         SimEngine.WORLD = self
         self.shape = patches_shape
         self.patches = np.array([patch_class(RowCol(r, c))
                                  for r in range(self.shape.row) for c in range(self.shape.col)])
         self.patches: np.ndarray = self.patches.reshape(patches_shape)
-        self.turtles: Set[turtle_class] = set(turtle_class() for _ in range(nbr_turtles))
-        for turtle in self.turtles:
-            turtle.patch().turtles.add(turtle)
-
+        self.turtles = set()
+        for _ in range(nbr_turtles):
+            # Adds itself to self.turtles
+            turtle_class()
 
     def clear_all(self):
         self.turtles = set()
@@ -126,7 +145,7 @@ class BasicWorld:
             turtle.draw(screen)
 
     def in_bounds(self, r, c):
-        return 0 <= r <= self.shape.row and 0 <= c <= self.shape.col
+        return 0 <= r < self.shape.row and 0 <= c < self.shape.col
 
     @staticmethod
     def pixel_pos_to_row_col(pixel_pos: PixelVector2):
@@ -159,14 +178,15 @@ class SimEngine:
     SIM_ENGINE = None  # The SimEngine object
     WORLD = None       # The world
 
-    def __init__(self, caption="Basic Model"):
+    def __init__(self, caption="Basic Model", fps=60):
 
         SimEngine.SIM_ENGINE = self
 
         # Leave a border of 1 pixel at the top and left of the patches
         self.width = 801
         self.height = 801
-        self.fps = 60
+        self.fps = fps
+        self.ticks = 0
 
         # This is the color of the lines between the patches, implemented as the screen background color.
 
@@ -181,6 +201,7 @@ class SimEngine:
         self.clock = Clock()
         self.screen_rect = self.screen.get_rect()
 
+        self.quit = False
 
     # Fill the screen with background color, then draw blocks, then draw turtle on top. Then update the display.
     def draw(self):
@@ -188,25 +209,34 @@ class SimEngine:
         SimEngine.WORLD.draw(self.screen)
         display.update()
 
-    def place_turtle(self, turtle):
+    def exit(self):
+        self.quit = True
+
+    def place_turtle_on_screen(self, turtle):
         # Wrap around the screen.
         turtle.pixel_pos = PixelVector2(turtle.pixel_pos.x % self.screen_rect.w,
                                         turtle.pixel_pos.y % self.screen_rect.h)
         turtle.rect = Rect((turtle.pixel_pos.x, turtle.pixel_pos.y), (BLOCK_SIDE, BLOCK_SIDE))
 
-
     def run_model(self):
         pg.init()
-        while True:
-            for ev in event.get():
-                if ev.type == QUIT or \
-                   ev.type == KEYDOWN and (ev.key == K_ESCAPE or
-                                           ev.key == K_q or
-                                           # The following tests for ctrl-d.
-                                           # (See https://www.pygame.org/docs/ref/key.html)
-                                           ev.key == K_d and ev.mod & KMOD_CTRL):
-                    return
+        while not self.quit:
+            self.test_for_quit( )
 
-            SimEngine.WORLD.update()
+            self.ticks += 1
+            SimEngine.WORLD.step()
             self.draw()
             self.clock.tick(self.fps)
+        self.quit = False
+        while not self.quit:
+            self.test_for_quit( )
+
+    def test_for_quit(self):
+        for ev in event.get( ):
+            if ev.type == QUIT or \
+                ev.type == KEYDOWN and (ev.key == K_ESCAPE or
+                                        ev.key == K_q or
+                                        # The following tests for ctrl-d.
+                                        # (See https://www.pygame.org/docs/ref/key.html)
+                                        ev.key == K_d and ev.mod & KMOD_CTRL):
+                self.quit = True

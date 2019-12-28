@@ -4,6 +4,8 @@ import pygame
 from pygame.color import Color
 from pygame.sprite import collide_rect
 
+from turtles_and_patches import BLOCK_SIDE
+
 from random import choice, randint, random
 
 from turtles_and_patches import BasicWorld, SimEngine, Patch, PixelVector2, RowCol, Turtle
@@ -27,7 +29,7 @@ class SimpleWorld_1(BasicWorld):
         for (turtle, vel) in zip(self.turtles, initial_velocities):
             turtle.vel = vel
 
-    def update(self):
+    def step(self):
         """
         Update the world by moving the turtle and indicating the patches that intersect the turtle
         """
@@ -42,9 +44,9 @@ class SimpleWorld_1(BasicWorld):
             pass
 
 
-# ######### The specialized Patch and Turtle for SimpleWorld_2 ######### #
+# ######### SimpleWorld_2 defines its own specialized Patch and Turtle ######### #
 
-class SimpleWorld_2_Patch(Patch):
+class SW2_Patch(Patch):
 
     def __init__(self, row_col: RowCol):
         super().__init__(row_col)
@@ -52,15 +54,16 @@ class SimpleWorld_2_Patch(Patch):
         self.hit_color = Color('green')
 
 
-class SimpleWorld_2_Turtle(Turtle):
+class SW2_Turtle(Turtle):
 
     def move_turtle(self):
         # Bounce turtle off the screen edges
         screen_rect = SimEngine.SIM_ENGINE.screen_rect
         turtle_rect = self.rect
-        if turtle_rect.right >= screen_rect.right - 10 or turtle_rect.left <= screen_rect.left + 10:
+        margin = BLOCK_SIDE*2/3
+        if turtle_rect.right >= screen_rect.right - margin or turtle_rect.left <= screen_rect.left + margin:
             self.vel = self.vel._replace(x=self.vel.x * (-1))
-        if turtle_rect.top <= screen_rect.top + 10 or turtle_rect.bottom >= screen_rect.bottom - 10:
+        if turtle_rect.top <= screen_rect.top + margin or turtle_rect.bottom >= screen_rect.bottom - margin:
             self.vel = self.vel._replace(y=self.vel.y * (-1))
 
         self.move_by_vel()
@@ -90,7 +93,7 @@ class SimpleWorld_2(BasicWorld):
         for turtle in self.turtles:
             turtle.vel = PixelVector2(randint(-2, 2), randint(-2, 2))
 
-    def update(self):
+    def step(self):
         """
         Update the world by moving the turtle and indicating the patches that intersect the turtle
         """
@@ -107,17 +110,15 @@ if __name__ == "__main__":
     # Select a world
     (world_class, turtle_class, nbr_turtles, patch_class) = \
                                             choice([(SimpleWorld_1, Turtle, 25, Patch),
-                                                    (SimpleWorld_2, SimpleWorld_2_Turtle, 3, SimpleWorld_2_Patch)])
-
-    # The assignment statements (SimEngine.WORLD = ... and SimEngine.SIM_ENGINE = ...)
-    # are not necessary. They are done in the __init__'s. They are included here for clarity.
-    SimEngine.WORLD = world_class(turtle_class=turtle_class, nbr_turtles=nbr_turtles, patch_class=patch_class)
-    SimEngine.WORLD.setup()
+                                                    (SimpleWorld_2, SW2_Turtle, 3, SW2_Patch)])
 
     # Get the name of the world's class to use as a caption.
     # str(world) is: "<class '__main__.SimpleWorldx'>" where x is either 1 or 2.
     caption = str(world_class).split(sep='.')[1][:-2]  # Selects 'SimpleWorldx'
 
-    # Create and run the SimEngine
+    # The assignment (SimEngine.SIM_ENGINE = ... and SimEngine.WORLD = ...) are redundant.
+    # They are done in the __init__'s and are included here for clarity.
     SimEngine.SIM_ENGINE = SimEngine(caption=caption)
+    SimEngine.WORLD = world_class(turtle_class=turtle_class, nbr_turtles=nbr_turtles, patch_class=patch_class)
+    SimEngine.WORLD.setup()
     SimEngine.SIM_ENGINE.run_model()
