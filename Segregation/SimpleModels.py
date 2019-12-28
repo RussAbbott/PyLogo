@@ -20,10 +20,6 @@ class SimpleWorld_1(BasicWorld):
     A world of starburst turtles.
     """
 
-    def __init__(self, patch_class=Patch, patches_shape=RowCol(50, 50), turtle_class=Turtle, nbr_turtles=25):
-        super().__init__(patch_class=patch_class, patches_shape=patches_shape,
-                         turtle_class=turtle_class, nbr_turtles=nbr_turtles)
-
     def setup(self):
         for (turtle, vel) in zip(self.turtles, cycle([PixelVector2(-1, -1), PixelVector2(-1, 1),
                                                       PixelVector2(1, -1), PixelVector2(1, 1),
