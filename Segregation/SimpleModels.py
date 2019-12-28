@@ -21,9 +21,10 @@ class SimpleWorld_1(BasicWorld):
     """
 
     def setup(self):
-        for (turtle, vel) in zip(self.turtles, cycle([PixelVector2(-1, -1), PixelVector2(-1, 1),
-                                                      PixelVector2(1, -1), PixelVector2(1, 1),
-                                                      PixelVector2(0, 0)])):
+        initial_velocities = cycle([PixelVector2(-1, -1), PixelVector2(-1, 1),
+                                    PixelVector2(0, 0),
+                                    PixelVector2(1, -1), PixelVector2(1, 1)])
+        for (turtle, vel) in zip(self.turtles, initial_velocities):
             turtle.vel = vel
 
     def update(self):

@@ -71,22 +71,31 @@ class Turtle(Block):
     def move_turtle(self):
         pass
 
-    def move_by_vel(self):
-        self.move_by_dx_dy(self.vel.x, self.vel.y)
+    def move_by_dxdy(self, dxdy: PixelVector2):
+        """
+        Move to self.pixel_pos + (dx, dy)
+        """
+        self.move_to_xy(PixelVector2(self.pixel_pos.x + dxdy.x, self.pixel_pos.y + dxdy.y))
 
-    def move_by_dx_dy(self, dx, dy):
+    def move_by_vel(self):
+        self.move_by_dxdy(self.vel)
+
+    def move_to_xy(self, xy: PixelVector2):
         """
         Computes the turtle pixel_pos based on its current pixel_pos and its velocity.
         Then calls SIM_ENGINE.place_turtle(turtle) to place it on the screen.
         SIM_ENGINE.place_turtle() wraps around if necessary.
         Removes the turtle from its current Patch and places it in its new Patch.
         """
-        current_patch: Patch = self.patch()
+        current_patch: Patch = self.patch( )
         current_patch.turtles.remove(self)
-        self.pixel_pos = PixelVector2(self.pixel_pos.x + dx, self.pixel_pos.y + dy)
+        self.pixel_pos = xy
         SimEngine.SIM_ENGINE.place_turtle(self)
-        new_patch: Patch = self.patch()
+        new_patch: Patch = self.patch( )
         new_patch.turtles.add(self)
+
+    def move_to_patch(self, patch):
+        self.move_to_xy(patch.pixel_pos)
 
     def patch(self) -> Patch:
         (row, col) = SimEngine.WORLD.pixel_pos_to_row_col(self.pixel_pos)
