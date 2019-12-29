@@ -42,10 +42,10 @@ class SegregationTurtle(Turtle):
         self.is_happy = self.total_nearby_count > 0 and \
                         self.similar_nearby_count/self.total_nearby_count >= SimEngine.WORLD.pct_similar_wanted/100
 
-        patch = self.patch()
-        on_boundary = 0 in patch.row_col
-        if on_boundary and self.similar_nearby_count == 0 and self.is_happy:
-            print(str(self), self.is_happy)
+        # patch = self.patch()
+        # on_boundary = 0 in patch.row_col
+        # if on_boundary and self.similar_nearby_count == 0 and self.is_happy:
+        #     print(str(self), self.is_happy)
 
 
 
@@ -60,13 +60,19 @@ class SegregationWorld(BasicWorld):
     """
 
     def __init__(self):
-        super().__init__()
+        super().__init__(turtle_class=SegregationTurtle, nbr_turtles=0)
         self.density = None
         self.pct_similar_wanted = None
         self.percent_similar = None
         self.percent_unhappy = None
         # Make a copy of the patches. Initially all the patches are empty.
         self.empty_patches = set(patch for patch in self.patches.flat)
+
+    def cleanup(self):
+        for row in range(self.shape.row):
+            print('\n')
+            for col in range(self.shape.col):
+                self.print_patch_details(self.patches[row, col])
 
     def go_once(self):
         """
@@ -88,17 +94,36 @@ class SegregationWorld(BasicWorld):
         old_empty_patches = len(self.empty_patches)
         new_patch = self.empty_patches.pop()
         old_patch = tur.patch()
+        old_patch.set_color(Color('white'))
         if old_patch in self.empty_patches:
             print(f' ==> {old_patch} already in self.empty_patches.  From {tur.pixel_pos}')
         self.empty_patches.add(old_patch)
         if old_empty_patches != len(self.empty_patches):
             print(f'{old_empty_patches} -> {len(self.empty_patches)}.')
         tur.move_to_patch(new_patch)
+        new_patch.set_color(tur.color)
 
     def move_unhappy_turtles(self):
         for tur in self.turtles:
             if not tur.is_happy:
                 self.find_new_spot(tur)
+
+    def print_counts(self, id=''):
+        """ For debugging  """
+        blues = len([t for t in self.turtles if t.color == Color("blue")])
+        oranges = len([t for t in self.turtles if t.color == Color("orange")])
+        empty = len(self.empty_patches)
+        print(f'{id}   blues: {blues}, orange: {oranges}, empty patches: {empty}, '
+              f'total: {blues + oranges + empty}, =? {len(self.patches.flat)}')
+
+    @staticmethod
+    def print_patch_details(patch):
+        patch_color = 'blue' if patch.color == Color('blue') else 'orange'
+        print(str(patch), patch_color, end=":  ")
+        for tur in patch.turtles:
+            tur_color = 'blue' if tur.color == Color('blue') else 'orange'
+            print(str(tur), 'Happy' if tur.is_happy else '***Unhappy***', tur_color, end=";  ")
+        print()
 
     def setup(self, density=90, pct_similar_wanted=30):
         """
@@ -122,24 +147,19 @@ class SegregationWorld(BasicWorld):
         self.pct_similar_wanted = pct_similar_wanted
         self.clear_all()
         for patch in self.patches.flat:
-            patch.set_color(Color('white'))
             # The density is approximate
             if randint(0, 99) < density:
                 turtle = SegregationTurtle()
                 turtle.set_color(choice([Color('blue'), Color('orange')]))
                 turtle.move_to_patch(patch)
+                patch.set_color(turtle.color)
                 self.empty_patches.remove(patch)
+            else:
+                patch.set_color(Color('white'))
 
         self.update_turtles()
+        print()
         self.update_globals()
-
-    def print_counts(self, id=''):
-        """ For debugging  """
-        blues = len([t for t in self.turtles if t.color == Color("blue")])
-        oranges = len([t for t in self.turtles if t.color == Color("orange")])
-        empty = len(self.empty_patches)
-        print(f'{id}   blues: {blues}, orange: {oranges}, empty patches: {empty}, '
-              f'total: {blues + oranges + empty}, =? {len(self.patches.flat)}')
 
     def step(self):
         self.go_once()

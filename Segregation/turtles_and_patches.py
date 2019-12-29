@@ -64,9 +64,13 @@ class Patch(Block):
     def _neighbors(self, extra_deltas=()):
         """
         The 4 or 8 neighbors of this patch.
-        Can't write extra_deltas=[]. Default arguments may not be mutable.
+        Must use an empty tuple, rather than an empty list, for the default extra_deltas.
+        Default arguments may not be mutable.
         """
-        rc_deltas = ((0, -1), (-1, 0), (1, 0), (0, 1), *extra_deltas)
+        # The initial cardinal_deltas are the cardinal directions: N, S, E, W
+        cardinal_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1))
+        # The extra_deltas, if given are the corner directions.
+        rc_deltas = cardinal_deltas + extra_deltas
         (row, col) = self.row_col
         neighbs = [SimEngine.WORLD.patches[row+r, col+c]
                    for (r, c) in rc_deltas if SimEngine.WORLD.in_bounds(row+r, col+c)]
@@ -113,9 +117,11 @@ class Turtle(Block):
         current_patch: Patch = self.patch()
         current_patch.remove_turtle(self)
         self.pixel_pos = xy
+        if SimEngine.WORLD.wrap:
+            SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
         new_patch = self.patch()
         new_patch.add_turtle(self)
-        SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
+        # SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
 
     def move_to_patch(self, patch):
         self.move_to_xy(patch.pixel_pos)
@@ -132,6 +138,8 @@ class Turtle(Block):
 
 class BasicWorld:
 
+    wrap = True
+
     def __init__(self, patch_class=Patch, patches_shape=RowCol(51, 51), turtle_class=Turtle, nbr_turtles=25):
         SimEngine.WORLD = self
         self.shape = patches_shape
@@ -140,8 +148,12 @@ class BasicWorld:
         self.patches: np.ndarray = self.patches.reshape(patches_shape)
         self.turtles = set()
         for _ in range(nbr_turtles):
-            # Adds itself to self.turtles
+            # Adds itself to self.turtles and
+            # adds itself to its patch
             turtle_class()
+
+    def cleanup(self):
+        pass
 
     def clear_all(self):
         self.turtles = set()
@@ -174,9 +186,6 @@ class BasicWorld:
         return PixelVector2(1+BLOCK_SPACING*row_col.col, 1+BLOCK_SPACING*row_col.row)
 
     def setup(self):
-        pass
-
-    def update(self):
         pass
 
 
@@ -237,23 +246,21 @@ class SimEngine:
 
     def place_turtle_on_screen(self, turtle):
         # Wrap around the screen.
-        turtle.pixel_pos = PixelVector2(turtle.pixel_pos.x % self.screen_rect.w,
-                                        turtle.pixel_pos.y % self.screen_rect.h)
+        if SimEngine.WORLD.wrap:
+            turtle.pixel_pos = PixelVector2(turtle.pixel_pos.x % self.screen_rect.w,
+                                            turtle.pixel_pos.y % self.screen_rect.h)
         turtle.rect = Rect((turtle.pixel_pos.x, turtle.pixel_pos.y), (BLOCK_SIDE, BLOCK_SIDE))
 
     def run_model(self):
         pg.init()
+        print('\nPress escape, Q/q, or ctrl-D/d to exit simulation loop, to enter cleanup (if any), and then to exit.')
         while not self.quit:
-            self.test_for_quit( )
-
+            self.test_for_quit()
             self.ticks += 1
             SimEngine.WORLD.step()
             self.draw()
             self.clock.tick(self.fps)
-        self.quit = False
-        print('\nPress escape, Q/q, or ctrl-D/d to exit.')
-        while not self.quit:
-            self.test_for_quit( )
+        SimEngine.WORLD.cleanup()
 
     def test_for_quit(self):
         for ev in event.get( ):

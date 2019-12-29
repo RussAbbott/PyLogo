@@ -4,11 +4,9 @@ import pygame
 from pygame.color import Color
 from pygame.sprite import collide_rect
 
-from turtles_and_patches import BLOCK_SIDE
-
 from random import choice, randint, random
 
-from turtles_and_patches import BasicWorld, SimEngine, Patch, PixelVector2, RowCol, Turtle
+from turtles_and_patches import BasicWorld,  BLOCK_SIDE, SimEngine, Patch, PixelVector2, RowCol, Turtle
 
 # ############################################################ #
 #     Two simple worlds to test the patches and the turtle.    #
@@ -31,14 +29,14 @@ class SimpleWorld_1(BasicWorld):
 
     def step(self):
         """
-        Update the world by moving the turtle and indicating the patches that intersect the turtle
+        Update the world by moving the turtle and indicating the patches that intersect with it.
         """
         for turtle in self.turtles:
-            if pygame.time.get_ticks( ) > 3000 and random( ) < 0.05:
+            if pygame.time.get_ticks() > 3000 and random() < 0.05:
                 turtle.vel = PixelVector2(randint(-2, 2), randint(-2, 2))
             turtle.move_by_vel()
 
-        # No Patch updates
+        # No default Patch updates
         # noinspection PyUnusedLocal
         for patch in self.patches.flat:
             pass
