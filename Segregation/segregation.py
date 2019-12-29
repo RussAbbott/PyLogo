@@ -61,6 +61,8 @@ class SegregationWorld(BasicWorld):
         self.percent_unhappy = None
         # Make a copy of the patches. Initially all the patches are empty.
         self.empty_patches = set(patch for patch in self.patches.flat)
+        # Don't wrap around. (Shouldn't occur. But this will check for cases when it does.)
+        SimEngine.WORLD.wrap = False
 
     def cleanup(self):
         for row in range(self.shape.row):

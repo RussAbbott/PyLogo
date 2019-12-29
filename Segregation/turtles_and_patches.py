@@ -218,8 +218,6 @@ class SimEngine:
         self.clock = Clock()
         self.screen_rect = self.screen.get_rect()
 
-        self.quit = False
-
     @staticmethod
     def class_name(obj):
         """
@@ -239,8 +237,17 @@ class SimEngine:
         SimEngine.WORLD.draw(self.screen)
         display.update()
 
-    def exit(self):
-        self.quit = True
+    @staticmethod
+    def exit():
+        for ev in event.get( ):
+            if ev.type == QUIT or \
+                ev.type == KEYDOWN and (ev.key == K_ESCAPE or
+                                        ev.key == K_q or
+                                        # The following tests for ctrl-d.
+                                        # (See https://www.pygame.org/docs/ref/key.html)
+                                        ev.key == K_d and ev.mod & KMOD_CTRL):
+                return True
+        return False
 
     def place_turtle_on_screen(self, turtle):
         # Wrap around the screen.
@@ -251,21 +258,10 @@ class SimEngine:
 
     def run_model(self):
         pg.init()
-        print('\nPress escape, Q/q, or ctrl-D/d to exit simulation loop, to enter cleanup (if any), and then to exit.')
-        while not self.quit:
-            self.test_for_quit()
+        print('\nPress escape, Q/q, or ctrl-d to exit.')
+        while not self.exit():
             self.ticks += 1
             SimEngine.WORLD.step()
             self.draw()
             self.clock.tick(self.fps)
         SimEngine.WORLD.cleanup()
-
-    def test_for_quit(self):
-        for ev in event.get( ):
-            if ev.type == QUIT or \
-                ev.type == KEYDOWN and (ev.key == K_ESCAPE or
-                                        ev.key == K_q or
-                                        # The following tests for ctrl-d.
-                                        # (See https://www.pygame.org/docs/ref/key.html)
-                                        ev.key == K_d and ev.mod & KMOD_CTRL):
-                self.quit = True
