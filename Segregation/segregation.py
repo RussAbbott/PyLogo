@@ -42,12 +42,6 @@ class SegregationTurtle(Turtle):
         self.is_happy = self.total_nearby_count > 0 and \
                         self.similar_nearby_count/self.total_nearby_count >= SimEngine.WORLD.pct_similar_wanted/100
 
-        # patch = self.patch()
-        # on_boundary = 0 in patch.row_col
-        # if on_boundary and self.similar_nearby_count == 0 and self.is_happy:
-        #     print(str(self), self.is_happy)
-
-
 
 class SegregationWorld(BasicWorld):
 

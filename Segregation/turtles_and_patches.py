@@ -121,7 +121,6 @@ class Turtle(Block):
             SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
         new_patch = self.patch()
         new_patch.add_turtle(self)
-        # SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
 
     def move_to_patch(self, patch):
         self.move_to_xy(patch.pixel_pos)
@@ -148,8 +147,7 @@ class BasicWorld:
         self.patches: np.ndarray = self.patches.reshape(patches_shape)
         self.turtles = set()
         for _ in range(nbr_turtles):
-            # Adds itself to self.turtles and
-            # adds itself to its patch
+            # Adds itself to self.turtles and to its patch's list of Turtles.
             turtle_class()
 
     def cleanup(self):
