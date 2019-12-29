@@ -111,10 +111,7 @@ if __name__ == "__main__":
     (world_class, turtle_class, nbr_turtles, patch_class) = \
                                             choice([(SimpleWorld_1, Turtle, 25, Patch),
                                                     (SimpleWorld_2, SW2_Turtle, 3, SW2_Patch)])
-
-    # Get the name of the world's class to use as a caption.
-    # str(world) is: "<class '__main__.SimpleWorldx'>" where x is either 1 or 2.
-    caption = str(world_class).split(sep='.')[1][:-2]  # Selects 'SimpleWorldx'
+    caption = SimEngine.class_name(world_class())
 
     # The assignment (SimEngine.SIM_ENGINE = ... and SimEngine.WORLD = ...) are redundant.
     # They are done in the __init__'s and are included here for clarity.

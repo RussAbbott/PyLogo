@@ -56,17 +56,17 @@ class Patch(Block):
         self.turtles.add(tur)
 
     def neighbors_4(self):
-        return self._neighbors(extra_deltas=[])
+        return self._neighbors()
 
     def neighbors_8(self):
-        return self._neighbors(extra_deltas=[(-1, -1), (-1, 1), (1, -1), (1, 1)])
+        return self._neighbors(extra_deltas=((-1, -1), (-1, 1), (1, -1), (1, 1)))
 
-    def _neighbors(self, extra_deltas):
+    def _neighbors(self, extra_deltas=()):
         """
         The 4 or 8 neighbors of this patch.
         Can't write extra_deltas=[]. Default arguments may not be mutable.
         """
-        rc_deltas = [(0, -1), (-1, 0), (1, 0), (0, 1)] + extra_deltas
+        rc_deltas = ((0, -1), (-1, 0), (1, 0), (0, 1), *extra_deltas)
         (row, col) = self.row_col
         neighbs = [SimEngine.WORLD.patches[row+r, col+c]
                    for (r, c) in rc_deltas if SimEngine.WORLD.in_bounds(row+r, col+c)]
@@ -74,6 +74,10 @@ class Patch(Block):
 
     def remove_turtle(self, tur):
         self.turtles.remove(tur)
+
+    def __str__(self):
+        class_name = SimEngine.class_name(self)
+        return f'{class_name}{(self.row_col.row, self.row_col.col)} at {(self.pixel_pos.x, self.pixel_pos.y)}'
 
 
 class Turtle(Block):
@@ -100,26 +104,30 @@ class Turtle(Block):
 
     def move_to_xy(self, xy: PixelVector2):
         """
-        Computes the turtle pixel_pos based on its current pixel_pos and its velocity.
+        Removes this turtle from the list of turtles at its current patch.
+        Move this turtle to its new xy pixel_pos.
+        Adds this turtle to the list of turtles in its new patch.
         Then calls SIM_ENGINE.place_turtle_on_screen(turtle) to place it on the screen.
         SIM_ENGINE.place_turtle_on_screen() wraps around if necessary.
-        Removes the turtle from its current Patch and places it in its new Patch.
         """
         current_patch: Patch = self.patch()
         current_patch.remove_turtle(self)
         self.pixel_pos = xy
-        new_patch: Patch = self.patch()
+        new_patch = self.patch()
         new_patch.add_turtle(self)
         SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
 
     def move_to_patch(self, patch):
         self.move_to_xy(patch.pixel_pos)
-        # patch.turtles.add_turtle(self)
 
     def patch(self) -> Patch:
         (row, col) = SimEngine.WORLD.pixel_pos_to_row_col(self.pixel_pos)
         patch = SimEngine.WORLD.patches[row, col]
         return patch
+
+    def __str__(self):
+        class_name = SimEngine.class_name(self)
+        return f'{class_name}{(self.pixel_pos.x, self.pixel_pos.y)} on {self.patch()}'
 
 
 class BasicWorld:
@@ -150,8 +158,9 @@ class BasicWorld:
     @staticmethod
     def pixel_pos_to_row_col(pixel_pos: PixelVector2):
         """
-        Get the patch row-col for this pixel_pos
-        """
+        Get the patch RowCol for this pixel_pos
+        Leave a border of 1 pixel at the top and left of the patches
+       """
         row = (pixel_pos.y - 1) // BLOCK_SPACING
         col = (pixel_pos.x - 1) // BLOCK_SPACING
         return RowCol(row, col)
@@ -159,9 +168,10 @@ class BasicWorld:
     @staticmethod
     def row_col_to_pixel_pos(row_col: RowCol):
         """
+        Get the pixel position for this RowCol.
         Leave a border of 1 pixel at the top and left of the patches
         """
-        return PixelVector2(1+BLOCK_SPACING*row_col.row, 1+BLOCK_SPACING*row_col.col)
+        return PixelVector2(1+BLOCK_SPACING*row_col.col, 1+BLOCK_SPACING*row_col.row)
 
     def setup(self):
         pass
@@ -203,6 +213,19 @@ class SimEngine:
 
         self.quit = False
 
+    @staticmethod
+    def class_name(obj):
+        """
+        Get the name of the object's class.
+        full_class_name = str(type(obj)) is: "<class 'module.class_name'>"
+        str(world_class).split(sep='.')[1][:-2]  # Selects 'class_name'
+        """
+        # <class 'module.class_name'> (as a string)
+        full_class_name = str(type(obj))
+        # --> class_name'> --> class_name
+        obj_class_name = full_class_name.split('.')[1][:-2]
+        return obj_class_name
+
     # Fill the screen with background color, then draw blocks, then draw turtle on top. Then update the display.
     def draw(self):
         self.screen.fill(self.screen_color)
@@ -228,6 +251,7 @@ class SimEngine:
             self.draw()
             self.clock.tick(self.fps)
         self.quit = False
+        print('\nPress escape, Q/q, or ctrl-D/d to exit.')
         while not self.quit:
             self.test_for_quit( )
 

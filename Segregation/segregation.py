@@ -42,6 +42,12 @@ class SegregationTurtle(Turtle):
         self.is_happy = self.total_nearby_count > 0 and \
                         self.similar_nearby_count/self.total_nearby_count >= SimEngine.WORLD.pct_similar_wanted/100
 
+        patch = self.patch()
+        on_boundary = 0 in patch.row_col
+        if on_boundary and self.similar_nearby_count == 0 and self.is_happy:
+            print(str(self), self.is_happy)
+
+
 
 class SegregationWorld(BasicWorld):
 
@@ -76,12 +82,17 @@ class SegregationWorld(BasicWorld):
         self.move_unhappy_turtles()
 
         self.update_turtles()
-        # Add one to the tick count since we've already moved unhappy turtles.
         self.update_globals()
 
     def find_new_spot(self, tur):
+        old_empty_patches = len(self.empty_patches)
         new_patch = self.empty_patches.pop()
-        self.empty_patches.add(tur.patch())
+        old_patch = tur.patch()
+        if old_patch in self.empty_patches:
+            print(f' ==> {old_patch} already in self.empty_patches.  From {tur.pixel_pos}')
+        self.empty_patches.add(old_patch)
+        if old_empty_patches != len(self.empty_patches):
+            print(f'{old_empty_patches} -> {len(self.empty_patches)}.')
         tur.move_to_patch(new_patch)
 
     def move_unhappy_turtles(self):
@@ -115,13 +126,20 @@ class SegregationWorld(BasicWorld):
             # The density is approximate
             if randint(0, 99) < density:
                 turtle = SegregationTurtle()
-                self.turtles.add(turtle)
                 turtle.set_color(choice([Color('blue'), Color('orange')]))
                 turtle.move_to_patch(patch)
                 self.empty_patches.remove(patch)
 
         self.update_turtles()
         self.update_globals()
+
+    def print_counts(self, id=''):
+        """ For debugging  """
+        blues = len([t for t in self.turtles if t.color == Color("blue")])
+        oranges = len([t for t in self.turtles if t.color == Color("orange")])
+        empty = len(self.empty_patches)
+        print(f'{id}   blues: {blues}, orange: {oranges}, empty patches: {empty}, '
+              f'total: {blues + oranges + empty}, =? {len(self.patches.flat)}')
 
     def step(self):
         self.go_once()
@@ -136,7 +154,6 @@ class SegregationWorld(BasicWorld):
         unhappy_count = len([tur for tur in self.turtles if not tur.is_happy])
         percent_unhappy = round(100 * unhappy_count / len(self.turtles), 2)
         print(f'unhappy: {unhappy_count:3}; unhappy: {percent_unhappy}%.')
-        print(f'empty patches: {len(self.empty_patches)}')
 
     def update_turtles(self):
         for turtle in self.turtles:
@@ -146,5 +163,5 @@ class SegregationWorld(BasicWorld):
 if __name__ == "__main__":
     SimEngine.SIM_ENGINE = SimEngine(caption="Segregation Model", fps=5)
     SimEngine.WORLD = SegregationWorld()
-    SimEngine.WORLD.setup(density=95, pct_similar_wanted=30)
+    SimEngine.WORLD.setup(density=95, pct_similar_wanted=40)
     SimEngine.SIM_ENGINE.run_model()
