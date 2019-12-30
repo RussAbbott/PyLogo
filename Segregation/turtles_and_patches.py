@@ -239,14 +239,16 @@ class SimEngine:
         return False
 
     @staticmethod
-    def extract_class_name(full_class_name):
-        # full_class_name --> "class_name'>" --> "class_name"
+    def extract_class_name(full_class_name: type):
+        """
+        full_class_name will be something like: <class '__main__.SimpleWorld_1'>
+        We return the str: SimpleWorld_1
+        """
         return str(full_class_name).split('.')[1][:-2]
 
     @staticmethod
     def get_class_name(obj) -> str:
         """ Get the name of the object's class as a string. """
-        # full_class_name: "<class 'module.class_name'>"
         full_class_name = type(obj)
         return SimEngine.extract_class_name(full_class_name)
 
