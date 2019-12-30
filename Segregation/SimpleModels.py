@@ -109,7 +109,7 @@ if __name__ == "__main__":
     (world_class, turtle_class, nbr_turtles, patch_class) = \
                                             choice([(SimpleWorld_1, Turtle, 25, Patch),
                                                     (SimpleWorld_2, SW2_Turtle, 3, SW2_Patch)])
-    caption = SimEngine.class_name(world_class())
+    caption = SimEngine.extract_class_name(world_class)
 
     # The assignment (SimEngine.SIM_ENGINE = ... and SimEngine.WORLD = ...) are redundant.
     # They are done in the __init__'s and are included here for clarity.

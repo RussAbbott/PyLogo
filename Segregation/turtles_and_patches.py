@@ -20,7 +20,7 @@ from PySimpleGUI import RGB
 RowCol = namedtuple('RowCol', 'row col')
 PixelVector2 = namedtuple('PixelVector2', 'x y')
 
-# Assumes that all Blocks are square with side BLOCK_SIDE
+# Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
 BLOCK_SIDE = 15
 BLOCK_SPACING = BLOCK_SIDE + 1
 
@@ -73,14 +73,14 @@ class Patch(Block):
         rc_deltas = cardinal_deltas + extra_deltas
         (row, col) = self.row_col
         neighbs = [SimEngine.WORLD.patches[row+r, col+c]
-                   for (r, c) in rc_deltas if SimEngine.WORLD.in_bounds(row+r, col+c)]
+                   for (r, c) in rc_deltas if SimEngine.SIM_ENGINE.in_bounds(row+r, col+c)]
         return neighbs
 
     def remove_turtle(self, tur):
         self.turtles.remove(tur)
 
     def __str__(self):
-        class_name = SimEngine.class_name(self)
+        class_name = SimEngine.get_class_name(self)
         return f'{class_name}{(self.row_col.row, self.row_col.col)} at {(self.pixel_pos.x, self.pixel_pos.y)}'
 
 
@@ -117,8 +117,7 @@ class Turtle(Block):
         current_patch: Patch = self.patch()
         current_patch.remove_turtle(self)
         self.pixel_pos = xy
-        if SimEngine.WORLD.wrap:
-            SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
+        SimEngine.SIM_ENGINE.place_turtle_on_screen(self)
         new_patch = self.patch()
         new_patch.add_turtle(self)
 
@@ -131,7 +130,7 @@ class Turtle(Block):
         return patch
 
     def __str__(self):
-        class_name = SimEngine.class_name(self)
+        class_name = SimEngine.get_class_name(self)
         return f'{class_name}{(self.pixel_pos.x, self.pixel_pos.y)} on {self.patch()}'
 
 
@@ -139,22 +138,22 @@ class BasicWorld:
 
     wrap = True
 
-    def __init__(self, patch_class=Patch, patches_shape=RowCol(51, 51), turtle_class=Turtle, nbr_turtles=25):
+    def __init__(self, patch_class=Patch, turtle_class=Turtle, nbr_turtles=25):
         SimEngine.WORLD = self
-        self.shape = patches_shape
+        grid_shape = SimEngine.SIM_ENGINE.grid_shape
         self.patches = np.array([patch_class(RowCol(r, c))
-                                 for r in range(self.shape.row) for c in range(self.shape.col)])
-        self.patches: np.ndarray = self.patches.reshape(patches_shape)
+                                 for r in range(grid_shape.row) for c in range(grid_shape.col)])
+        self.patches: np.ndarray = self.patches.reshape(grid_shape)
         self.turtles = set()
         for _ in range(nbr_turtles):
             # Adds itself to self.turtles and to its patch's list of Turtles.
             turtle_class()
 
-    def cleanup(self):
-        pass
-
     def clear_all(self):
         self.turtles = set()
+
+    def done(self):
+        return False
 
     def draw(self, screen):
         for patch in self.patches.flat:
@@ -162,8 +161,9 @@ class BasicWorld:
         for turtle in self.turtles:
             turtle.draw(screen)
 
-    def in_bounds(self, r, c):
-        return 0 <= r < self.shape.row and 0 <= c < self.shape.col
+    def final_thoughts(self):
+        """ Add any final tests, data gathering, or summarization here. """
+        pass
 
     @staticmethod
     def pixel_pos_to_row_col(pixel_pos: PixelVector2):
@@ -195,15 +195,16 @@ class SimEngine:
     SIM_ENGINE = None  # The SimEngine object
     WORLD = None       # The world
 
-    def __init__(self, caption="Basic Model", fps=60):
+    def __init__(self, caption="Basic Model", fps=60, grid_shape=RowCol(51, 51)):
 
         SimEngine.SIM_ENGINE = self
 
         # Leave a border of 1 pixel at the top and left of the patches
-        self.width = 801
-        self.height = 801
+        self.width = 816
+        self.height = 816
         self.fps = fps
         self.ticks = 0
+        self.grid_shape = grid_shape
 
         # This is the color of the lines between the patches, implemented as the screen background color.
 
@@ -217,28 +218,16 @@ class SimEngine:
         display.set_caption(caption)
         self.clock = Clock()
         self.screen_rect = self.screen.get_rect()
+        print('\nPress escape, Q/q, or ctrl-d to terminate the simulation loop.')
 
-    @staticmethod
-    def class_name(obj):
-        """
-        Get the name of the object's class.
-        full_class_name = str(type(obj)) is: "<class 'module.class_name'>"
-        str(world_class).split(sep='.')[1][:-2]  # Selects 'class_name'
-        """
-        # <class 'module.class_name'> (as a string)
-        full_class_name = str(type(obj))
-        # --> class_name'> --> class_name
-        obj_class_name = full_class_name.split('.')[1][:-2]
-        return obj_class_name
-
-    # Fill the screen with background color, then draw blocks, then draw turtle on top. Then update the display.
+    # Fill the screen with the background color, then: draw blocks, draw turtles on top, update the display.
     def draw(self):
         self.screen.fill(self.screen_color)
         SimEngine.WORLD.draw(self.screen)
         display.update()
 
     @staticmethod
-    def exit():
+    def exit() -> bool:
         for ev in event.get( ):
             if ev.type == QUIT or \
                 ev.type == KEYDOWN and (ev.key == K_ESCAPE or
@@ -249,6 +238,21 @@ class SimEngine:
                 return True
         return False
 
+    @staticmethod
+    def extract_class_name(full_class_name):
+        # full_class_name --> "class_name'>" --> "class_name"
+        return str(full_class_name).split('.')[1][:-2]
+
+    @staticmethod
+    def get_class_name(obj) -> str:
+        """ Get the name of the object's class as a string. """
+        # full_class_name: "<class 'module.class_name'>"
+        full_class_name = type(obj)
+        return SimEngine.extract_class_name(full_class_name)
+
+    def in_bounds(self, r, c):
+        return 0 <= r < self.grid_shape.row and 0 <= c < self.grid_shape.col
+
     def place_turtle_on_screen(self, turtle):
         # Wrap around the screen.
         if SimEngine.WORLD.wrap:
@@ -258,10 +262,12 @@ class SimEngine:
 
     def run_model(self):
         pg.init()
-        print('\nPress escape, Q/q, or ctrl-d to exit.')
-        while not self.exit():
+        while not self.exit() and not SimEngine.WORLD.done():
             self.ticks += 1
             SimEngine.WORLD.step()
             self.draw()
             self.clock.tick(self.fps)
-        SimEngine.WORLD.cleanup()
+        SimEngine.WORLD.final_thoughts()
+        print("\nPress escape, Q/q, or ctrl-d to terminate the program.")
+        while not self.exit():
+            self.clock.tick(1)
