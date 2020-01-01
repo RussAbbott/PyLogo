@@ -1,12 +1,15 @@
+import PySimpleGUI as sg
+
+from PySimpleGUI_with_PyLogo import SimpleGUI
 
 from pygame import Color
 
 from random import choice, randint
 
-from turtles_and_patches import BasicWorld, SimEngine, Turtle
+import sim_engine as se
 
 
-class SegregationTurtle(Turtle):
+class SegregationTurtle(se.Turtle):
 
     """
     turtles-own [
@@ -40,10 +43,10 @@ class SegregationTurtle(Turtle):
         # Isolated turtles are not considered happy.
         # Also, don't divide by 0.
         self.is_happy = self.total_nearby_count > 0 and \
-                        self.similar_nearby_count/self.total_nearby_count >= SimEngine.WORLD.pct_similar_wanted/100
+                        self.similar_nearby_count/self.total_nearby_count >= se.SimEngine.WORLD.pct_similar_wanted/100
 
 
-class SegregationWorld(BasicWorld):
+class SegregationWorld(se.BasicWorld):
 
     """
     globals [
@@ -54,15 +57,15 @@ class SegregationWorld(BasicWorld):
     """
 
     def __init__(self):
-        super().__init__(turtle_class=SegregationTurtle, nbr_turtles=0)
+        super().__init__(turtle_class=SegregationTurtle)
         self.density = None
         self.pct_similar_wanted = None
         self.percent_similar = None
         self.percent_unhappy = None
         # Make a copy of the patches. Initially all the patches are empty.
-        self.empty_patches = set(patch for patch in self.patches.flat)
+        self.empty_patches = None  # set(patch for patch in self.patches.flat)
         # Don't wrap around. (Shouldn't occur. But this will check for cases when it does.)
-        SimEngine.WORLD.wrap = False
+        se.SimEngine.WORLD.wrap = False
 
     def done(self):
         return all(tur.is_happy for tur in self.turtles)
@@ -121,7 +124,7 @@ class SegregationWorld(BasicWorld):
                   f'{tur.is_happy}, {tur_color}')
         print()
 
-    def setup(self, density=90, pct_similar_wanted=30):
+    def setup(self, values):  # density=90, pct_similar_wanted=30):
         """
         to setup
           clear-all
@@ -140,20 +143,19 @@ class SegregationWorld(BasicWorld):
           reset-ticks
         end
         """
-        self.pct_similar_wanted = pct_similar_wanted
+        self.pct_similar_wanted = values['% similar wanted']
+        density = values['density']
         self.clear_all()
+        # Make a copy of the patches. Initially all the patches are empty.
+        self.empty_patches = set(patch for patch in self.patches.flat)
         for patch in self.patches.flat:
-            # The density is approximate
-            patch.set_color(Color('burlywood4'))
-            patch.set_color(Color('cornsilk4'))
-            patch.set_color(Color('chartreuse4'))
-            patch.set_color(Color('bisque4'))
             patch.set_color(Color('white'))
+
+            # The density is approximate.
             if randint(0, 99) < density:
                 turtle = SegregationTurtle()
                 turtle.set_color(choice([Color('blue'), Color('orange')]))
                 turtle.move_to_patch(patch)
-                # patch.set_color(turtle.color)
                 self.empty_patches.remove(patch)
 
         self.update_turtles()
@@ -166,7 +168,7 @@ class SegregationWorld(BasicWorld):
         similar_neighbors_count = sum(tur.similar_nearby_count for tur in self.turtles)
         total_neighbors_count = sum(tur.total_nearby_count for tur in self.turtles)
         percent_similar = round(100 * similar_neighbors_count / total_neighbors_count)
-        print(f'\t{SimEngine.SIM_ENGINE.ticks:2}. '
+        print(f'\t{se.SimEngine.SIM_ENGINE.ticks:2}. '
               f'agents: {len(self.turtles)}; similar: {percent_similar}%; ', end='')
 
         unhappy_count = len([tur for tur in self.turtles if not tur.is_happy])
@@ -178,8 +180,25 @@ class SegregationWorld(BasicWorld):
             turtle.update()
 
 
+def main():
+    se.SimEngine.SIM_ENGINE = se.SimEngine()  # caption="Segregation Model", fps=4)
+
+    se.SimEngine.WORLD = SegregationWorld()
+
+    gui_elements = [sg.Text('density'), sg.Slider(key='density',
+                                                  range=(1, 100),
+                                                  default_value=95,
+                                                  orientation='horizontal',
+                                                  pad=((0, 50), (0, 20))),
+                    sg.Text('% similar wanted'), sg.Slider(key='% similar wanted',
+                                                           range=(1, 100),
+                                                           default_value=30,
+                                                           orientation='horizontal',
+                                                           pad=((0, 50), (0, 20)))]
+
+    simple_gui = SimpleGUI(gui_elements, caption="Segregation model")
+    simple_gui.idle_loop()
+
+
 if __name__ == "__main__":
-    SimEngine.SIM_ENGINE = SimEngine(caption="Segregation Model", fps=5)
-    SimEngine.WORLD = SegregationWorld()
-    SimEngine.WORLD.setup(density=95, pct_similar_wanted=40)
-    SimEngine.SIM_ENGINE.run_model()
+    main( )
