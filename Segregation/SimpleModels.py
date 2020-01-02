@@ -63,8 +63,13 @@ class ColliderWorld(se.BasicWorld):
     def setup(self, values):
         super().setup(values)
 
-        # Give each turtle a random initial velocity.
-        for turtle in self.turtles:
+        nbr_turtles = int(values['nbr_turtles'])
+        for i in range(nbr_turtles):
+            # Adds itself to self.turtles and to its patch's list of Turtles.
+            turtle = self.turtle_class()
+
+            # Give each turtle a random initial velocity.
+        # for turtle in self.turtles:
             turtle.vel = se.PixelVector2(randint(-2, 2), randint(-2, 2))
 
     def step(self):
@@ -89,6 +94,12 @@ class StarburstWorld(se.BasicWorld):
 
     def setup(self, values):
         super().setup(values)
+
+        nbr_turtles = int(values['nbr_turtles'])
+        for i in range(nbr_turtles):
+            # Adds itself to self.turtles and to its patch's list of Turtles.
+            self.turtle_class()
+
         initial_velocities = cycle([se.PixelVector2(-1, -1), se.PixelVector2(-1, 1),
                                     se.PixelVector2(0, 0),
                                     se.PixelVector2(1, -1), se.PixelVector2(1, 1)])

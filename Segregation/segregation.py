@@ -29,19 +29,12 @@ class SegregationTurtle(se.Turtle):
 
     def update(self):
         """
-        ; in next two lines, we use "neighbors" to test the eight patches
-        ; surrounding the current patch
-        set similar-nearby count (turtles-on neighbors)  with [ color = [ color ] of myself ]
-        set other-nearby count (turtles-on neighbors) with [ color != [ color ] of myself ]
-        set total-nearby similar-nearby + other-nearby
-        set happy? similar-nearby >= (%-similar-wanted * total-nearby / 100)
-        end
+        Determine the happy and unhappy turtles.
         """
         turtles_nearby_list = [tur for patch in self.patch().neighbors_8() for tur in patch.turtles]
         self.similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
         self.total_nearby_count = len(turtles_nearby_list)
-        # Isolated turtles are not considered happy.
-        # Also, don't divide by 0.
+        # Isolated turtles are not considered happy. Also, don't divide by 0.
         self.is_happy = self.total_nearby_count > 0 and \
                         self.similar_nearby_count/self.total_nearby_count >= se.SimEngine.WORLD.pct_similar_wanted/100
 
@@ -143,9 +136,9 @@ class SegregationWorld(se.BasicWorld):
           reset-ticks
         end
         """
+        super().setup(values)
         self.pct_similar_wanted = values['% similar wanted']
         density = values['density']
-        self.clear_all()
         # Make a copy of the patches. Initially all the patches are empty.
         self.empty_patches = set(patch for patch in self.patches.flat)
         for patch in self.patches.flat:
@@ -168,6 +161,8 @@ class SegregationWorld(se.BasicWorld):
         similar_neighbors_count = sum(tur.similar_nearby_count for tur in self.turtles)
         total_neighbors_count = sum(tur.total_nearby_count for tur in self.turtles)
         percent_similar = round(100 * similar_neighbors_count / total_neighbors_count)
+        if se.SimEngine.SIM_ENGINE.ticks == 0:
+            print()
         print(f'\t{se.SimEngine.SIM_ENGINE.ticks:2}. '
               f'agents: {len(self.turtles)}; similar: {percent_similar}%; ', end='')
 

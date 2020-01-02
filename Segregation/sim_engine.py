@@ -141,17 +141,24 @@ class BasicWorld:
     def __init__(self, patch_class=Patch, turtle_class=Turtle):   # , nbr_turtles=25):
         SimEngine.WORLD = self
 
-        patch_grid_shape = SimEngine.SIM_ENGINE.patch_grid_shape
-        patches_temp_array = np.array([patch_class(RowCol(r, c))
-                                           for r in range(patch_grid_shape.row)
-                                               for c in range(patch_grid_shape.col)])
-        self.patches: np.ndarray = patches_temp_array.reshape(patch_grid_shape)
-        
+        self.patch_class = patch_class
         self.turtle_class = turtle_class
+
+        self.patches = None
+
+        self.create_patches()
+
         self.turtles = set()
 
     def clear_all(self):
         self.turtles = set()
+
+    def create_patches(self):
+        patch_grid_shape = SimEngine.SIM_ENGINE.patch_grid_shape
+        patches_temp_array = np.array([self.patch_class(RowCol(r, c))
+                                       for r in range(patch_grid_shape.row)
+                                       for c in range(patch_grid_shape.col)])
+        self.patches: np.ndarray = patches_temp_array.reshape(patch_grid_shape)
 
     def done(self):
         return False
@@ -185,10 +192,9 @@ class BasicWorld:
         return PixelVector2(1+BLOCK_SPACING*row_col.col, 1+BLOCK_SPACING*row_col.row)
 
     def setup(self, values):
-        nbr_turtles = int(values['nbr_turtles'])
-        for i in range(nbr_turtles):
-            # Adds itself to self.turtles and to its patch's list of Turtles.
-            self.turtle_class()
+        self.clear_all()
+        self.create_patches()
+        SimEngine.SIM_ENGINE.ticks = 0
 
 
 class SimEngine:
@@ -212,22 +218,6 @@ class SimEngine:
         self.patch_grid_shape = patch_grid_shape
         self.screen_color = Color(RGB(50, 60, 60))
         self.clock = Clock()
-
-        # SimEngine.fps = fps
-        # SimEngine.screen_pixel_width = screen_pixel_width
-        # SimEngine.screen_pixel_height = screen_pixel_height
-
-        # This is the color of the lines between the patches, implemented as the screen background color.
-
-        # self.screen_color = Color('darkslategray')  # (47, 79, 79, 255), same as pygame.colordict.THECOLORS['...']
-        # self.screen_color = Color('gray20')  # (51, 51, 51, 255), same as pygame.colordict.THECOLORS['...']
-        # A compromize between 'darkslategray' and 'gray20'
-        #
-        # # set_mode() creates a Surface for display
-        # self.screen = pg.display.set_mode((self.screen_pixel_width, self.screen_pixel_height))
-        # pg.display.set_caption(caption)
-        # self.screen_rect = self.screen.get_rect()
-        # print('\nPress escape, Q/q, or ctrl-d to terminate the simulation loop.')
 
     # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
     def draw(self, screen):
