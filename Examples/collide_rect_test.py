@@ -1,19 +1,18 @@
 
+import globals_and_utils as gu
 from pygame.color import Color
 from pygame.sprite import collide_rect
-
-import PySimpleGUI as sg   # import run_model, read_values
 
 from PySimpleGUI_with_PyLogo import SimpleGUI
 
 from random import randint, random
 
-import sim_engine as se
+from sim_engine import World, Patch, SimEngine
 
 
-class CollisionRect_Patch(se.Patch):
+class CollisionRect_Patch(Patch):
 
-    def __init__(self, row_col: se.RowCol):
+    def __init__(self, row_col: gu.RowCol):
         super().__init__(row_col)
         # Each patch gets a hit_color
         self.hit_color = Color('green')
@@ -24,7 +23,7 @@ class CollisionRect_Patch(se.Patch):
         self.image.fill(fill_color)
 
 
-class CollisionRect_World(se.BasicWorld):
+class CollisionRect_World(World):
     """
     A world in which the patches change to green when intersecting with a turtle.
     """
@@ -38,7 +37,7 @@ class CollisionRect_World(se.BasicWorld):
             turtle = self.turtle_class()
 
             # Give each turtle a random initial velocity.
-            turtle.vel = se.PixelVector2(randint(-2, 2), randint(-2, 2))
+            turtle.vel = gu.PixelVector2(randint(-2, 2), randint(-2, 2))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -49,7 +48,7 @@ class CollisionRect_World(se.BasicWorld):
         """
         for turtle in self.turtles:
             while random() < 0.02 or turtle.vel.x == 0 == turtle.vel.y or abs(turtle.vel.x) + abs(turtle.vel.y) > 4:
-                turtle.vel = se.PixelVector2(randint(-2, 2), randint(-2, 2))
+                turtle.vel = gu.PixelVector2(randint(-2, 2), randint(-2, 2))
             turtle.move_by_vel(values['Bounce?'])
 
         for patch in self.patches.flat:
@@ -58,18 +57,19 @@ class CollisionRect_World(se.BasicWorld):
 
 
 def main():
-    se.SimEngine.SIM_ENGINE = se.SimEngine()
+    SimEngine.SIM_ENGINE = SimEngine()
 
-    se.SimEngine.WORLD = CollisionRect_World(patch_class=CollisionRect_Patch)
+    SimEngine.WORLD = CollisionRect_World(patch_class=CollisionRect_Patch)
 
-    gui_elements = [sg.Text('number of turtles'), sg.Slider(key='nbr_turtles',
-                                                            range=(1, 10),
-                                                            default_value=3,
-                                                            orientation='horizontal',
-                                                            pad=((0, 50), (0, 20))),
-                    sg.Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
+    from PySimpleGUI import Checkbox, Slider, Text
+    gui_elements = [Text('number of turtles'), Slider(key='nbr_turtles',
+                                                      range=(1, 10),
+                                                      default_value=3,
+                                                      orientation='horizontal',
+                                                      pad=((0, 50), (0, 20))),
+                    Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
 
-    caption = se.SimEngine.extract_class_name(CollisionRect_World)
+    caption = gu.extract_class_name(CollisionRect_World)
     simple_gui = SimpleGUI(gui_elements, caption=caption)
     simple_gui.idle_loop()
 

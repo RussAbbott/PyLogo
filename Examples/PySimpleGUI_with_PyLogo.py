@@ -1,4 +1,6 @@
 
+import globals_and_utils as gu
+
 import os
 
 import pygame as pg
@@ -7,8 +9,6 @@ import pygame as pg
 
 
 import PySimpleGUI as sg
-
-import sim_engine as se
 
 """
     Demo of integrating PyGame with PySimpleGUI.
@@ -73,20 +73,19 @@ class SimpleGUI:
         # # ----------------------------- PyGame Code -----------------------------
         pg.init()
         self.screen = pg.display.set_mode(self.DISPLAY_SHAPE)
-        se.SimEngine.SCREEN_RECT = self.screen.get_rect()
+        gu.SCREEN_RECT = self.screen.get_rect()
+        gu.CENTER_PIXEL = gu.PixelVector2(round(self.DISPLAY_SHAPE[0]/2), round(self.DISPLAY_SHAPE[1]/2))
         self.default_fps = default_fps
         self.fps = default_fps
 
     def idle_loop(self):
-        simEngine = se.SimEngine.SIM_ENGINE
+        simEngine = gu.SIM_ENGINE
 
         # Not getting any keyboard events. Always returns False.
         pg.event.set_grab(False)
         event = None
         while event not in [self.ESCAPE, self.q, self.Q, self.CTRL_D, self.CTRL_d]:
             (event, values) = self.window.read(timeout=10)
-            # if event != '__TIMEOUT__':
-            #     print(f'{type(event)}: {event}')
 
             self.fps = values[self.FPS]
 
@@ -95,11 +94,11 @@ class SimpleGUI:
                 break
 
             if event == self.SETUP:
-                simEngine.WORLD.setup(values)
+                gu.WORLD.setup(values)
                 simEngine.draw(self.screen)
 
             if event == self.GO_ONCE:
-                simEngine.WORLD.step(event, values)
+                gu.WORLD.step(event, values)
                 simEngine.draw(self.screen)
 
             if event == self.GO:
@@ -108,22 +107,22 @@ class SimpleGUI:
                     self.window.close()
                     break
 
-            simEngine.clock.tick(self.idle_fps)
+            gu.CLOCK.tick(self.idle_fps)
 
     def run_model(self):
-        simEngine = se.SimEngine.SIM_ENGINE
+        simEngine = gu.SIM_ENGINE
         while True:
             (event, values) = self.window.read(timeout=10)
             self.fps = values[self.FPS]
 
             if event in (None, self.EXIT):
                 return self.EXIT
-            if event == self.STOP or se.SimEngine.WORLD.done():
+            if event == self.STOP or gu.WORLD.done():
                 break
-            simEngine.ticks += 1
-            se.SimEngine.WORLD.step(event, values)
+            gu.TICKS += 1
+            gu.WORLD.step(event, values)
             simEngine.draw(self.screen)
-            simEngine.clock.tick(self.fps)
+            gu.CLOCK.tick(self.fps)
 
-        se.SimEngine.WORLD.final_thoughts()
+        gu.WORLD.final_thoughts()
         return self.NORMAL

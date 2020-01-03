@@ -1,15 +1,15 @@
-from itertools import cycle
+import globals_and_utils as gu
 
-import PySimpleGUI as sg   # import run_model, read_values
+from itertools import cycle
 
 from PySimpleGUI_with_PyLogo import SimpleGUI
 
 from random import randint, random
 
-import sim_engine as se
+from sim_engine import SimEngine, World
 
 
-class Starburst_World(se.BasicWorld):
+class Starburst_World(World):
     """
     A starburst world of turtles.
     """
@@ -22,9 +22,9 @@ class Starburst_World(se.BasicWorld):
             # Adds itself to self.turtles and to its patch's list of Turtles.
             self.turtle_class()
 
-        initial_velocities = cycle([se.PixelVector2(-1, -1), se.PixelVector2(-1, 1),
-                                    se.PixelVector2(0, 0),
-                                    se.PixelVector2(1, -1), se.PixelVector2(1, 1)])
+        initial_velocities = cycle([gu.PixelVector2(-1, -1), gu.PixelVector2(-1, 1),
+                                    gu.PixelVector2(0, 0),
+                                    gu.PixelVector2(1, -1), gu.PixelVector2(1, 1)])
         for (turtle, vel) in zip(self.turtles, initial_velocities):
             turtle.vel = vel
 
@@ -35,23 +35,24 @@ class Starburst_World(se.BasicWorld):
         """
         for turtle in self.turtles:
             turtle.move_by_vel(values['Bounce?'])
-            if se.SimEngine.SIM_ENGINE.ticks > 200 and random() < 0.02:
-                turtle.vel = se.PixelVector2(randint(-2, 2), randint(-2, 2))
+            if gu.TICKS > 200 and random() < 0.02:
+                turtle.vel = gu.PixelVector2(randint(-2, 2), randint(-2, 2))
 
 
 def main():
-    se.SimEngine.SIM_ENGINE = se.SimEngine()
+    gu.SIM_ENGINE = SimEngine()
 
-    se.SimEngine.WORLD = Starburst_World()
+    gu.WORLD = Starburst_World()
 
-    gui_elements = [sg.Text('number of turtles'), sg.Slider(key='nbr_turtles',
-                                                            range=(1, 100),
-                                                            default_value=25,
-                                                            orientation='horizontal',
-                                                            pad=((0, 50), (0, 20))),
-                    sg.Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
+    from PySimpleGUI import Checkbox, Slider, Text
+    gui_elements = [Text('number of turtles'), Slider(key='nbr_turtles',
+                                                      range=(1, 100),
+                                                      default_value=25,
+                                                      orientation='horizontal',
+                                                      pad=((0, 50), (0, 20))),
+                    Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
 
-    caption = se.SimEngine.extract_class_name(Starburst_World)
+    caption = gu.extract_class_name(Starburst_World)
     simple_gui = SimpleGUI(gui_elements, caption=caption)
     simple_gui.idle_loop()
 
