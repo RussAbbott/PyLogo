@@ -1,5 +1,5 @@
 
-import globals_and_utils as gu
+import sim_engine as se
 
 import os
 
@@ -73,13 +73,13 @@ class SimpleGUI:
         # # ----------------------------- PyGame Code -----------------------------
         pg.init()
         self.screen = pg.display.set_mode(self.DISPLAY_SHAPE)
-        gu.SCREEN_RECT = self.screen.get_rect()
-        gu.CENTER_PIXEL = gu.PixelVector2(round(self.DISPLAY_SHAPE[0]/2), round(self.DISPLAY_SHAPE[1]/2))
+        se.SCREEN_RECT = self.screen.get_rect()
+        se.CENTER_PIXEL = se.PixelVector2(round(self.DISPLAY_SHAPE[0]/2), round(self.DISPLAY_SHAPE[1]/2))
         self.default_fps = default_fps
         self.fps = default_fps
 
     def idle_loop(self):
-        simEngine = gu.SIM_ENGINE
+        simEngine = se.SIM_ENGINE
 
         # Not getting any keyboard events. Always returns False.
         pg.event.set_grab(False)
@@ -94,12 +94,12 @@ class SimpleGUI:
                 break
 
             if event == self.SETUP:
-                gu.WORLD.setup(values)
-                simEngine.draw(self.screen)
+                se.WORLD.setup(values)
+                se.draw(self.screen)
 
             if event == self.GO_ONCE:
-                gu.WORLD.step(event, values)
-                simEngine.draw(self.screen)
+                se.WORLD.step(event, values)
+                se.draw(self.screen)
 
             if event == self.GO:
                 returned_value = self.run_model()
@@ -107,22 +107,22 @@ class SimpleGUI:
                     self.window.close()
                     break
 
-            gu.CLOCK.tick(self.idle_fps)
+            se.CLOCK.tick(self.idle_fps)
 
     def run_model(self):
-        simEngine = gu.SIM_ENGINE
+        simEngine = se.SIM_ENGINE
         while True:
             (event, values) = self.window.read(timeout=10)
             self.fps = values[self.FPS]
 
             if event in (None, self.EXIT):
                 return self.EXIT
-            if event == self.STOP or gu.WORLD.done():
+            if event == self.STOP or se.WORLD.done():
                 break
-            gu.TICKS += 1
-            gu.WORLD.step(event, values)
-            simEngine.draw(self.screen)
-            gu.CLOCK.tick(self.fps)
+            se.TICKS += 1
+            se.WORLD.step(event, values)
+            se.draw(self.screen)
+            se.CLOCK.tick(self.fps)
 
-        gu.WORLD.final_thoughts()
+        se.WORLD.final_thoughts()
         return self.NORMAL

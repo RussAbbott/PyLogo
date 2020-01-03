@@ -1,18 +1,18 @@
 
-import globals_and_utils as gu
+import sim_engine as se
 from pygame.color import Color
 from pygame.sprite import collide_rect
 
-from PySimpleGUI_with_PyLogo import SimpleGUI
+from pySimpleGUI_with_PyLogo import SimpleGUI
 
 from random import randint, random
 
-from sim_engine import World, Patch, SimEngine
+from core_elements import World, Patch
 
 
 class CollisionRect_Patch(Patch):
 
-    def __init__(self, row_col: gu.RowCol):
+    def __init__(self, row_col: se.RowCol):
         super().__init__(row_col)
         # Each patch gets a hit_color
         self.hit_color = Color('green')
@@ -37,7 +37,7 @@ class CollisionRect_World(World):
             turtle = self.turtle_class()
 
             # Give each turtle a random initial velocity.
-            turtle.vel = gu.PixelVector2(randint(-2, 2), randint(-2, 2))
+            turtle.vel = se.PixelVector2(randint(-2, 2), randint(-2, 2))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -48,7 +48,7 @@ class CollisionRect_World(World):
         """
         for turtle in self.turtles:
             while random() < 0.02 or turtle.vel.x == 0 == turtle.vel.y or abs(turtle.vel.x) + abs(turtle.vel.y) > 4:
-                turtle.vel = gu.PixelVector2(randint(-2, 2), randint(-2, 2))
+                turtle.vel = se.PixelVector2(randint(-2, 2), randint(-2, 2))
             turtle.move_by_vel(values['Bounce?'])
 
         for patch in self.patches.flat:
@@ -57,9 +57,9 @@ class CollisionRect_World(World):
 
 
 def main():
-    SimEngine.SIM_ENGINE = SimEngine()
+    # SimEngine.SIM_ENGINE = SimEngine()
 
-    SimEngine.WORLD = CollisionRect_World(patch_class=CollisionRect_Patch)
+    se.WORLD = CollisionRect_World(patch_class=CollisionRect_Patch)
 
     from PySimpleGUI import Checkbox, Slider, Text
     gui_elements = [Text('number of turtles'), Slider(key='nbr_turtles',
@@ -69,7 +69,7 @@ def main():
                                                       pad=((0, 50), (0, 20))),
                     Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
 
-    caption = gu.extract_class_name(CollisionRect_World)
+    caption = se.extract_class_name(CollisionRect_World)
     simple_gui = SimpleGUI(gui_elements, caption=caption)
     simple_gui.idle_loop()
 
