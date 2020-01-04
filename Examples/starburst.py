@@ -1,12 +1,11 @@
-import sim_engine as se
+
+import PyLogo.core.sim_engine as se
+from PyLogo.core.core_elements import World
+from PyLogo.core.pySimpleGUI_with_PyLogo import SimpleGUI
 
 from itertools import cycle
 
-from pySimpleGUI_with_PyLogo import SimpleGUI
-
 from random import randint, random
-
-from core_elements import World
 
 
 class Starburst_World(World):

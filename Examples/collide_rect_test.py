@@ -1,13 +1,12 @@
 
-import sim_engine as se
+import PyLogo.core.sim_engine as se
+from PyLogo.core.core_elements import Patch, Turtle, World
+from PyLogo.core.pySimpleGUI_with_PyLogo import SimpleGUI
+
 from pygame.color import Color
 from pygame.sprite import collide_rect
 
-from pySimpleGUI_with_PyLogo import SimpleGUI
-
 from random import randint, random
-
-from core_elements import Patch, Turtle, World
 
 
 class CollisionTest_Patch(Patch):
