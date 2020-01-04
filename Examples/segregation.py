@@ -58,12 +58,12 @@ class SegregationWorld(World):
     def done(self):
         return all(tur.is_happy for tur in self.turtles)
 
-    def draw(self, screen):
+    def draw(self):
         for patch in self.patches.flat:
             if not patch.turtles:
-                patch.draw(screen)
+                patch.draw()
         for turtle in self.turtles:
-            turtle.draw(screen)
+            turtle.draw()
 
     def find_new_spot(self, tur):
         old_empty_patches = len(self.empty_patches)

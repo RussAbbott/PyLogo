@@ -1,14 +1,17 @@
-# from collections import namedtuple
-
-import pygame as pg
-from pygame.color import Color
 from pygame.rect import Rect
-from pygame.time import Clock
-
-from PySimpleGUI import RGB
 
 PATCH_ROWS = 51
 PATCH_COLS = 51
+
+SCREEN_PIXEL_WIDTH = 816
+SCREEN_PIXEL_HEIGHT = 816
+
+SCREEN_RECT = Rect((0, 0), (SCREEN_PIXEL_WIDTH, SCREEN_PIXEL_HEIGHT))
+SCREEN = None
+
+# Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
+BLOCK_SIDE = 15
+BLOCK_SPACING = BLOCK_SIDE + 1
 
 
 class PixelVector2:
@@ -63,25 +66,13 @@ class RowCol:
         return self
 
 
-
-
-# Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
-BLOCK_SIDE = 15
-BLOCK_SPACING = BLOCK_SIDE + 1
-SCREEN_RECT = Rect((0, 0), (816, 816))
+# Must follow definitions of PixelVector2 and RowCol
 CENTER_PIXEL = PixelVector2(round(SCREEN_RECT.width/2), round(SCREEN_RECT.height/2))
-CLOCK = Clock()
 PATCH_GRID_SHAPE = RowCol(PATCH_ROWS, PATCH_COLS)
-SCREEN_COLOR = Color(RGB(50, 60, 60))
+
 TICKS = 0
+
 WORLD = None  # The world
-
-
-def draw(screen):
-    # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
-    screen.fill(SCREEN_COLOR)
-    WORLD.draw(screen)
-    pg.display.update( )
 
 
 def extract_class_name(full_class_name: type):
@@ -98,7 +89,7 @@ def get_class_name(obj) -> str:
     return extract_class_name(full_class_name)
 
 
-def in_bounds(r, c):
+def in_bounds_rc(r, c):
     return 0 <= r < PATCH_GRID_SHAPE.row() and 0 <= c < PATCH_GRID_SHAPE.col()
 
 

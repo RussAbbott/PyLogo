@@ -45,7 +45,8 @@ def main():
     gui_elements = [Text('number of turtles'),
                     Slider(key='nbr_turtles', range=(1, 100), default_value=25,
                            orientation='horizontal', pad=((0, 50), (0, 20))),
-                    Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
+                    Checkbox('Bounce?', key='Bounce?', default=True,
+                             tooltip='Bounce back from the edges of the screen?')]
 
     simple_gui = SimpleGUI(gui_elements, caption='Starburst World')
     simple_gui.start(Starburst_World)

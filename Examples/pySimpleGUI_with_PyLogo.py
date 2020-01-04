@@ -1,10 +1,12 @@
 
 from core_elements import Patch, Turtle
+
 import sim_engine as se
 
 import os
 
 import pygame as pg
+from pygame.time import Clock
 
 import PySimpleGUI as sg
 
@@ -19,14 +21,9 @@ import PySimpleGUI as sg
 
 class SimpleGUI:
 
-    def __init__(self, model_gui_elements, caption="Basic Model",
-                 screen_pixel_width=816, screen_pixel_height=816,
-                 default_fps=60):
-        # --------------------- PySimpleGUI window layout and creation --------------------
-        self.DISPLAY_SHAPE = (screen_pixel_width, screen_pixel_height)
-        self.LOWER_LEFT_PIXEL = (self.DISPLAY_SHAPE[1]-1, 0)
-        self.UPPER_RIGHT_PIXEL = (0, self.DISPLAY_SHAPE[0]-1)
+    def __init__(self, model_gui_elements, caption="Basic Model"):
 
+        # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
         self.CTRL_d = 'd:68'
         self.ESCAPE = 'Escape:27'
@@ -40,44 +37,53 @@ class SimpleGUI:
         self.SETUP = 'setup'
         self.STOP = 'Stop'
 
+        self.default_fps = 60
+        self.fps = self.default_fps
         self.idle_fps = 10
 
-        layout = [     # [sg.Text('Test of PySimpleGUI with PyGame')],
-                       # [sg.Graph(screen-shape, (0, 0), shape,
-                       # sg.Graph(SHAPE, lower-left, upper-right,
-                      [sg.Graph(self.DISPLAY_SHAPE,
-                                self.LOWER_LEFT_PIXEL, self.UPPER_RIGHT_PIXEL,
-                                background_color='black',
-                                key='-GRAPH-')],
+        self.make_window(caption, model_gui_elements)
+        self.screen_color = pg.Color(sg.RGB(50, 60, 60))
 
-                      model_gui_elements,
+        self.clock = Clock()
+        pg.init()
+        se.SCREEN = pg.display.set_mode(self.screen_pixel_shape)
 
-                      [sg.Button(self.SETUP), sg.Button(self.GO_ONCE), sg.Button(self.GO, pad=((0, 50), (0, 0))),
-                       sg.Button(self.STOP, button_color=('white', 'darkblue')),
-                       sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT),
-                       sg.Text(self.FPS, pad=((100, 10), (0, 0)), tooltip='Frames per second'),
-                       sg.Slider(key=self.FPS, range=(1, 100), orientation='horizontal', tooltip='Frames per second',
-                                 default_value=default_fps, pad=((0, 0), (0, 20)))]
-                 ]
+    def draw(self):
+        # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
+        se.SCREEN.fill(self.screen_color)
+        se.WORLD.draw( )
+        pg.display.update( )
 
-        self.window = sg.Window(caption, layout, finalize=True, return_keyboard_events=True)
-        self.graph = self.window['-GRAPH-']
+    # noinspection PyAttributeOutsideInit
+    def make_window(self, caption, model_gui_elements):
+        # --------------------- PySimpleGUI window layout and creation --------------------
+        self.lower_left_pixel = (se.SCREEN_PIXEL_HEIGHT - 1, 0)
+        self.upper_right_pixel = (0, se.SCREEN_PIXEL_WIDTH - 1)
+        self.screen_pixel_shape = (se.SCREEN_PIXEL_WIDTH, se.SCREEN_PIXEL_HEIGHT)
+        layout = \
+            [   # sg.Graph(SHAPE, lower-left, upper-right,
+                [sg.Graph(self.screen_pixel_shape, self.lower_left_pixel, self.upper_right_pixel,
+                          background_color='black', key='-GRAPH-')],
 
+                model_gui_elements,
+
+                [sg.Button(self.SETUP), sg.Button(self.GO_ONCE), sg.Button(self.GO, pad=((0, 50), (0, 0))),
+
+                 sg.Button(self.STOP, button_color=('white', 'darkblue')),
+                 sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT),
+
+                 sg.Text(self.FPS, pad=((100, 10), (0, 0)), tooltip='Frames per second'),
+                 sg.Slider(key=self.FPS, range=(1, 100), orientation='horizontal', tooltip='Frames per second',
+                           default_value=self.default_fps, pad=((0, 0), (0, 20)))]
+        ]
+        self.window = sg.Window(caption, layout, finalize=True, grab_anywhere=True, return_keyboard_events=True)
+        graph = self.window['-GRAPH-']
         # -------------- Magic code to integrate PyGame with tkinter -------
-        embed = self.graph.TKCanvas
-        os.environ['SDL_WINDOWID'] = str(embed.winfo_id())
+        embed = graph.TKCanvas
+        os.environ['SDL_WINDOWID'] = str(embed.winfo_id( ))
         os.environ['SDL_VIDEODRIVER'] = 'windib'  # change this to 'x11' to make it work on Linux
 
-        # # ----------------------------- PyGame Code -----------------------------
-        pg.init()
-        self.screen = pg.display.set_mode(self.DISPLAY_SHAPE)
-        # se.SCREEN_RECT = self.screen.get_rect()
-        # se.CENTER_PIXEL = se.PixelVector2(round(self.DISPLAY_SHAPE[0]/2), round(self.DISPLAY_SHAPE[1]/2))
-        self.default_fps = default_fps
-        self.fps = default_fps
-
     def run_model(self):
-        # simEngine = se.SIM_ENGINE
         while True:
             (event, values) = self.window.read(timeout=10)
             self.fps = values[self.FPS]
@@ -88,14 +94,14 @@ class SimpleGUI:
                 break
             se.TICKS += 1
             se.WORLD.step(event, values)
-            se.draw(self.screen)
-            se.CLOCK.tick(self.fps)
+            # se.draw(self.screen)
+            self.draw()
+            self.clock.tick(self.fps)
 
         se.WORLD.final_thoughts()
         return self.NORMAL
 
     def start(self, world_class, patch_class=Patch, turtle_class=Turtle):
-        # simEngine = se.SIM_ENGINE
 
         world_class(patch_class=patch_class, turtle_class=turtle_class)
 
@@ -113,11 +119,13 @@ class SimpleGUI:
 
             if event == self.SETUP:
                 se.WORLD.setup(values)
-                se.draw(self.screen)
+                # se.draw(self.screen)
+                self.draw()
 
             if event == self.GO_ONCE:
                 se.WORLD.step(event, values)
-                se.draw(self.screen)
+                # se.draw(self.screen)
+                self.draw()
 
             if event == self.GO:
                 returned_value = self.run_model()
@@ -125,4 +133,4 @@ class SimpleGUI:
                     self.window.close()
                     break
 
-            se.CLOCK.tick(self.idle_fps)
+            self.clock.tick(self.idle_fps)

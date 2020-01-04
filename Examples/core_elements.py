@@ -24,8 +24,9 @@ class Block(Sprite):
         self.image = Surface((self.rect.w, self.rect.h))
         self.image.fill(color)
 
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
+    def draw(self):  # , screen):
+        # screen.blit(self.image, self.rect)
+        se.SCREEN.blit(self.image, self.rect)
 
     def set_color(self, color):
         self.color = color
@@ -63,7 +64,7 @@ class Patch(Block):
         rc_deltas = cardinal_deltas + extra_deltas
         (row, col) = self.row_col.as_tuple()
         neighbs = [se.WORLD.patches[row+r, col+c]
-                   for (r, c) in rc_deltas if se.in_bounds(row+r, col+c)]
+                   for (r, c) in rc_deltas if se.in_bounds_rc(row+r, col+c)]
         return neighbs
 
     def remove_turtle(self, tur):
@@ -143,11 +144,17 @@ class World:
     def done(self):
         return False
 
-    def draw(self, screen):
+    # def draw(self, screen):
+    #     for patch in self.patches.flat:
+    #         patch.draw(screen)
+    #     for turtle in self.turtles:
+    #         turtle.draw(screen)
+    #
+    def draw(self):
         for patch in self.patches.flat:
-            patch.draw(screen)
+            patch.draw()
         for turtle in self.turtles:
-            turtle.draw(screen)
+            turtle.draw()
 
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """
@@ -155,9 +162,9 @@ class World:
 
     def setup(self, values):
         self.clear_all()
-        pseudo_patch_array = [[self.patch_class(se.RowCol(r, c)) for c in range(se.PATCH_GRID_SHAPE.col())]
+        patch_pseudo_array = [[self.patch_class(se.RowCol(r, c)) for c in range(se.PATCH_GRID_SHAPE.col())]
                               for r in range(se.PATCH_GRID_SHAPE.row())]
-        self.patches = np.array(pseudo_patch_array)
+        self.patches = np.array(patch_pseudo_array)
         se.reset_ticks()
 
     def step(self, event, values):
