@@ -1,7 +1,6 @@
 
 from __future__ import annotations
 
-import sim_engine as se
 
 import numpy as np
 
@@ -9,6 +8,10 @@ from pygame.color import Color
 from pygame.rect import Rect
 from pygame.sprite import Sprite
 from pygame.surface import Surface
+
+from random import choice
+
+import sim_engine as se
 
 
 class Block(Sprite):
@@ -72,9 +75,11 @@ class Patch(Block):
 
 
 class Turtle(Block):
-    def __init__(self,
-                 pixel_pos: se.PixelVector2 = se.CENTER_PIXEL,
-                 color=Color('red')):
+    def __init__(self, pixel_pos: se.PixelVector2 = se.CENTER_PIXEL, color=None):
+        if color is None:
+            # Use either se.NETLOGO_PRIMARY_COLORS or se.NETLOGO_PRIMARY_COLORS
+            # color = choice(se.NETLOGO_PRIMARY_COLORS)
+            color = choice(se.PYGAME_COLORS)
         super().__init__(pixel_pos, color)
         se.WORLD.turtles.add(self)
         self.patch().add_turtle(self)
@@ -144,12 +149,6 @@ class World:
     def done(self):
         return False
 
-    # def draw(self, screen):
-    #     for patch in self.patches.flat:
-    #         patch.draw(screen)
-    #     for turtle in self.turtles:
-    #         turtle.draw(screen)
-    #
     def draw(self):
         for patch in self.patches.flat:
             patch.draw()

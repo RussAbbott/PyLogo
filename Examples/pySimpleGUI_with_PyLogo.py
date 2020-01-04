@@ -56,6 +56,9 @@ class SimpleGUI:
 
     # noinspection PyAttributeOutsideInit
     def make_window(self, caption, model_gui_elements):
+        """
+        Create the window, including sg.Graph, the drawing surface.
+        """
         # --------------------- PySimpleGUI window layout and creation --------------------
         self.lower_left_pixel = (se.SCREEN_PIXEL_HEIGHT - 1, 0)
         self.upper_right_pixel = (0, se.SCREEN_PIXEL_WIDTH - 1)
@@ -86,16 +89,21 @@ class SimpleGUI:
     def run_model(self):
         while True:
             (event, values) = self.window.read(timeout=10)
+            # Allow the user to change the FPS dynamically.
             self.fps = values[self.FPS]
 
             if event in (None, self.EXIT):
                 return self.EXIT
             if event == self.STOP or se.WORLD.done():
                 break
+
+            # se.TICKS are our local counter for the number of times we have gone around this loop.
             se.TICKS += 1
             se.WORLD.step(event, values)
-            # se.draw(self.screen)
             self.draw()
+
+            # The next line controls how fast the simulation runs
+            # and is not really a counter for our purposes.
             self.clock.tick(self.fps)
 
         se.WORLD.final_thoughts()
@@ -105,8 +113,9 @@ class SimpleGUI:
 
         world_class(patch_class=patch_class, turtle_class=turtle_class)
 
-        # Not getting any keyboard events. Always returns False.
+        # Let events come through pygame to this level.
         pg.event.set_grab(False)
+        # Give event a value so that the while loop can look at it the first time through.
         event = None
         while event not in [self.ESCAPE, self.q, self.Q, self.CTRL_D, self.CTRL_d]:
             (event, values) = self.window.read(timeout=10)
@@ -119,12 +128,10 @@ class SimpleGUI:
 
             if event == self.SETUP:
                 se.WORLD.setup(values)
-                # se.draw(self.screen)
                 self.draw()
 
             if event == self.GO_ONCE:
                 se.WORLD.step(event, values)
-                # se.draw(self.screen)
                 self.draw()
 
             if event == self.GO:

@@ -7,7 +7,7 @@ from pySimpleGUI_with_PyLogo import SimpleGUI
 
 from random import randint, random
 
-from core_elements import World, Patch
+from core_elements import Patch, Turtle, World
 
 
 class CollisionTest_Patch(Patch):
@@ -21,6 +21,12 @@ class CollisionTest_Patch(Patch):
         collides = any([collide_rect(self, turtle) for turtle in turtles])
         fill_color = self.hit_color if collides else self.color
         self.image.fill(fill_color)
+
+
+class CollisionTest_Turtle(Turtle):
+
+    def __init__(self):
+        super().__init__(color=Color('red'))
 
 
 class CollisionTest_World(World):
@@ -64,7 +70,7 @@ def main():
                     Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
 
     simple_gui = SimpleGUI(gui_elements, caption='Collision test')
-    simple_gui.start(CollisionTest_World, patch_class=CollisionTest_Patch)
+    simple_gui.start(CollisionTest_World, patch_class=CollisionTest_Patch, turtle_class=CollisionTest_Turtle)
 
 
 if __name__ == "__main__":
