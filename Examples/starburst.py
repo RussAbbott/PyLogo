@@ -1,7 +1,8 @@
 
-import PyLogo.core.sim_engine as se
+import PyLogo.core.static_values as static
+import PyLogo.core.utils as utils
 from PyLogo.core.core_elements import World
-from PyLogo.core.pySimpleGUI_with_PyLogo import SimpleGUI
+from PyLogo.core.sim_engine import SimpleGUI
 
 from itertools import cycle
 
@@ -22,9 +23,9 @@ class Starburst_World(World):
             # Adds itself to self.turtles and to its patch's list of Turtles.
             self.turtle_class()
 
-        initial_velocities = cycle([se.PixelVector2(-1, -1), se.PixelVector2(-1, 1),
-                                    se.PixelVector2(0, 0),
-                                    se.PixelVector2(1, -1), se.PixelVector2(1, 1)])
+        initial_velocities = cycle([utils.PixelVector2(-1, -1), utils.PixelVector2(-1, 1),
+                                    utils.PixelVector2(0, 0),
+                                    utils.PixelVector2(1, -1), utils.PixelVector2(1, 1)])
         for (turtle, vel) in zip(self.turtles, initial_velocities):
             turtle.velocity = vel
 
@@ -35,8 +36,8 @@ class Starburst_World(World):
         """
         for turtle in self.turtles:
             turtle.move_by_velocity(values['Bounce?'])
-            if se.TICKS > 200 and random() < 0.02:
-                turtle.velocity = se.PixelVector2(randint(-2, 2), randint(-2, 2))
+            if static.TICKS > 200 and random() < 0.02:
+                turtle.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
 
 
 def main():

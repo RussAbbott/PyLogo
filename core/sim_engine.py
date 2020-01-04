@@ -1,128 +1,112 @@
 
-from pygame.color import Color
-from pygame.colordict import THECOLORS
-from pygame.rect import Rect
+import PyLogo.core.static_values as static
+from PyLogo.core.gui import make_window
+
+from PyLogo.core.core_elements import Patch, Turtle
+
+import pygame as pg
+from pygame.time import Clock
+
+import PySimpleGUI as sg
+
+"""
+    Demo of integrating PyGame with PySimpleGUI.
+    A similar technique may be possible with WxPython.
+    To make it work on Linux, set SDL_VIDEODRIVER as
+    specified in http://www.pygame.org/docs/ref/display.html, in the
+    pygame.display.init() section.
+"""
 
 
-class PixelVector2:
+class SimpleGUI:
 
-    def __init__(self, x, y):
-        # Wrap around the screen.
-        self._x = x
-        self._y = y
-        self.wrap()
+    def __init__(self, model_gui_elements, caption="Basic Model"):
 
-    def __str__(self):
-        return f'PixelVector2{self.x(), self.y()}'
+        # Constants for the main loop in start() below.
+        self.CTRL_D = 'D:68'
+        self.CTRL_d = 'd:68'
+        self.ESCAPE = 'Escape:27'
+        self.EXIT = 'Exit'
+        self.FPS = 'FPS'
+        self.GO = 'go'
+        self.GO_ONCE = 'go once'
+        self.NORMAL = 'normal'
+        self.Q = 'Q'
+        self.q = 'q'
+        self.SETUP = 'setup'
+        self.STOP = 'Stop'
 
-    def as_tuple(self):
-        return (self._x, self._y)
+        self.default_fps = 60
+        self.fps = self.default_fps
+        self.idle_fps = 10
 
-    def wrap(self):
-        self._x = self.x() % SCREEN_RECT.w
-        self._y = self.y() % SCREEN_RECT.h
-        return self
-
-    def x(self):
-        return self._x
-
-    def y(self):
-        return self._y
-
-
-class RowCol:
-
-    def __init__(self, row, col):
-        # Wrap around the patch field.
-        self._row = row
-        self._col = col
-        self.wrap()
-
-    def __str__(self):
-        return f'PixelVector2{self._row(), self._col()}'
-
-    def as_tuple(self):
-        return (self._row, self._col)
-
-    def col(self):
-        return self._col
-
-    def row(self):
-        return self._row
-
-    def wrap(self):
-        self._row = self.row() if self.row() <= PATCH_ROWS else self.row() % PATCH_GRID_SHAPE.row()
-        self._col = self.col() if self.col() <= PATCH_COLS else self.col() % PATCH_GRID_SHAPE.col()
-        return self
+        self.screen_pixel_shape = (static.SCREEN_PIXEL_WIDTH, static.SCREEN_PIXEL_HEIGHT)
+        self.window = make_window(self, caption, model_gui_elements)
+        self.screen_color = pg.Color(sg.RGB(50, 60, 60))
 
 
-PATCH_ROWS = 51
-PATCH_COLS = 51
+        self.clock = Clock()
+        pg.init()
+        static.SCREEN = pg.display.set_mode(self.screen_pixel_shape)
 
-SCREEN_PIXEL_WIDTH = 816
-SCREEN_PIXEL_HEIGHT = 816
+    def draw(self):
+        # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
+        static.SCREEN.fill(self.screen_color)
+        static.WORLD.draw( )
+        pg.display.update( )
 
-SCREEN_RECT = Rect((0, 0), (SCREEN_PIXEL_WIDTH, SCREEN_PIXEL_HEIGHT))
-SCREEN = None
+    def run_model(self):
+        while True:
+            (event, values) = self.window.read(timeout=10)
+            # Allow the user to change the FPS dynamically.
+            self.fps = values[self.FPS]
 
-# Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
-BLOCK_SIDE = 15
-BLOCK_SPACING = BLOCK_SIDE + 1
+            if event in (None, self.EXIT):
+                return self.EXIT
+            if event == self.STOP or static.WORLD.done():
+                break
 
+            # static.TICKS are our local counter for the number of times we have gone around this loop.
+            static.TICKS += 1
+            static.WORLD.step(event, values)
+            self.draw()
 
-NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('brown'), Color('yellow'),
-                          Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
-                          Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
-PYGAME_COLORS = [rgba for rgba in THECOLORS.values()]
+            # The next line controls how fast the simulation runs
+            # and is not really a counter for our purposes.
+            self.clock.tick(self.fps)
 
-# Can't have backslash inside f-string expressions
-NEW_LINE = '\n'
+        static.WORLD.final_thoughts()
+        return self.NORMAL
 
-CENTER_PIXEL = PixelVector2(round(SCREEN_RECT.width/2), round(SCREEN_RECT.height/2))
-PATCH_GRID_SHAPE = RowCol(PATCH_ROWS, PATCH_COLS)
+    def start(self, world_class, patch_class=Patch, turtle_class=Turtle):
 
-TICKS = 0
+        world_class(patch_class=patch_class, turtle_class=turtle_class)
 
-WORLD = None  # The world
+        # Let events come through pygame to this level.
+        pg.event.set_grab(False)
+        # Give event a value so that the while loop can look at it the first time through.
+        event = None
+        while event not in [self.ESCAPE, self.q, self.Q, self.CTRL_D, self.CTRL_d]:
+            (event, values) = self.window.read(timeout=10)
 
+            self.fps = values[self.FPS]
 
-def extract_class_name(full_class_name: type):
-    """
-    full_class_name will be something like: <class '__main__.SimpleWorld_1'>
-    We return the str: SimpleWorld_1
-    """
-    return str(full_class_name).split('.')[1][:-2]
+            if event in (None, self.EXIT):
+                self.window.close()
+                break
 
+            if event == self.SETUP:
+                static.WORLD.setup(values)
+                self.draw()
 
-def get_class_name(obj) -> str:
-    """ Get the name of the object's class as a string. """
-    full_class_name = type(obj)
-    return extract_class_name(full_class_name)
+            if event == self.GO_ONCE:
+                static.WORLD.step(event, values)
+                self.draw()
 
+            if event == self.GO:
+                returned_value = self.run_model()
+                if returned_value == self.EXIT:
+                    self.window.close()
+                    break
 
-def in_bounds_rc(r, c):
-    return 0 <= r < PATCH_GRID_SHAPE.row() and 0 <= c < PATCH_GRID_SHAPE.col()
-
-
-def pixel_pos_to_row_col(pixel_pos: PixelVector2):
-    """
-    Get the patch RowCol for this pixel_pos
-    Leave a border of 1 pixel at the top and left of the patches
-   """
-    row = (pixel_pos.y() - 1) // BLOCK_SPACING
-    col = (pixel_pos.x() - 1) // BLOCK_SPACING
-    return RowCol(row, col)
-
-
-def row_col_to_pixel_pos(row_col: RowCol):
-    """
-    Get the pixel position for this RowCol.
-    Leave a border of 1 pixel at the top and left of the patches
-    """
-    pv = PixelVector2(1 + BLOCK_SPACING * row_col.col(), 1 + BLOCK_SPACING * row_col.row())
-    return pv
-
-
-def reset_ticks():
-    global TICKS
-    TICKS = 0
+            self.clock.tick(self.idle_fps)

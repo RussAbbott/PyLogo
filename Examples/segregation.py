@@ -1,7 +1,7 @@
 
-import PyLogo.core.sim_engine as se
+import PyLogo.core.static_values as static
 from PyLogo.core.core_elements import World, Patch, Turtle
-from PyLogo.core.pySimpleGUI_with_PyLogo import SimpleGUI
+from PyLogo.core.sim_engine import SimpleGUI
 
 from pygame import Color
 
@@ -49,12 +49,12 @@ class SegregationTurtle(Turtle):
         Determine whether this turtle is happy.
         """
         turtles_nearby_list = [tur for patch in self.patch().neighbors_8() for tur in patch.turtles]
-        # turtles_nearby_list = self.nearby_turtles()
         self.similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
         self.total_nearby_count = len(turtles_nearby_list)
+
         # Isolated turtles, i.e., with no nearby neighbors, are not considered happy. Also, don't divide by 0.
         self.is_happy = self.total_nearby_count > 0 and \
-                        self.similar_nearby_count/self.total_nearby_count >= se.WORLD.pct_similar_wanted/100
+                        self.similar_nearby_count/self.total_nearby_count >= static.WORLD.pct_similar_wanted/100
 
 
 class SegregationWorld(World):
@@ -113,9 +113,9 @@ class SegregationWorld(World):
         similar_neighbors_count = sum(tur.similar_nearby_count for tur in self.turtles)
         total_neighbors_count = sum(tur.total_nearby_count for tur in self.turtles)
         percent_similar = round(100 * similar_neighbors_count / total_neighbors_count)
-        if se.TICKS == 0:
+        if static.TICKS == 0:
             print()
-        print(f'\t{se.TICKS:2}. agents: {len(self.turtles)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{static.TICKS:2}. agents: {len(self.turtles)};  %-similar: {percent_similar}%;  ', end='')
 
         unhappy_count = len([tur for tur in self.turtles if not tur.is_happy])
         percent_unhappy = round(100 * unhappy_count / len(self.turtles), 2)

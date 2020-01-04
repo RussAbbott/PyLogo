@@ -1,7 +1,7 @@
 
-import PyLogo.core.sim_engine as se
+import PyLogo.core.utils as utils
 from PyLogo.core.core_elements import Patch, Turtle, World
-from PyLogo.core.pySimpleGUI_with_PyLogo import SimpleGUI
+from PyLogo.core.sim_engine import SimpleGUI
 
 from pygame.color import Color
 from pygame.sprite import collide_rect
@@ -11,7 +11,7 @@ from random import randint, random
 
 class CollisionTest_Patch(Patch):
 
-    def __init__(self, row_col: se.RowCol):
+    def __init__(self, row_col: utils.RowCol):
         super().__init__(row_col)
         # Each patch gets a hit_color
         self.hit_color = Color('green')
@@ -42,7 +42,7 @@ class CollisionTest_World(World):
             turtle = self.turtle_class()
 
             # Give each turtle a random initial velocity.
-            turtle.velocity = se.PixelVector2(randint(-2, 2), randint(-2, 2))
+            turtle.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -54,7 +54,7 @@ class CollisionTest_World(World):
         for turtle in self.turtles:
             turtle.move_by_velocity(values['Bounce?'])
             if random() < 0.02:
-                turtle.velocity = se.PixelVector2(randint(-2, 2), randint(-2, 2))
+                turtle.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
