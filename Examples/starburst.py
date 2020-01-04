@@ -26,7 +26,7 @@ class Starburst_World(World):
                                     se.PixelVector2(0, 0),
                                     se.PixelVector2(1, -1), se.PixelVector2(1, 1)])
         for (turtle, vel) in zip(self.turtles, initial_velocities):
-            turtle.vel = vel
+            turtle.velocity = vel
 
 
     def step(self, event, values):
@@ -34,27 +34,21 @@ class Starburst_World(World):
         Update the world by moving the turtles.
         """
         for turtle in self.turtles:
-            turtle.move_by_vel(values['Bounce?'])
+            turtle.move_by_velocity(values['Bounce?'])
             if se.TICKS > 200 and random() < 0.02:
-                turtle.vel = se.PixelVector2(randint(-2, 2), randint(-2, 2))
+                turtle.velocity = se.PixelVector2(randint(-2, 2), randint(-2, 2))
 
 
 def main():
-    # se.SIM_ENGINE = SimEngine()
-
-    se.WORLD = Starburst_World()
 
     from PySimpleGUI import Checkbox, Slider, Text
-    gui_elements = [Text('number of turtles'), Slider(key='nbr_turtles',
-                                                      range=(1, 100),
-                                                      default_value=25,
-                                                      orientation='horizontal',
-                                                      pad=((0, 50), (0, 20))),
+    gui_elements = [Text('number of turtles'),
+                    Slider(key='nbr_turtles', range=(1, 100), default_value=25,
+                           orientation='horizontal', pad=((0, 50), (0, 20))),
                     Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]
 
-    caption = se.extract_class_name(Starburst_World)
-    simple_gui = SimpleGUI(gui_elements, caption=caption)
-    simple_gui.idle_loop()
+    simple_gui = SimpleGUI(gui_elements, caption='Starburst World')
+    simple_gui.start(Starburst_World)
 
 
 if __name__ == "__main__":

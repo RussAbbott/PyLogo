@@ -1,4 +1,5 @@
 
+from core_elements import Patch
 import sim_engine as se
 
 from pySimpleGUI_with_PyLogo import SimpleGUI
@@ -41,14 +42,12 @@ class SegregationTurtle(Turtle):
 
 
 class SegregationWorld(World):
-
     """
       percent-similar: on the average, what percent of a turtle's neighbors are the same color as that turtle?
       percent-unhappy: what percent of the turtles are unhappy?
     """
-
-    def __init__(self):
-        super().__init__(turtle_class=SegregationTurtle)
+    def __init__(self, patch_class=Patch, turtle_class=SegregationTurtle):
+        super().__init__(patch_class=patch_class, turtle_class=turtle_class)
         self.density = None
         self.pct_similar_wanted = None
         self.percent_similar = None
@@ -130,26 +129,19 @@ class SegregationWorld(World):
 
 def main():
 
-    # SimEngine.SIM_ENGINE = SimEngine()
-
-    se.WORLD = SegregationWorld()
-
     from PySimpleGUI import Slider, Text
-    gui_elements = [Text('density'), Slider(key='density',
-                                            range=(50, 95),
-                                            default_value=95,
-                                            orientation='horizontal',
-                                            pad=((0, 50), (0, 20)),
-                                            tooltip='The ratio of households to housing units'),
-                    Text('% similar wanted'), Slider(key='% similar wanted',
-                                                     range=(1, 60),
-                                                     default_value=35,
-                                                     orientation='horizontal',
-                                                     pad=((0, 50), (0, 20)),
-                                                     tooltip='The percentage of similar people to make someone happy.')]
+    gui_elements = [Text('density'),
+                    Slider(key='density', range=(50, 95), default_value=95,
+                           orientation='horizontal', pad=((0, 50), (0, 20)),
+                           tooltip='The ratio of households to housing units'),
+
+                    Text('% similar wanted'),
+                    Slider(key='% similar wanted', range=(1, 60), default_value=35,
+                           orientation='horizontal', pad=((0, 50), (0, 20)),
+                           tooltip='The percentage of similar people to make someone happy.')]
 
     simple_gui = SimpleGUI(gui_elements, caption="Segregation model")
-    simple_gui.idle_loop()
+    simple_gui.start(SegregationWorld)
 
 
 if __name__ == "__main__":

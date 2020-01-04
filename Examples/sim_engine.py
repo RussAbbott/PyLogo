@@ -1,4 +1,4 @@
-from collections import namedtuple
+# from collections import namedtuple
 
 import pygame as pg
 from pygame.color import Color
@@ -7,41 +7,79 @@ from pygame.time import Clock
 
 from PySimpleGUI import RGB
 
-# Global constants
-RowCol = namedtuple('RowCol', 'row col')
-PixelVector2 = namedtuple('PixelVector2', 'x y')
+PATCH_ROWS = 51
+PATCH_COLS = 51
+
+
+class PixelVector2:
+
+    def __init__(self, x, y):
+        # Wrap around the screen.
+        self._x = x
+        self._y = y
+        self.wrap()
+
+    def __str__(self):
+        return f'PixelVector2{self.x(), self.y()}'
+
+    def as_tuple(self):
+        return (self._x, self._y)
+
+    def wrap(self):
+        self._x = self.x() % SCREEN_RECT.w
+        self._y = self.y() % SCREEN_RECT.h
+        return self
+
+    def x(self):
+        return self._x
+
+    def y(self):
+        return self._y
+
+
+class RowCol:
+
+    def __init__(self, row, col):
+        # Wrap around the patch field.
+        self._row = row
+        self._col = col
+        self.wrap()
+
+    def __str__(self):
+        return f'PixelVector2{self._row(), self._col()}'
+
+    def as_tuple(self):
+        return (self._row, self._col)
+
+    def col(self):
+        return self._col
+
+    def row(self):
+        return self._row
+
+    def wrap(self):
+        self._row = self.row() if self.row() <= PATCH_ROWS else self.row() % PATCH_GRID_SHAPE.row()
+        self._col = self.col() if self.col() <= PATCH_COLS else self.col() % PATCH_GRID_SHAPE.col()
+        return self
+
+
+
 
 # Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
 BLOCK_SIDE = 15
 BLOCK_SPACING = BLOCK_SIDE + 1
-
-
-
-# These are globally available as SimEngine.SIM_ENGINE and SimEngine.WORLD
-SIM_ENGINE = None  # The SimEngine object
+SCREEN_RECT = Rect((0, 0), (816, 816))
+CENTER_PIXEL = PixelVector2(round(SCREEN_RECT.width/2), round(SCREEN_RECT.height/2))
+CLOCK = Clock()
+PATCH_GRID_SHAPE = RowCol(PATCH_ROWS, PATCH_COLS)
+SCREEN_COLOR = Color(RGB(50, 60, 60))
+TICKS = 0
 WORLD = None  # The world
 
-SCREEN_RECT = None
-CENTER_PIXELS = None
 
-patch_grid_shape = RowCol(51, 51)
-screen_color = Color(RGB(50, 60, 60))
-
-CLOCK = Clock()
-TICKS = 0
-
-
-# def __init__():
-#     global CLOCK, patch_grid_shape, screen_color, TICKS
-#     CLOCK = Clock()
-#     TICKS = 0
-#     patch_grid_shape = RowCol(51, 51)
-#     screen_color = Color(RGB(50, 60, 60))
-
-
-# Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
 def draw(screen):
-    screen.fill(screen_color)
+    # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
+    screen.fill(SCREEN_COLOR)
     WORLD.draw(screen)
     pg.display.update( )
 
@@ -61,19 +99,28 @@ def get_class_name(obj) -> str:
 
 
 def in_bounds(r, c):
-    return 0 <= r < patch_grid_shape.row and 0 <= c < patch_grid_shape.col
+    return 0 <= r < PATCH_GRID_SHAPE.row() and 0 <= c < PATCH_GRID_SHAPE.col()
 
 
-def place_turtle_on_screen(turtle):
-    # Wrap around the screen.
-    turtle.pixel_pos = PixelVector2(turtle.pixel_pos.x % SCREEN_RECT.w,
-                                    turtle.pixel_pos.y % SCREEN_RECT.h)
-    turtle.rect = Rect((turtle.pixel_pos.x, turtle.pixel_pos.y), (BLOCK_SIDE, BLOCK_SIDE))
+def pixel_pos_to_row_col(pixel_pos: PixelVector2):
+    """
+    Get the patch RowCol for this pixel_pos
+    Leave a border of 1 pixel at the top and left of the patches
+   """
+    row = (pixel_pos.y() - 1) // BLOCK_SPACING
+    col = (pixel_pos.x() - 1) // BLOCK_SPACING
+    return RowCol(row, col)
+
+
+def row_col_to_pixel_pos(row_col: RowCol):
+    """
+    Get the pixel position for this RowCol.
+    Leave a border of 1 pixel at the top and left of the patches
+    """
+    pv = PixelVector2(1 + BLOCK_SPACING * row_col.col(), 1 + BLOCK_SPACING * row_col.row())
+    return pv
 
 
 def reset_ticks():
     global TICKS
     TICKS = 0
-
-
-# __init__()

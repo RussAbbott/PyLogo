@@ -1,12 +1,10 @@
 
+from core_elements import Patch, Turtle
 import sim_engine as se
 
 import os
 
 import pygame as pg
-
-# from pygame import display, event, K_d, K_ESCAPE, KMOD_CTRL, K_q, KEYDOWN, QUIT
-
 
 import PySimpleGUI as sg
 
@@ -73,13 +71,33 @@ class SimpleGUI:
         # # ----------------------------- PyGame Code -----------------------------
         pg.init()
         self.screen = pg.display.set_mode(self.DISPLAY_SHAPE)
-        se.SCREEN_RECT = self.screen.get_rect()
-        se.CENTER_PIXEL = se.PixelVector2(round(self.DISPLAY_SHAPE[0]/2), round(self.DISPLAY_SHAPE[1]/2))
+        # se.SCREEN_RECT = self.screen.get_rect()
+        # se.CENTER_PIXEL = se.PixelVector2(round(self.DISPLAY_SHAPE[0]/2), round(self.DISPLAY_SHAPE[1]/2))
         self.default_fps = default_fps
         self.fps = default_fps
 
-    def idle_loop(self):
-        simEngine = se.SIM_ENGINE
+    def run_model(self):
+        # simEngine = se.SIM_ENGINE
+        while True:
+            (event, values) = self.window.read(timeout=10)
+            self.fps = values[self.FPS]
+
+            if event in (None, self.EXIT):
+                return self.EXIT
+            if event == self.STOP or se.WORLD.done():
+                break
+            se.TICKS += 1
+            se.WORLD.step(event, values)
+            se.draw(self.screen)
+            se.CLOCK.tick(self.fps)
+
+        se.WORLD.final_thoughts()
+        return self.NORMAL
+
+    def start(self, world_class, patch_class=Patch, turtle_class=Turtle):
+        # simEngine = se.SIM_ENGINE
+
+        world_class(patch_class=patch_class, turtle_class=turtle_class)
 
         # Not getting any keyboard events. Always returns False.
         pg.event.set_grab(False)
@@ -108,21 +126,3 @@ class SimpleGUI:
                     break
 
             se.CLOCK.tick(self.idle_fps)
-
-    def run_model(self):
-        simEngine = se.SIM_ENGINE
-        while True:
-            (event, values) = self.window.read(timeout=10)
-            self.fps = values[self.FPS]
-
-            if event in (None, self.EXIT):
-                return self.EXIT
-            if event == self.STOP or se.WORLD.done():
-                break
-            se.TICKS += 1
-            se.WORLD.step(event, values)
-            se.draw(self.screen)
-            se.CLOCK.tick(self.fps)
-
-        se.WORLD.final_thoughts()
-        return self.NORMAL
