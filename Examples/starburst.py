@@ -12,6 +12,7 @@ from core_elements import World
 class Starburst_World(World):
     """
     A starburst world of turtles.
+    No special Patches or Turtles.
     """
 
     def setup(self, values):

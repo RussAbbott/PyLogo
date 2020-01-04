@@ -31,12 +31,12 @@ class SegregationTurtle(Turtle):
 
     def update(self):
         """
-        Determine the happy and unhappy turtles.
+        Determine whether this turtle is happy.
         """
         turtles_nearby_list = [tur for patch in self.patch().neighbors_8() for tur in patch.turtles]
         self.similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
         self.total_nearby_count = len(turtles_nearby_list)
-        # Isolated turtles are not considered happy. Also, don't divide by 0.
+        # Isolated turtles, i.e., with no nearby neighbors, are not considered happy. Also, don't divide by 0.
         self.is_happy = self.total_nearby_count > 0 and \
                         self.similar_nearby_count/self.total_nearby_count >= se.WORLD.pct_similar_wanted/100
 
@@ -52,8 +52,7 @@ class SegregationWorld(World):
         self.pct_similar_wanted = None
         self.percent_similar = None
         self.percent_unhappy = None
-        # Make a copy of the patches. Initially all the patches are empty.
-        self.empty_patches = None  # set(patch for patch in self.patches.flat)
+        self.empty_patches = None
 
     def done(self):
         return all(tur.is_happy for tur in self.turtles)
@@ -65,49 +64,42 @@ class SegregationWorld(World):
         for turtle in self.turtles:
             turtle.draw()
 
-    def find_new_spot(self, tur):
-        old_empty_patches = len(self.empty_patches)
+    def find_new_spot(self, turtle):
+        """
+        Keep track of the empty patches instead of wandering around looking for one.
+        """
         new_patch = self.empty_patches.pop()
-        old_patch = tur.patch()
-        if old_patch in self.empty_patches:
-            print(f' ==> {old_patch} already in self.empty_patches.  From {tur.pixel_pos}')
+        old_patch = turtle.patch()
         self.empty_patches.add(old_patch)
-        if old_empty_patches != len(self.empty_patches):
-            print(f'{old_empty_patches} -> {len(self.empty_patches)}.')
-        tur.move_to_patch(new_patch)
-        # new_patch.set_color(tur.color)
-
-    def go_once(self):
-        self.move_unhappy_turtles()
-        self.update_turtles()
-        self.update_globals()
+        turtle.move_to_patch(new_patch)
 
     def move_unhappy_turtles(self):
         for tur in self.turtles:
             if not tur.is_happy:
                 self.find_new_spot(tur)
 
-    def setup(self, values):  # density=90, pct_similar_wanted=30):
+    def setup(self, values):
         super().setup(values)
         self.pct_similar_wanted = values['% similar wanted']
         density = values['density']
-        # Make a copy of the patches. Initially all the patches are empty.
+
+        # Initially all the patches are empty.
         self.empty_patches = set(patch for patch in self.patches.flat)
         for patch in self.patches.flat:
             patch.set_color(Color('white'))
 
-            # The density is approximate.
+            # Create the Turtles. The density is approximate.
             if randint(0, 99) < density:
                 turtle = SegregationTurtle()
                 turtle.set_color(choice([Color('blue'), Color('orange')]))
                 turtle.move_to_patch(patch)
                 self.empty_patches.remove(patch)
 
-        self.update_turtles()
-        self.update_globals()
+        self.update_all()
 
     def step(self, event, values):
-        self.go_once()
+        self.move_unhappy_turtles()
+        self.update_all()
 
     def update_globals(self):
         similar_neighbors_count = sum(tur.similar_nearby_count for tur in self.turtles)
@@ -122,9 +114,14 @@ class SegregationWorld(World):
         percent_unhappy = round(100 * unhappy_count / len(self.turtles), 2)
         print(f'unhappy: {unhappy_count:3}; unhappy: {percent_unhappy}%.')
 
-    def update_turtles(self):
+    def update_all(self):
+        # Update turtles
         for turtle in self.turtles:
             turtle.update()
+
+        # Update globals
+        self.update_globals()
+
 
 
 def main():
