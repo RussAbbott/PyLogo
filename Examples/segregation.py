@@ -5,7 +5,7 @@ from PyLogo.core.sim_engine import SimpleGUI
 
 from pygame import Color
 
-from random import choice, randint
+from random import choice, randint, sample
 
 
 class SegregationTurtle(Turtle):
@@ -43,10 +43,8 @@ class SegregationTurtle(Turtle):
         turtles_nearby_list = [tur for patch in self.patch().neighbors_8() for tur in patch.turtles]
         total_nearby_count = len(turtles_nearby_list)
         # Isolated turtles, i.e., with no nearby neighbors, are considered to have 100% similar neighbors.
-        if total_nearby_count == 0:
-            return 100
         similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
-        similarity = round(100 * similar_nearby_count / total_nearby_count)
+        similarity = 100 if total_nearby_count == 0 else round(100 * similar_nearby_count / total_nearby_count)
         return similarity
 
     def pct_similarity_satisfied_here(self, patch) -> float:
@@ -78,6 +76,9 @@ class SegregationWorld(World):
         self.pct_similar_wanted = None
         self.percent_similar = None
         self.percent_unhappy = None
+        self.unhappy_turtles = None
+        self.max_turtles_per_step = None
+
 
     def done(self):
         return all(tur.is_happy for tur in self.turtles)
@@ -92,6 +93,7 @@ class SegregationWorld(World):
     def setup(self, values):
         super().setup(values)
         self.pct_similar_wanted = values['% similar wanted']
+        self.max_turtles_per_step = int(values['max turtles per step'])
         density = values['density']
 
         self.empty_patches = set()
@@ -109,7 +111,8 @@ class SegregationWorld(World):
         self.update_all()
 
     def step(self, event, values):
-        for turtle in self.turtles:
+        number_to_move = min(len(self.unhappy_turtles), self.max_turtles_per_step)
+        for turtle in sample(self.unhappy_turtles, number_to_move):
             turtle.find_new_spot_if_unhappy(self.empty_patches)
         self.update_all()
 
@@ -124,7 +127,8 @@ class SegregationWorld(World):
             print()
         print(f'\t{static.TICKS:2}. agents: {len(self.turtles)};  %-similar: {percent_similar}%;  ', end='')
 
-        unhappy_count = len([tur for tur in self.turtles if not tur.is_happy])
+        self.unhappy_turtles = [turtle for turtle in self.turtles if not turtle.is_happy]
+        unhappy_count = len(self.unhappy_turtles)
         percent_unhappy = round(100 * unhappy_count / len(self.turtles), 2)
         print(f'nbr-unhappy: {unhappy_count:3};  %-unhappy: {percent_unhappy}.')
 
@@ -133,14 +137,20 @@ def main():
 
     from PySimpleGUI import Slider, Text
     gui_elements = [Text('density'),
-                    Slider(key='density', range=(50, 95), default_value=95,
-                           orientation='horizontal', pad=((0, 50), (0, 20)),
+                    Slider(key='density', range=(50, 95), default_value=95, size=(14,20),
+                           orientation='horizontal', pad=((0, 30), (0, 20)), resolution=5,
                            tooltip='The ratio of households to housing units'),
 
                     Text('% similar wanted'),
-                    Slider(key='% similar wanted', range=(1, 100), default_value=30,
-                           orientation='horizontal', pad=((0, 50), (0, 20)),
-                           tooltip='The percentage of similar people to make someone happy.')]
+                    Slider(key='% similar wanted', range=(1, 100), default_value=30, size=(14,20),
+                           orientation='horizontal', pad=((0, 30), (0, 20)), resolution=5,
+                           tooltip='The percentage of similar people to make someone happy.'),
+
+                    Text('max turtles per step'),
+                    Slider(key='max turtles per step', range=(10, 1000), default_value=60, size=(14,20),
+                           orientation='horizontal', pad=((0, 0), (0, 20)), resolution=10,
+                           tooltip='The percentage of similar people to make someone happy.')
+                    ]
 
     simple_gui = SimpleGUI(gui_elements, caption="Segregation model")
     simple_gui.start(SegregationWorld)
