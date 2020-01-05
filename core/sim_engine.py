@@ -1,13 +1,16 @@
 
-import PyLogo.core.static_values as static
-from PyLogo.core.gui import make_window
+import os
 
 from PyLogo.core.core_elements import Patch, Turtle
+import PyLogo.core.static_values as static
 
 import pygame as pg
 from pygame.time import Clock
 
 import PySimpleGUI as sg
+
+import tkinter as tk
+
 
 """
     Demo of integrating PyGame with PySimpleGUI.
@@ -36,17 +39,20 @@ class SimpleGUI:
         self.SETUP = 'setup'
         self.STOP = 'Stop'
 
+        self.clock = Clock()
         self.default_fps = 60
         self.fps = self.default_fps
         self.idle_fps = 10
 
-        self.screen_pixel_shape = (static.SCREEN_PIXEL_WIDTH, static.SCREEN_PIXEL_HEIGHT)
-        self.window = make_window(self, caption, model_gui_elements)
+        self.lower_left_pixel = (static.SCREEN_PIXEL_HEIGHT - 1, 0)
+        self.upper_right_pixel = (0, static.SCREEN_PIXEL_WIDTH - 1)
         self.screen_color = pg.Color(sg.RGB(50, 60, 60))
+        self.screen_pixel_shape = (static.SCREEN_PIXEL_WIDTH, static.SCREEN_PIXEL_HEIGHT)
 
+        self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements)
 
-        self.clock = Clock()
         pg.init()
+        # Everything is drawn to static.SCREEN
         static.SCREEN = pg.display.set_mode(self.screen_pixel_shape)
 
     def draw(self):
@@ -54,6 +60,40 @@ class SimpleGUI:
         static.SCREEN.fill(self.screen_color)
         static.WORLD.draw( )
         pg.display.update( )
+
+    def make_window(self, caption, model_gui_elements):
+        """
+        Create the window, including sg.Graph, the drawing surface.
+        """
+        # --------------------- PySimpleGUI window layout and creation --------------------
+        layout = \
+            [  # sg.Graph(SHAPE, lower-left, upper-right,
+                [sg.Graph(self.screen_pixel_shape, self.lower_left_pixel, self.upper_right_pixel,
+                          background_color='black', key='-GRAPH-')],
+
+                model_gui_elements,
+
+                [sg.Button(self.SETUP), sg.Button(self.GO_ONCE),
+                 sg.Button(self.GO, pad=((0, 50), (0, 0))),
+
+                 sg.Button(self.STOP, button_color=('white', 'darkblue')),
+                 sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT),
+
+                 sg.Text(self.FPS, pad=((100, 10), (0, 0)), tooltip='Frames per second'),
+                 sg.Slider(key=self.FPS, range=(1, 100), orientation='horizontal', tooltip='Frames per second',
+                           default_value=self.default_fps, pad=((0, 0), (0, 20)))]
+            ]
+        window: sg.PySimpleGUI.Window = sg.Window(caption, layout, finalize=True, return_keyboard_events=True)
+        # print(type(window))
+        graph: sg.PySimpleGUI.Graph = window['-GRAPH-']
+        # print(type(graph))
+        # -------------- Magic code to integrate PyGame with tkinter -------
+        embed: tk.Canvas = graph.TKCanvas
+        # print(type(embed))
+        os.environ['SDL_WINDOWID'] = str(embed.winfo_id( ))
+        os.environ['SDL_VIDEODRIVER'] = 'windib'  # change this to 'x11' to make it work on Linux
+
+        return window
 
     def run_model(self):
         while True:

@@ -8,54 +8,49 @@ class PixelVector2:
 
     def __init__(self, x, y):
         # Wrap around the screen.
-        self._x = x
-        self._y = y
+        self.x = x
+        self.y = y
         self.wrap()
 
     def __str__(self):
-        return f'PixelVector2{self.x(), self.y()}'
+        return f'PixelVector2{self.x, self.y}'
 
     def as_tuple(self):
-        return (self._x, self._y)
+        return (self.x, self.y)
 
     def wrap(self):
-        self._x = self.x() % SCREEN_RECT.w
-        self._y = self.y() % SCREEN_RECT.h
+        self.x = self.x % SCREEN_RECT.w
+        self.y = self.y % SCREEN_RECT.h
         return self
-
-    def x(self):
-        return self._x
-
-    def y(self):
-        return self._y
+    # 
+    # def x(self):
+    #     return self._x
+    # 
+    # def y(self):
+    #     return self._y
 
 
 class RowCol:
 
     def __init__(self, row, col):
-        # Wrap around the patch field.
-        self._row = row
-        self._col = col
+        # Wrap around the patch grid.
+        self.row = row
+        self.col = col
         self.wrap()
 
     def __str__(self):
-        return f'PixelVector2{self._row(), self._col()}'
+        return f'PixelVector2{self.row(), self.col()}'
 
     def as_tuple(self):
-        return (self._row, self._col)
-
-    def col(self):
-        return self._col
-
-    def row(self):
-        return self._row
+        return (self.row, self.col)
 
     def wrap(self):
-        self._row = self.row() if self.row() <= static.PATCH_ROWS else self.row() % PATCH_GRID_SHAPE.row()
-        self._col = self.col() if self.col() <= static.PATCH_COLS else self.col() % PATCH_GRID_SHAPE.col()
+        self.row = self.row if self.row <= static.PATCH_ROWS else self.row % PATCH_GRID_SHAPE.row
+        self.col = self.col if self.col <= static.PATCH_COLS else self.col % PATCH_GRID_SHAPE.col
         return self
 
 
+# These must be here to avoid a circular import.
 SCREEN_RECT = Rect((0, 0), (static.SCREEN_PIXEL_WIDTH, static.SCREEN_PIXEL_HEIGHT))
 PATCH_GRID_SHAPE = RowCol(static.PATCH_ROWS, static.PATCH_COLS)
 
@@ -77,7 +72,7 @@ def get_class_name(obj) -> str:
 
 
 def in_bounds_rc(r, c):
-    return 0 <= r < PATCH_GRID_SHAPE.row() and 0 <= c < PATCH_GRID_SHAPE.col()
+    return 0 <= r < PATCH_GRID_SHAPE.row and 0 <= c < PATCH_GRID_SHAPE.col
 
 
 def pixel_pos_to_row_col(pixel_pos: PixelVector2):
@@ -85,8 +80,8 @@ def pixel_pos_to_row_col(pixel_pos: PixelVector2):
     Get the patch RowCol for this pixel_pos
     Leave a border of 1 pixel at the top and left of the patches
    """
-    row = (pixel_pos.y() - 1) // static.BLOCK_SPACING
-    col = (pixel_pos.x() - 1) // static.BLOCK_SPACING
+    row = (pixel_pos.y - 1) // static.BLOCK_SPACING
+    col = (pixel_pos.x - 1) // static.BLOCK_SPACING
     return RowCol(row, col)
 
 
@@ -95,7 +90,7 @@ def row_col_to_pixel_pos(row_col: RowCol):
     Get the pixel position for this RowCol.
     Leave a border of 1 pixel at the top and left of the patches
     """
-    pv = PixelVector2(1 + static.BLOCK_SPACING * row_col.col(), 1 + static.BLOCK_SPACING * row_col.row())
+    pv = PixelVector2(1 + static.BLOCK_SPACING * row_col.col, 1 + static.BLOCK_SPACING * row_col.row)
     return pv
 
 

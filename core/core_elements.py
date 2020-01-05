@@ -21,7 +21,7 @@ class Block(Sprite):
         super().__init__()
         self.color = color
         self.pixel_pos: utils.PixelVector2 = pixel_pos
-        self.rect = Rect((self.pixel_pos.x(), self.pixel_pos.y()), (static.BLOCK_SIDE, static.BLOCK_SIDE))
+        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.BLOCK_SIDE, static.BLOCK_SIDE))
         self.image = Surface((self.rect.w, self.rect.h))
         self.image.fill(color)
 
@@ -41,7 +41,7 @@ class Patch(Block):
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}{(self.row_col.row(), self.row_col.col())} at {(self.pixel_pos.x(), self.pixel_pos.y())}'
+        return f'{class_name}{(self.row_col.row, self.row_col.col)} at {(self.pixel_pos.x, self.pixel_pos.y)}'
 
     def add_turtle(self, tur):
         self.turtles.add(tur)
@@ -84,7 +84,7 @@ class Turtle(Block):
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}{(self.pixel_pos.x(), self.pixel_pos.y())} on {self.patch()}'
+        return f'{class_name}{(self.pixel_pos.x, self.pixel_pos.y)} on {self.patch()}'
 
     def move_turtle(self, wrap):
         pass
@@ -93,7 +93,7 @@ class Turtle(Block):
         """
         Move to self.pixel_pos + (dx, dy)
         """
-        self.move_to_xy(utils.PixelVector2(self.pixel_pos.x() + dxdy.x(), self.pixel_pos.y() + dxdy.y()))
+        self.move_to_xy(utils.PixelVector2(self.pixel_pos.x + dxdy.x, self.pixel_pos.y + dxdy.y))
 
     def move_by_velocity(self, bounce):
         if bounce:
@@ -102,9 +102,9 @@ class Turtle(Block):
             turtle_rect = self.rect
             margin = 0
             if turtle_rect.right >= screen_rect.right - margin or turtle_rect.left <= screen_rect.left + margin:
-                self.velocity = utils.PixelVector2(self.velocity.x() * (-1), self.velocity.y())
+                self.velocity = utils.PixelVector2(self.velocity.x * (-1), self.velocity.y)
             if turtle_rect.top <= screen_rect.top + margin or turtle_rect.bottom >= screen_rect.bottom - margin:
-                self.velocity = utils.PixelVector2(self.velocity.x(), self.velocity.y() * (-1))
+                self.velocity = utils.PixelVector2(self.velocity.x, self.velocity.y * (-1))
         self.move_by_dxdy(self.velocity)
 
     def move_to_xy(self, xy: utils.PixelVector2):
@@ -116,7 +116,7 @@ class Turtle(Block):
         current_patch: Patch = self.patch()
         current_patch.remove_turtle(self)
         self.pixel_pos = xy.wrap()
-        self.rect = Rect((self.pixel_pos.x(), self.pixel_pos.y()), (static.BLOCK_SIDE, static.BLOCK_SIDE))
+        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.BLOCK_SIDE, static.BLOCK_SIDE))
         new_patch = self.patch()
         new_patch.add_turtle(self)
 
@@ -158,8 +158,8 @@ class World:
 
     def setup(self, values):
         self.clear_all()
-        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(utils.PATCH_GRID_SHAPE.col())]
-                              for r in range(utils.PATCH_GRID_SHAPE.row())]
+        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(utils.PATCH_GRID_SHAPE.col)]
+                              for r in range(utils.PATCH_GRID_SHAPE.row)]
         self.patches = np.array(patch_pseudo_array)
         utils.reset_ticks()
 
