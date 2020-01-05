@@ -14,12 +14,12 @@ BLOCK_SPACING = BLOCK_SIDE + 1
 
 def is_acceptable_color(rgb: Tuple[int, int, int]):
     """
-    Require reasonably bright colors (>= 300) that aren't washed out (<= 600)
+    Require reasonably bright colors (>= 150) that aren't washed out (<= 600)
     and for which r, g, and b are not too close to each other.
     """
     sum_rgb = sum(rgb)
     avg_rgb = sum_rgb/3
-    return 300 <= sum_rgb <= 600 and sum(abs(avg_rgb-x) for x in rgb) > 50
+    return 150 <= sum_rgb <= 600 and sum(abs(avg_rgb-x) for x in rgb) > 50
 
 
 # These are colors defined by pygame that satisfy is_acceptable_color above.
