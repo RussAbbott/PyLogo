@@ -10,51 +10,60 @@ from random import choice, randint
 
 class SegregationTurtle(Turtle):
 
-    """
-    turtles-own [
-      happy?           ; for each turtle, indicates whether at least %-similar-wanted percent of
-                       ;   that turtle's neighbors are the same color as the turtle
-      similar-nearby   ; how many neighboring patches have a turtle with my color?
-      other-nearby     ; how many have a turtle of another color?
-      total-nearby     ; sum of previous two variables
-    ]
-    """
     def __init__(self):
         super().__init__()
         self.is_happy = None
-        self.total_nearby_count = None
-        self.similar_nearby_count = None
-        self.is_happy = None
+        self.pct_similar = None
 
     def find_new_spot_if_unhappy(self, empty_patches):
         """
-        If this turtle is unhappy, move it to an empty patch where it is happy.
+        If this turtle is happy, do nothing.
+        If it's unhappy move it to an empty patch where it is happy if one can be found.
+        Otherwise, move it to any empty patch.
+
         Keep track of the empty patches instead of wandering around looking for one.
         The original NetLogo code doesn't check to see if the turtle would be happy in its new spot.
         (Doing so doesn't guarantee that the formerly happy new neighbors in the new spot remain happy!)
         """
-        while not self.is_happy:
-            new_patch = empty_patches.pop()
-            old_patch = self.patch()
-            empty_patches.add(old_patch)
-            self.move_to_patch(new_patch)
-            self.update()
+        if not self.is_happy:
+            # Keep track of current patch. Will add to empty patches after this Turtle moves.
+            current_patch = self.patch()
+            # Find one of the best available patches.
+            best_patch = max(empty_patches, key=lambda patch: self.pct_similarity_satisfied_here(patch))
+            empty_patches.remove(best_patch)
+            empty_patches.add(current_patch)
+            self.move_to_patch(best_patch)
 
-    def nearby_turtles(self):
+    def pct_similar_here(self, patch) -> int:
+        """
+        Returns an integer between 0 and 100 for the percent similar to neighbors.
+        Returns 100 if no neighbors,
+        """
+        self.move_to_patch(patch)
         turtles_nearby_list = [tur for patch in self.patch().neighbors_8() for tur in patch.turtles]
-        return turtles_nearby_list
+        total_nearby_count = len(turtles_nearby_list)
+        # Isolated turtles, i.e., with no nearby neighbors, are considered to have 100% similar neighbors.
+        if total_nearby_count == 0:
+            return 100
+        similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
+        similarity = round(100 * similar_nearby_count / total_nearby_count)
+        return similarity
+
+    def pct_similarity_satisfied_here(self, patch) -> float:
+        """
+        Returns the degree to which the similarity here satisfies pct_similar_wanted.
+        Returns a fraction between 0 and 1.
+        Never more than 1. Doesn't favor more similar patches over sufficiently similar patches.
+        """
+        return min(1.0, self.pct_similar_here(patch)/static.WORLD.pct_similar_wanted)
+
 
     def update(self):
         """
-        Determine whether this turtle is happy.
+        Determine pct_similar and whether this turtle is happy.
         """
-        turtles_nearby_list = [tur for patch in self.patch().neighbors_8() for tur in patch.turtles]
-        self.similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
-        self.total_nearby_count = len(turtles_nearby_list)
-
-        # Isolated turtles, i.e., with no nearby neighbors, are not considered happy. Also, don't divide by 0.
-        self.is_happy = self.total_nearby_count > 0 and \
-                        self.similar_nearby_count/self.total_nearby_count >= static.WORLD.pct_similar_wanted/100
+        self.pct_similar = self.pct_similar_here(self.patch())
+        self.is_happy = self.pct_similar >= static.WORLD.pct_similar_wanted
 
 
 class SegregationWorld(World):
@@ -110,9 +119,7 @@ class SegregationWorld(World):
             turtle.update()
 
         # Update Globals
-        similar_neighbors_count = sum(tur.similar_nearby_count for tur in self.turtles)
-        total_neighbors_count = sum(tur.total_nearby_count for tur in self.turtles)
-        percent_similar = round(100 * similar_neighbors_count / total_neighbors_count)
+        percent_similar = round(sum(turtle.pct_similar for turtle in self.turtles)/len(self.turtles))
         if static.TICKS == 0:
             print()
         print(f'\t{static.TICKS:2}. agents: {len(self.turtles)};  %-similar: {percent_similar}%;  ', end='')
@@ -131,7 +138,7 @@ def main():
                            tooltip='The ratio of households to housing units'),
 
                     Text('% similar wanted'),
-                    Slider(key='% similar wanted', range=(1, 60), default_value=35,
+                    Slider(key='% similar wanted', range=(1, 100), default_value=30,
                            orientation='horizontal', pad=((0, 50), (0, 20)),
                            tooltip='The percentage of similar people to make someone happy.')]
 
