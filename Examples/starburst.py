@@ -3,7 +3,6 @@ import PyLogo.core.static_values as static
 import PyLogo.core.utils as utils
 from PyLogo.core.core_elements import World
 from PyLogo.core.sim_engine import SimEngine
-# from PyLogo.core.sim_engine import se
 
 from itertools import cycle
 
@@ -50,7 +49,7 @@ def main():
                     [Checkbox('Bounce?', key='Bounce?', default=True,
                               tooltip='Bounce back from the edges of the screen?')]]
 
-    sim_engine = SimEngine(gui_elements, caption='Starburst World')
+    sim_engine = SimEngine(gui_elements, caption='Starburst')
     sim_engine.start(Starburst_World)
 
 

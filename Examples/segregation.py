@@ -151,7 +151,7 @@ def main():
                           tooltip='The percentage of similar people to make someone happy.')],
                     ]
 
-    sim_engine = SimEngine(gui_elements, caption="Segregation model", patch_size=11)
+    sim_engine = SimEngine(gui_elements, caption="Schelling's segregation model", patch_size=11)
     sim_engine.start(SegregationWorld)
 
 
