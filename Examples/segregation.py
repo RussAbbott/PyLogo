@@ -28,8 +28,11 @@ class SegregationTurtle(Turtle):
         if not self.is_happy:
             # Keep track of current patch. Will add to empty patches after this Turtle moves.
             current_patch = self.patch()
-            # Find one of the best available patches.
-            best_patch = max(empty_patches, key=lambda patch: self.pct_similarity_satisfied_here(patch))
+            # Find one of the best available patches. The sample size of 25 is arbitrary.
+            # It seems like a reasonable compromize between speed and number of steps.
+            nbr_of_patches_to_sample = min(25, len(empty_patches))
+            best_patch = max(sample(empty_patches, nbr_of_patches_to_sample),
+                             key=lambda patch: self.pct_similarity_satisfied_here(patch))
             empty_patches.remove(best_patch)
             empty_patches.add(current_patch)
             self.move_to_patch(best_patch)
@@ -93,7 +96,7 @@ class SegregationWorld(World):
     def setup(self, values):
         super().setup(values)
         self.pct_similar_wanted = values['% similar wanted']
-        self.max_turtles_per_step = int(values['max turtles/step'])
+        self.max_turtles_per_step = 60  # int(values['max turtles/step'])
         density = values['density']
 
         self.empty_patches = set()
@@ -113,8 +116,8 @@ class SegregationWorld(World):
     def step(self, event, values):
         nbr_unhappy_turtles = len(self.unhappy_turtles)
         min_bound = nbr_unhappy_turtles if nbr_unhappy_turtles >= 10 else max(1, round(nbr_unhappy_turtles/2))
-        number_to_move = min(min_bound, self.max_turtles_per_step)
-        for turtle in sample(self.unhappy_turtles, number_to_move):
+        nbr_to_move = min(min_bound, self.max_turtles_per_step)
+        for turtle in sample(self.unhappy_turtles, nbr_to_move):
             turtle.find_new_spot_if_unhappy(self.empty_patches)
         self.update_all()
 
@@ -147,12 +150,12 @@ def main():
                     Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                           background_color='skyblue', default_value=30,
                           tooltip='The percentage of similar people to make someone happy.')],
-
-                    [Text('max turtles/step'),
-                    Combo(key='max turtles/step', values=[30, 60, 100, 200, 500, 1000],
-                          background_color='skyblue', default_value=60,
-                          tooltip='The maximum number of turtles to process each simulation tick.')
-                    ]]
+                    #
+                    # [Text('max turtles/step'),
+                    # Combo(key='max turtles/step', values=[30, 60, 100, 200, 500, 1000],
+                    #       background_color='skyblue', default_value=60,
+                    #       tooltip='The maximum number of turtles to process each simulation tick.')]
+                    ]
 
     simple_gui = SimpleGUI(gui_elements, caption="Segregation model", patch_size=11)
     simple_gui.start(SegregationWorld)
