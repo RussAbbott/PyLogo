@@ -1,7 +1,7 @@
 
 import PyLogo.core.static_values as static
 from PyLogo.core.core_elements import World, Patch, Turtle
-from PyLogo.core.sim_engine import SimpleGUI
+from PyLogo.core.sim_engine import SimEngine
 
 from pygame import Color
 
@@ -82,7 +82,6 @@ class SegregationWorld(World):
         self.unhappy_turtles = None
         self.max_turtles_per_step = None
 
-
     def done(self):
         return all(tur.is_happy for tur in self.turtles)
 
@@ -143,22 +142,17 @@ def main():
     from PySimpleGUI import Combo, Slider, Text
     gui_elements = [[Text('density'),
                     Slider(key='density', range=(50, 95), default_value=95, size=(10, 20),
-                           orientation='horizontal', pad=((0, 10), (0, 20)), resolution=5,
+                           orientation='horizontal', pad=((0, 0), (0, 20)), resolution=5,
                            tooltip='The ratio of households to housing units')],
 
                     [Text('% similar wanted'),
                     Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                           background_color='skyblue', default_value=30,
                           tooltip='The percentage of similar people to make someone happy.')],
-                    #
-                    # [Text('max turtles/step'),
-                    # Combo(key='max turtles/step', values=[30, 60, 100, 200, 500, 1000],
-                    #       background_color='skyblue', default_value=60,
-                    #       tooltip='The maximum number of turtles to process each simulation tick.')]
                     ]
 
-    simple_gui = SimpleGUI(gui_elements, caption="Segregation model", patch_size=11)
-    simple_gui.start(SegregationWorld)
+    sim_engine = SimEngine(gui_elements, caption="Segregation model", patch_size=11)
+    sim_engine.start(SegregationWorld)
 
 
 if __name__ == "__main__":

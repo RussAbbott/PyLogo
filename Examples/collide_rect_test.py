@@ -1,7 +1,7 @@
 
 import PyLogo.core.utils as utils
 from PyLogo.core.core_elements import Patch, Turtle, World
-from PyLogo.core.sim_engine import SimpleGUI
+from PyLogo.core.sim_engine import SimEngine
 
 from pygame.color import Color
 from pygame.sprite import collide_rect
@@ -68,8 +68,8 @@ def main():
                             orientation='horizontal', pad=((0, 50), (0, 20)))],
                     [Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]]
 
-    simple_gui = SimpleGUI(gui_elements, caption='Collision test')
-    simple_gui.start(CollisionTest_World, patch_class=CollisionTest_Patch, turtle_class=CollisionTest_Turtle)
+    sim_engine = SimEngine(gui_elements, caption='Collision test')
+    sim_engine.start(CollisionTest_World, patch_class=CollisionTest_Patch, turtle_class=CollisionTest_Turtle)
 
 
 if __name__ == "__main__":
