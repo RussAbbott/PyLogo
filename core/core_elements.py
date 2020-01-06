@@ -1,4 +1,5 @@
 
+# import PyLogo.core.sim_engine as se
 import PyLogo.core.static_values as static
 import PyLogo.core.utils as utils
 
@@ -81,7 +82,11 @@ class Turtle(Block):
             # color = choice(static.NETLOGO_PRIMARY_COLORS)
             color = choice(static.PYGAME_COLORS)
         if pixel_pos is None:
-            pixel_pos = utils.CENTER_PIXEL()
+            # Get the center pixel
+            screen_rect = static.SCREEN.get_rect()
+            pixel_pos = utils.PixelVector2(round(screen_rect.width / 2), round(screen_rect.height / 2))
+            # pixel_pos = utils.CENTER_PIXEL()
+            # pixel_pos = cp
         super().__init__(pixel_pos, color)
         static.WORLD.turtles.add(self)
         self.patch().add_turtle(self)
@@ -103,7 +108,7 @@ class Turtle(Block):
     def move_by_velocity(self, bounce):
         if bounce:
             # Bounce turtle off the screen edges
-            screen_rect = utils.SCREEN_RECT
+            screen_rect = static.SCREEN.get_rect()  # utils.SCREEN_RECT()
             turtle_rect = self.rect
             margin = 0
             if turtle_rect.right >= screen_rect.right - margin or turtle_rect.left <= screen_rect.left + margin:

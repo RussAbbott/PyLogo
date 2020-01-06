@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import PyLogo.core.static_values as static
 
-from pygame.rect import Rect
-
 
 class PixelVector2:
 
@@ -21,8 +19,10 @@ class PixelVector2:
         return (self.x, self.y)
 
     def wrap(self):
-        self.x = self.x % SCREEN_RECT.w
-        self.y = self.y % SCREEN_RECT.h
+        rect = static.SCREEN.get_rect()
+        screen_rect = rect
+        self.x = self.x % screen_rect.w
+        self.y = self.y % screen_rect.h
         return self
 
 
@@ -50,15 +50,9 @@ class RowCol:
         return self
 
 
-# These must be here to avoid a circular import. This definition of SCREEN_RECT is temporary.
-# It is defined now to allow the definition of CENTER_PIXEL. When the screen is created
-# The actual screen_rect is substituted for this.
-SCREEN_RECT = Rect((0, 0), (static.SCREEN_PIXEL_WIDTH(), static.SCREEN_PIXEL_HEIGHT()))
-
-
 def CENTER_PIXEL():
-    cp = PixelVector2(round(SCREEN_RECT.width/2), round(SCREEN_RECT.height/2))
-    # print(SCREEN_RECT, cp)
+    rect = static.SCREEN.get_rect()
+    cp = PixelVector2(round(rect.width/2), round(rect.height/2))
     return cp
 
 
