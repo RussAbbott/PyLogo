@@ -32,22 +32,19 @@ class SimEngine:
     def run_model(self):
         while True:
             (event, values) = self.window.read(timeout=10)
-            # Allow the user to change the FPS dynamically.
-            # self.fps = values[self.FPS]
 
             if event in (None, self.simple_gui.EXIT):
                 return self.simple_gui.EXIT
 
             if event == 'GoStop':
-                self.window['GoStop'].update(text='go', button_color=('white', 'green'))
                 self.window[self.simple_gui.GO_ONCE].update(disabled=False)
-                self.window[self.simple_gui.SETUP].update(disabled=False)
                 break
 
             if static.WORLD.done():
-                self.window['GoStop'].update(text='go', disabled=True, button_color=('white', 'green'))
-                self.window[self.simple_gui.GO_ONCE].update(disabled=True)
-                self.window[self.simple_gui.SETUP].update(disabled=False)
+                # for element in [self.window['GoStop'], self.window[self.simple_gui.GO_ONCE]]:
+                #     element.update(disabled=True)
+                self.window['GoStop'].update(disabled=True)
+                # self.window[self.simple_gui.GO_ONCE].update(disabled=True)
                 break
 
             # static.TICKS are our local counter for the number of times we have gone around this loop.
@@ -88,11 +85,13 @@ class SimEngine:
                 static.WORLD.step(event, values)
                 self.simple_gui.draw()
 
-            if event == self.simple_gui.GOSTOP:  # self.simple_gui.GO:
+            if event == self.simple_gui.GOSTOP:
                 self.window[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
                 self.window[self.simple_gui.GO_ONCE].update(disabled=True)
                 self.window[self.simple_gui.SETUP].update(disabled=True)
                 returned_value = self.run_model()
+                self.window['GoStop'].update(text='go', button_color=('white', 'green'))
+                self.window[self.simple_gui.SETUP].update(disabled=False)
                 if returned_value == self.simple_gui.EXIT:
                     # self.desired_patch_size = values[self.PATCH_SIZE_STRING]
                     # desired_patch_size = values[self.PATCH_SIZE_STRING]

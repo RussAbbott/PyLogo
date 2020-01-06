@@ -58,18 +58,23 @@ class SimpleGUI:
         upper_right_pixel = (0, static.SCREEN_PIXEL_WIDTH() - 1)
         col1 = [ *model_gui_elements,
 
-                 [sg.Button(self.SETUP, pad=((0, 10), (50, 0))),
-                  sg.Button(self.GO_ONCE, disabled=True, pad=((0, 10), (50, 0))),
-                  sg.Button(self.GO, disabled=True, button_color=('white', 'green'),
-                            key=self.GOSTOP, pad=((0, 0), (50, 0)))],
+                 [sg.Text('_'  * 25)],
 
-                 [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((0, 30), (20, 0)))] ]
+                 [sg.Button(self.SETUP, pad=((0, 10), (10, 0))),
+                  sg.Button(self.GO_ONCE, disabled=True, button_color=('white', 'green'), pad=((0, 10), (10, 0))),
+                  sg.Button(self.GO, disabled=True, button_color=('white', 'green'), pad=((0, 0), (10, 0)),
+                            key=self.GOSTOP)],
+
+                 [sg.Text('_' * 25)],
+
+                 [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((70, 0), (10, 0)))] ]
 
         col2 = [[sg.Graph(screen_pixel_shape, lower_left_pixel, upper_right_pixel,
                           background_color='black', key='-GRAPH-')]]
 
         layout = [[sg.Column(col1), sg.Column(col2)]]
-        window: sg.PySimpleGUI.Window = sg.Window(caption, layout, finalize=True, return_keyboard_events=True)
+        window: sg.PySimpleGUI.Window = sg.Window(caption, layout, margins=(5,20),
+                                                  return_keyboard_events=True, finalize=True)
         graph: sg.PySimpleGUI.Graph = window['-GRAPH-']
 
         # -------------- Magic code to integrate PyGame with tkinter -------

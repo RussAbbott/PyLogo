@@ -1,5 +1,4 @@
 
-# import PyLogo.core.sim_engine as se
 import PyLogo.core.static_values as static
 import PyLogo.core.utils as utils
 
@@ -27,8 +26,7 @@ class Block(Sprite):
         self.image = Surface((self.rect.w, self.rect.h))
         self.image.fill(color)
 
-    def draw(self):  # , screen):
-        # print(self.rect)
+    def draw(self):
         static.SCREEN.blit(self.image, self.rect)
 
     def set_color(self, color):
@@ -40,8 +38,9 @@ class Patch(Block):
     def __init__(self, row_col: utils.RowCol, color=Color('black')):
         super().__init__(utils.row_col_to_pixel_pos(row_col), color)
         self.row_col = row_col
-        # print(f'{row_col} -> {self.pixel_pos}')
         self.turtles = set()
+        self._neighbors_4 = None
+        self._neighbors_8 = None
 
     def __str__(self):
         class_name = utils.get_class_name(self)
@@ -51,25 +50,25 @@ class Patch(Block):
         self.turtles.add(tur)
 
     def neighbors_4(self):
-        return self._neighbors()
+        if self._neighbors_4 is None:
+            cardinal_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1))
+            self._neighbors_4 = self._neighbors(cardinal_deltas)
+        return self._neighbors_4
 
     def neighbors_8(self):
-        return self._neighbors(extra_deltas=((-1, -1), (-1, 1), (1, -1), (1, 1)))
+        if self._neighbors_8 is None:
+            all_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
+            self._neighbors_8 = self._neighbors(all_deltas)
+        return self._neighbors_8
 
-    def _neighbors(self, extra_deltas=()):
+    def _neighbors(self, deltas):
         """
-        The 4 or 8 neighbors of this patch.
-        Must use an empty tuple, rather than an empty list, for the default extra_deltas.
-        Default arguments may not be mutable.
+        The neighbors of this patch determined by the deltas.
+        Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
+        Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        # The initial cardinal_deltas are the cardinal directions: N, S, E, W
-        cardinal_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1))
-        # The extra_deltas, if given are the corner directions.
-        rc_deltas = cardinal_deltas + extra_deltas
-        # (row, col) = self.row_col.as_tuple()
-        neighbs = [static.WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in rc_deltas]
-        # print(f'{self} -> {[str(neighb) for neighb in neighbs]}')
-        return neighbs
+        neighbors = [static.WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in deltas]
+        return neighbors
 
     def remove_turtle(self, tur):
         self.turtles.remove(tur)
@@ -108,14 +107,16 @@ class Turtle(Block):
     def move_by_velocity(self, bounce):
         if bounce:
             # Bounce turtle off the screen edges
-            screen_rect = static.SCREEN.get_rect()  # utils.SCREEN_RECT()
+            screen_rect = static.SCREEN.get_rect()
             turtle_rect = self.rect
-            margin = 0
-            if turtle_rect.right >= screen_rect.right - margin or turtle_rect.left <= screen_rect.left + margin:
+            if turtle_rect.right >= screen_rect.right or turtle_rect.left <= screen_rect.left:
                 self.velocity = utils.PixelVector2(self.velocity.x * (-1), self.velocity.y)
-            if turtle_rect.top <= screen_rect.top + margin or turtle_rect.bottom >= screen_rect.bottom - margin:
+            if turtle_rect.top <= screen_rect.top or turtle_rect.bottom >= screen_rect.bottom:
                 self.velocity = utils.PixelVector2(self.velocity.x, self.velocity.y * (-1))
         self.move_by_dxdy(self.velocity)
+
+    def move_to_patch(self, patch):
+        self.move_to_xy(patch.pixel_pos)
 
     def move_to_xy(self, xy: utils.PixelVector2):
         """
@@ -130,9 +131,6 @@ class Turtle(Block):
         new_patch = self.patch()
         new_patch.add_turtle(self)
 
-    def move_to_patch(self, patch):
-        self.move_to_xy(patch.pixel_pos)
-
     def patch(self) -> Patch:
         (row, col) = utils.pixel_pos_to_row_col(self.pixel_pos).as_tuple()
         patch = static.WORLD.patches[row, col]
@@ -145,7 +143,7 @@ class World:
         static.WORLD = self
 
         self.patch_class = patch_class
-        self.patches = None
+        self.patches: np.ndarray = np.ndarray([])
 
         self.turtle_class = turtle_class
         self.turtles = set()
@@ -168,10 +166,9 @@ class World:
 
     def setup(self, values):
         self.clear_all()
-        # print(f'(World setup) static.BLOCK_SPACING(): {static.BLOCK_SPACING()}')
         patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(static.PATCH_COLS)]
                               for r in range(static.PATCH_ROWS)]
-        self.patches = np.array(patch_pseudo_array)
+        self.patches: np.ndarray = np.array(patch_pseudo_array)
         utils.reset_ticks()
 
     def step(self, event, values):
