@@ -45,8 +45,7 @@ class SimpleGUI:
         self.STOP = 'Stop'
 
         self.clock = Clock()
-        self.default_fps = 60
-        self.fps = self.default_fps
+        self.fps = 60
         self.idle_fps = 10
 
         # self.PATCH_SIZE_STRING = 'Patch size'
@@ -92,11 +91,11 @@ class SimpleGUI:
                  sg.Button(self.GO_ONCE, pad=((0, 10), (50, 0))),
                  sg.Button(self.GO, pad=((0, 0), (50, 0)))],
 
-                 [sg.Text(self.FPS, pad=((0, 0), (50, 0)), tooltip='Frames per second'),
-                 sg.Combo(key=self.FPS, values=[5, 10, 25, 50, 100], pad=((0, 0), (50, 0)), default_value=50,
-                          background_color='skyblue',
-                          tooltip='Frames per second')],
-
+                 # [sg.Text(self.FPS, pad=((0, 0), (50, 0)), tooltip='Frames per second'),
+                 # sg.Combo(key=self.FPS, values=[5, 10, 25, 50, 100], pad=((0, 0), (50, 0)), default_value=50,
+                 #          background_color='skyblue',
+                 #          tooltip='Frames per second')],
+                 #
                  [sg.Button(self.STOP, button_color=('white', 'darkblue'), pad=((0, 10), (20, 0))),
                   sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((0, 30), (20, 0)))],
 
@@ -119,7 +118,7 @@ class SimpleGUI:
         while True:
             (event, values) = self.window.read(timeout=10)
             # Allow the user to change the FPS dynamically.
-            self.fps = values[self.FPS]
+            # self.fps = values[self.FPS]
 
             if event in (None, self.EXIT):
                 return self.EXIT
@@ -155,7 +154,7 @@ class SimpleGUI:
         while event not in [self.ESCAPE, self.q, self.Q, self.CTRL_D, self.CTRL_d]:
             (event, values) = self.window.read(timeout=10)
 
-            self.fps = values[self.FPS]
+            # self.fps = values[self.FPS]
 
             if event in (None, self.EXIT):
                 # self.desired_patch_size = values[self.PATCH_SIZE_STRING]
