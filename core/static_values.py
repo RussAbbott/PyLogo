@@ -3,13 +3,14 @@ import pygame as pg
 from pygame.color import Color
 from pygame.colordict import THECOLORS
 
-# from PySimpleGUI import RGB
-
 from typing import Optional, Tuple
 
 # Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
-BLOCK_SIDE = 15
-BLOCK_SPACING = BLOCK_SIDE + 1
+PATCH_SIZE = 10
+
+
+def BLOCK_SPACING():
+    return PATCH_SIZE + 1
 
 
 def is_acceptable_color(rgb: Tuple[int, int, int]):
@@ -29,13 +30,19 @@ NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('b
                           Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
                           Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
 
+SCREEN: Optional[pg.Surface] = None
+
 PATCH_ROWS = 51
 PATCH_COLS = 51
 
-SCREEN: Optional[pg.Surface] = None
 
-SCREEN_PIXEL_WIDTH = 816
-SCREEN_PIXEL_HEIGHT = 816
+def SCREEN_PIXEL_WIDTH():
+    return PATCH_COLS * BLOCK_SPACING() + 1
+
+
+def SCREEN_PIXEL_HEIGHT():
+    return PATCH_ROWS * BLOCK_SPACING() + 1
+
 
 TICKS = 0
 

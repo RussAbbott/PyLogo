@@ -20,12 +20,14 @@ class Block(Sprite):
     def __init__(self, pixel_pos: utils.PixelVector2, color=Color('black')):
         super().__init__()
         self.color = color
-        self.pixel_pos: utils.PixelVector2 = pixel_pos
-        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.BLOCK_SIDE, static.BLOCK_SIDE))
+        self.pixel_pos = pixel_pos
+        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.PATCH_SIZE, static.PATCH_SIZE))
+        # print(self.rect)
         self.image = Surface((self.rect.w, self.rect.h))
         self.image.fill(color)
 
     def draw(self):  # , screen):
+        # print(self.rect)
         static.SCREEN.blit(self.image, self.rect)
 
     def set_color(self, color):
@@ -37,11 +39,12 @@ class Patch(Block):
     def __init__(self, row_col: utils.RowCol, color=Color('black')):
         super().__init__(utils.row_col_to_pixel_pos(row_col), color)
         self.row_col = row_col
+        # print(f'{row_col} -> {self.pixel_pos}')
         self.turtles = set()
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}{(self.row_col.row, self.row_col.col)} at {(self.pixel_pos.x, self.pixel_pos.y)}'
+        return f'{class_name}{(self.row_col.row, self.row_col.col)}'
 
     def add_turtle(self, tur):
         self.turtles.add(tur)
@@ -62,9 +65,9 @@ class Patch(Block):
         cardinal_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1))
         # The extra_deltas, if given are the corner directions.
         rc_deltas = cardinal_deltas + extra_deltas
-        (row, col) = self.row_col.as_tuple()
-        neighbs = [static.WORLD.patches[row+r, col+c]
-                   for (r, c) in rc_deltas if utils.in_bounds_rc(row+r, col+c)]
+        # (row, col) = self.row_col.as_tuple()
+        neighbs = [static.WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in rc_deltas]
+        # print(f'{self} -> {[str(neighb) for neighb in neighbs]}')
         return neighbs
 
     def remove_turtle(self, tur):
@@ -72,11 +75,13 @@ class Patch(Block):
 
 
 class Turtle(Block):
-    def __init__(self, pixel_pos: utils.PixelVector2 = utils.CENTER_PIXEL, color=None):
+    def __init__(self, pixel_pos: utils.PixelVector2 = None, color=None):
         if color is None:
             # Use either static.NETLOGO_PRIMARY_COLORS or static.NETLOGO_PRIMARY_COLORS
             # color = choice(static.NETLOGO_PRIMARY_COLORS)
             color = choice(static.PYGAME_COLORS)
+        if pixel_pos is None:
+            pixel_pos = utils.CENTER_PIXEL()
         super().__init__(pixel_pos, color)
         static.WORLD.turtles.add(self)
         self.patch().add_turtle(self)
@@ -116,7 +121,7 @@ class Turtle(Block):
         current_patch: Patch = self.patch()
         current_patch.remove_turtle(self)
         self.pixel_pos = xy.wrap()
-        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.BLOCK_SIDE, static.BLOCK_SIDE))
+        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.PATCH_SIZE, static.PATCH_SIZE))
         new_patch = self.patch()
         new_patch.add_turtle(self)
 
@@ -158,8 +163,9 @@ class World:
 
     def setup(self, values):
         self.clear_all()
-        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(utils.PATCH_GRID_SHAPE.col)]
-                              for r in range(utils.PATCH_GRID_SHAPE.row)]
+        # print(f'(World setup) static.BLOCK_SPACING(): {static.BLOCK_SPACING()}')
+        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(static.PATCH_COLS)]
+                              for r in range(static.PATCH_ROWS)]
         self.patches = np.array(patch_pseudo_array)
         utils.reset_ticks()
 
