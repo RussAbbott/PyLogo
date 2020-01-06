@@ -93,7 +93,7 @@ class SegregationWorld(World):
     def setup(self, values):
         super().setup(values)
         self.pct_similar_wanted = values['% similar wanted']
-        self.max_turtles_per_step = int(values['max turtles per step'])
+        self.max_turtles_per_step = int(values['max turtles/step'])
         density = values['density']
 
         self.empty_patches = set()
@@ -111,7 +111,9 @@ class SegregationWorld(World):
         self.update_all()
 
     def step(self, event, values):
-        number_to_move = min(len(self.unhappy_turtles), self.max_turtles_per_step)
+        nbr_unhappy_turtles = len(self.unhappy_turtles)
+        min_bound = nbr_unhappy_turtles if nbr_unhappy_turtles >= 10 else max(1, round(nbr_unhappy_turtles/2))
+        number_to_move = min(min_bound, self.max_turtles_per_step)
         for turtle in sample(self.unhappy_turtles, number_to_move):
             turtle.find_new_spot_if_unhappy(self.empty_patches)
         self.update_all()
@@ -135,24 +137,24 @@ class SegregationWorld(World):
 
 def main():
 
-    from PySimpleGUI import Slider, Text
-    gui_elements = [Text('density'),
-                    Slider(key='density', range=(50, 95), default_value=95, size=(14,20),
-                           orientation='horizontal', pad=((0, 30), (0, 20)), resolution=5,
-                           tooltip='The ratio of households to housing units'),
+    from PySimpleGUI import Combo, Slider, Text
+    gui_elements = [[Text('density'),
+                    Slider(key='density', range=(50, 95), default_value=95, size=(10, 20),
+                           orientation='horizontal', pad=((0, 10), (0, 20)), resolution=5,
+                           tooltip='The ratio of households to housing units')],
 
-                    Text('% similar wanted'),
-                    Slider(key='% similar wanted', range=(1, 100), default_value=30, size=(14,20),
-                           orientation='horizontal', pad=((0, 30), (0, 20)), resolution=5,
-                           tooltip='The percentage of similar people to make someone happy.'),
+                    [Text('% similar wanted'),
+                    Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                          background_color='skyblue', default_value=30,
+                          tooltip='The percentage of similar people to make someone happy.')],
 
-                    Text('max turtles per step'),
-                    Slider(key='max turtles per step', range=(10, 1000), default_value=60, size=(14,20),
-                           orientation='horizontal', pad=((0, 0), (0, 20)), resolution=10,
-                           tooltip='The percentage of similar people to make someone happy.')
-                    ]
+                    [Text('max turtles/step'),
+                    Combo(key='max turtles/step', values=[30, 60, 100, 200, 500, 1000],
+                          background_color='skyblue', default_value=60,
+                          tooltip='The maximum number of turtles to process each simulation tick.')
+                    ]]
 
-    simple_gui = SimpleGUI(gui_elements, caption="Segregation model")
+    simple_gui = SimpleGUI(gui_elements, caption="Segregation model", patch_size=11)
     simple_gui.start(SegregationWorld)
 
 
