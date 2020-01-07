@@ -24,8 +24,8 @@ class SimEngine:
         self.fps = 60
         self.idle_fps = 10
 
-        self.simple_gui = gui.SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size)
-        self.window = self.simple_gui.window
+        gui.SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size)
+        self.window = gui.simple_gui.window
 
         pg.init()
 
@@ -33,11 +33,11 @@ class SimEngine:
         while True:
             (event, values) = self.window.read(timeout=10)
 
-            if event in (None, self.simple_gui.EXIT):
-                return self.simple_gui.EXIT
+            if event in (None, gui.simple_gui.EXIT):
+                return gui.simple_gui.EXIT
 
             if event == 'GoStop':
-                self.window[self.simple_gui.GO_ONCE].update(disabled=False)
+                self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
                 break
 
             if static.WORLD.done():
@@ -47,7 +47,7 @@ class SimEngine:
             # static.TICKS are our local counter for the number of times we have gone around this loop.
             static.TICKS += 1
             static.WORLD.step(event, values)
-            self.simple_gui.draw()
+            gui.simple_gui.draw()
 
             # The next line limits how fast the simulation runs and is not a counter.
             self.clock.tick(self.fps)
@@ -67,31 +67,29 @@ class SimEngine:
                             self.CTRL_D, self.CTRL_d]:
             (event, values) = self.window.read(timeout=10)
 
-            if event in (None, self.simple_gui.EXIT):
+            if event in (None, gui.simple_gui.EXIT):
                 self.window.close()
                 break
 
-            if event == self.simple_gui.SETUP:
-                self.window[self.simple_gui.GOSTOP].update(disabled=False)
-                self.window[self.simple_gui.GO_ONCE].update(disabled=False)
+            if event == gui.simple_gui.SETUP:
+                self.window[gui.simple_gui.GOSTOP].update(disabled=False)
+                self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
                 static.WORLD.setup(values)
-                self.simple_gui.draw()
+                gui.simple_gui.draw()
 
-            if event == self.simple_gui.GO_ONCE:
+            if event == gui.simple_gui.GO_ONCE:
                 static.TICKS += 1
                 static.WORLD.step(event, values)
-                self.simple_gui.draw()
+                gui.simple_gui.draw()
 
-            if event == self.simple_gui.GOSTOP:
-                self.window[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
-                self.window[self.simple_gui.GO_ONCE].update(disabled=True)
-                self.window[self.simple_gui.SETUP].update(disabled=True)
+            if event == gui.simple_gui.GOSTOP:
+                self.window[gui.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
+                self.window[gui.simple_gui.GO_ONCE].update(disabled=True)
+                self.window[gui.simple_gui.SETUP].update(disabled=True)
                 returned_value = self.run_model()
                 self.window['GoStop'].update(text='go', button_color=('white', 'green'))
-                self.window[self.simple_gui.SETUP].update(disabled=False)
-                if returned_value == self.simple_gui.EXIT:
-                    # self.desired_patch_size = values[self.PATCH_SIZE_STRING]
-                    # desired_patch_size = values[self.PATCH_SIZE_STRING]
+                self.window[gui.simple_gui.SETUP].update(disabled=False)
+                if returned_value == gui.simple_gui.EXIT:
                     self.window.close()
                     break
 

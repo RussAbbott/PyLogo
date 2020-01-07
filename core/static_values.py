@@ -1,9 +1,8 @@
 
-import pygame as pg
 from pygame.color import Color
 from pygame.colordict import THECOLORS
 
-from typing import Optional, Tuple
+from typing import Tuple
 
 # Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
 PATCH_SIZE = 10
@@ -30,7 +29,7 @@ NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('b
                           Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
                           Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
 
-SCREEN: Optional[pg.Surface] = None
+# SCREEN: Optional[pg.Surface] = None
 
 
 PATCH_ROWS = 51

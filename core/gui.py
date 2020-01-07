@@ -11,10 +11,14 @@ import PySimpleGUI as sg
 import tkinter as tk
 
 
+simple_gui = None
+
+
 class SimpleGUI:
 
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15):
-
+        global simple_gui
+        simple_gui = self
         static.PATCH_SIZE = patch_size
 
         self.EXIT = 'Exit'
@@ -37,12 +41,12 @@ class SimpleGUI:
         self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements, screen_pixel_shape)
 
         pg.init()
-        # Everything is drawn to static.SCREEN
-        static.SCREEN = pg.display.set_mode(screen_pixel_shape)
+        # Everything is drawn to self.SCREEN
+        self.SCREEN = pg.display.set_mode(screen_pixel_shape)
 
     def draw(self):
         # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
-        static.SCREEN.fill(self.screen_color)
+        self.SCREEN.fill(self.screen_color)
         static.WORLD.draw( )
         pg.display.update( )
 

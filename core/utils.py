@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+import PyLogo.core.gui as gui
+
 import PyLogo.core.static_values as static
 
 
@@ -19,7 +21,7 @@ class PixelVector2:
         return (self.x, self.y)
 
     def wrap(self):
-        rect = static.SCREEN.get_rect()
+        rect = gui.simple_gui.SCREEN.get_rect()
         screen_rect = rect
         self.x = self.x % screen_rect.w
         self.y = self.y % screen_rect.h
@@ -51,7 +53,8 @@ class RowCol:
 
 
 def CENTER_PIXEL():
-    rect = static.SCREEN.get_rect()
+    from PyLogo.core.gui import simple_gui as simple_gui
+    rect = simple_gui.SCREEN.get_rect()
     cp = PixelVector2(round(rect.width/2), round(rect.height/2))
     return cp
 

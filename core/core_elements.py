@@ -1,4 +1,5 @@
 
+import PyLogo.core.gui as gui
 import PyLogo.core.static_values as static
 import PyLogo.core.utils as utils
 
@@ -26,7 +27,8 @@ class Block(Sprite):
         self.image.fill(color)
 
     def draw(self):
-        static.SCREEN.blit(self.image, self.rect)
+        import PyLogo.core.gui as gui
+        gui.simple_gui.SCREEN.blit(self.image, self.rect)
 
     def set_color(self, color):
         self.color = color
@@ -103,7 +105,7 @@ class Turtle(Block):
     def move_by_velocity(self, bounce):
         if bounce:
             # Bounce turtle off the screen edges
-            screen_rect = static.SCREEN.get_rect()
+            screen_rect = gui.simple_gui.SCREEN.get_rect()
             turtle_rect = self.rect
             if turtle_rect.right >= screen_rect.right or turtle_rect.left <= screen_rect.left:
                 self.velocity = utils.PixelVector2(self.velocity.x * (-1), self.velocity.y)
