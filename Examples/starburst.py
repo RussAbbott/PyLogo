@@ -18,7 +18,7 @@ class Starburst_World(core.World):
         super().setup(values)
 
         nbr_turtles = int(values['nbr_turtles'])
-        for i in range(nbr_turtles):
+        for _ in range(nbr_turtles):
             # Adds itself to self.turtles and to its patch's list of Turtles.
             self.turtle_class()
 
@@ -28,14 +28,14 @@ class Starburst_World(core.World):
         for (turtle, vel) in zip(self.turtles, initial_velocities):
             turtle.velocity = vel
 
-
     def step(self, event, values):
         """
         Update the world by moving the turtles.
         """
         for turtle in self.turtles:
             turtle.move_by_velocity(values['Bounce?'])
-            if core.WORLD.TICKS > 200 and random() < 0.02:
+            # After the turtles spread out, let them change velocity randomly
+            if core.WORLD.TICKS > 150 and random() < 0.02:
                 turtle.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
 
 
