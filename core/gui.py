@@ -1,14 +1,32 @@
 
 import os
 
-import PyLogo.core.static_values as static
-
 import pygame as pg
 from pygame.time import Clock
 
 import PySimpleGUI as sg
 
 import tkinter as tk
+
+
+# Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
+PATCH_SIZE = 10
+
+
+def BLOCK_SPACING():
+    return PATCH_SIZE + 1
+
+
+PATCH_ROWS = 51
+PATCH_COLS = 51
+
+
+def SCREEN_PIXEL_WIDTH():
+    return PATCH_COLS * BLOCK_SPACING() + 1
+
+
+def SCREEN_PIXEL_HEIGHT():
+    return PATCH_ROWS * BLOCK_SPACING() + 1
 
 
 simple_gui = None
@@ -19,7 +37,9 @@ class SimpleGUI:
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15):
         global simple_gui
         simple_gui = self
-        static.PATCH_SIZE = patch_size
+
+        global PATCH_SIZE
+        PATCH_SIZE = patch_size
 
         self.EXIT = 'Exit'
         self.GO = 'go'
@@ -37,17 +57,17 @@ class SimpleGUI:
         self.caption = caption
         self.model_gui_elements = model_gui_elements
 
-        screen_pixel_shape = (static.SCREEN_PIXEL_WIDTH(), static.SCREEN_PIXEL_HEIGHT())
+        screen_pixel_shape = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
         self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements, screen_pixel_shape)
 
         pg.init()
         # Everything is drawn to self.SCREEN
         self.SCREEN = pg.display.set_mode(screen_pixel_shape)
 
-    def draw(self):
-        # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
+    def draw(self, element):
+        # Fill the screen with the background color, draw the element, and update the display.
         self.SCREEN.fill(self.screen_color)
-        static.WORLD.draw( )
+        element.draw( )
         pg.display.update( )
 
     def make_window(self, caption, model_gui_elements, screen_pixel_shape):
@@ -55,8 +75,8 @@ class SimpleGUI:
         Create the window, including sg.Graph, the drawing surface.
         """
         # --------------------- PySimpleGUI window layout and creation --------------------
-        lower_left_pixel = (static.SCREEN_PIXEL_HEIGHT() - 1, 0)
-        upper_right_pixel = (0, static.SCREEN_PIXEL_WIDTH() - 1)
+        lower_left_pixel = (SCREEN_PIXEL_HEIGHT() - 1, 0)
+        upper_right_pixel = (0, SCREEN_PIXEL_WIDTH() - 1)
         col1 = [ *model_gui_elements,
 
                  [sg.Text('_' * 25)],

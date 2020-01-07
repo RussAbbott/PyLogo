@@ -1,6 +1,7 @@
 
+from pygame.colordict import THECOLORS
+
 import PyLogo.core.gui as gui
-import PyLogo.core.static_values as static
 import PyLogo.core.utils as utils
 
 import numpy as np
@@ -12,6 +13,29 @@ from pygame.surface import Surface
 
 from random import choice
 
+from typing import Tuple
+
+
+def is_acceptable_color(rgb: Tuple[int, int, int]):
+    """
+    Require reasonably bright colors (>= 150) that aren't washed out (<= 600)
+    and for which r, g, and b are not too close to each other.
+    """
+    sum_rgb = sum(rgb)
+    avg_rgb = sum_rgb/3
+    return 150 <= sum_rgb <= 600 and sum(abs(avg_rgb-x) for x in rgb) > 50
+
+
+# These are colors defined by pygame that satisfy is_acceptable_color above.
+PYGAME_COLORS = [rgba for rgba in THECOLORS.values() if is_acceptable_color(rgba[:3])]
+
+NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('brown'), Color('yellow'),
+                          Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
+                          Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
+
+
+WORLD = None  # The world
+
 
 class Block(Sprite):
     """
@@ -22,12 +46,12 @@ class Block(Sprite):
         super().__init__()
         self.color = color
         self.pixel_pos = pixel_pos
-        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.PATCH_SIZE, static.PATCH_SIZE))
+        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         self.image = Surface((self.rect.w, self.rect.h))
         self.image.fill(color)
 
     def draw(self):
-        import PyLogo.core.gui as gui
+        # import PyLogo.core.gui as gui
         gui.simple_gui.SCREEN.blit(self.image, self.rect)
 
     def set_color(self, color):
@@ -68,7 +92,7 @@ class Patch(Block):
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        neighbors = [static.WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in deltas]
+        neighbors = [WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in deltas]
         return neighbors
 
     def remove_turtle(self, tur):
@@ -78,13 +102,13 @@ class Patch(Block):
 class Turtle(Block):
     def __init__(self, pixel_pos: utils.PixelVector2 = None, color=None):
         if color is None:
-            # Use either static.NETLOGO_PRIMARY_COLORS or static.NETLOGO_PRIMARY_COLORS
-            # color = choice(static.NETLOGO_PRIMARY_COLORS)
-            color = choice(static.PYGAME_COLORS)
+            # Use either NETLOGO_PRIMARY_COLORS or NETLOGO_PRIMARY_COLORS from above
+            # color = choice(NETLOGO_PRIMARY_COLORS)
+            color = choice(PYGAME_COLORS)
         if pixel_pos is None:
             pixel_pos = utils.CENTER_PIXEL()
         super().__init__(pixel_pos, color)
-        static.WORLD.turtles.add(self)
+        WORLD.turtles.add(self)
         self.patch().add_turtle(self)
         self.heading = 0
         self.velocity = utils.PixelVector2(0, 0)
@@ -125,20 +149,23 @@ class Turtle(Block):
         current_patch: Patch = self.patch()
         current_patch.remove_turtle(self)
         self.pixel_pos = xy.wrap()
-        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.PATCH_SIZE, static.PATCH_SIZE))
+        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         new_patch = self.patch()
         new_patch.add_turtle(self)
 
     def patch(self) -> Patch:
         (row, col) = utils.pixel_pos_to_row_col(self.pixel_pos).as_tuple()
-        patch = static.WORLD.patches[row, col]
+        patch = WORLD.patches[row, col]
         return patch
 
 
 class World:
 
     def __init__(self, patch_class=Patch, turtle_class=Turtle):
-        static.WORLD = self
+        global WORLD
+        WORLD = self
+
+        self.TICKS = 0
 
         self.patch_class = patch_class
         self.patches: np.ndarray = np.ndarray([])
@@ -162,12 +189,18 @@ class World:
         """ Add any final tests, data gathering, summarization, etc. here. """
         pass
 
+    def increment_ticks(self):
+        self.TICKS += 1
+
+    def reset_ticks(self):
+        self.TICKS = 0
+
     def setup(self, values):
         self.clear_all()
-        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(static.PATCH_COLS)]
-                              for r in range(static.PATCH_ROWS)]
+        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
+                              for r in range(gui.PATCH_ROWS)]
         self.patches: np.ndarray = np.array(patch_pseudo_array)
-        utils.reset_ticks()
+        self.reset_ticks()
 
     def step(self, event, values):
         """

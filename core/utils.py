@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import PyLogo.core.gui as gui
 
-import PyLogo.core.static_values as static
-
 
 class PixelVector2:
 
@@ -47,8 +45,8 @@ class RowCol:
         return (self.row, self.col)
 
     def wrap(self):
-        self.row = self.row % static.PATCH_ROWS
-        self.col = self.col % static.PATCH_COLS
+        self.row = self.row % gui.PATCH_ROWS
+        self.col = self.col % gui.PATCH_COLS
         return self
 
 
@@ -79,8 +77,8 @@ def pixel_pos_to_row_col(pixel_pos: PixelVector2):
     Get the patch RowCol for this pixel_pos
     Leave a border of 1 pixel at the top and left of the patches
    """
-    row = (pixel_pos.y - 1) // static.BLOCK_SPACING()
-    col = (pixel_pos.x - 1) // static.BLOCK_SPACING()
+    row = (pixel_pos.y - 1) // gui.BLOCK_SPACING()
+    col = (pixel_pos.x - 1) // gui.BLOCK_SPACING()
     return RowCol(row, col)
 
 
@@ -89,10 +87,5 @@ def row_col_to_pixel_pos(row_col: RowCol):
     Get the pixel position for this RowCol.
     Leave a border of 1 pixel at the top and left of the patches
     """
-    pv = PixelVector2(1 + static.BLOCK_SPACING() * row_col.col, 1 + static.BLOCK_SPACING() * row_col.row)
-    # print(f'{row_col} -> {pv}')
+    pv = PixelVector2(1 + gui.BLOCK_SPACING() * row_col.col, 1 + gui.BLOCK_SPACING() * row_col.row)
     return pv
-
-
-def reset_ticks():
-    static.TICKS = 0

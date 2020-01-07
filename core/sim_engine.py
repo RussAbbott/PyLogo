@@ -1,7 +1,6 @@
 
-from PyLogo.core.core_elements import Patch, Turtle
+import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
-import PyLogo.core.static_values as static
 
 import pygame as pg
 from pygame.time import Clock
@@ -24,7 +23,7 @@ class SimEngine:
         self.fps = 60
         self.idle_fps = 10
 
-        gui.SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size)
+        self.simple_gui = gui.SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size)
         self.window = gui.simple_gui.window
 
         pg.init()
@@ -40,22 +39,22 @@ class SimEngine:
                 self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
                 break
 
-            if static.WORLD.done():
+            if core.WORLD.done():
                 self.window['GoStop'].update(disabled=True)
                 break
 
-            # static.TICKS are our local counter for the number of times we have gone around this loop.
-            static.TICKS += 1
-            static.WORLD.step(event, values)
-            gui.simple_gui.draw()
+            # TICKS are our local counter for the number of times we have gone around this loop.
+            core.WORLD.increment_ticks( )
+            core.WORLD.step(event, values)
+            self.simple_gui.draw(core.WORLD)
 
             # The next line limits how fast the simulation runs and is not a counter.
             self.clock.tick(self.fps)
 
-        static.WORLD.final_thoughts()
+        core.WORLD.final_thoughts()
         return self.NORMAL
 
-    def start(self, world_class, patch_class=Patch, turtle_class=Turtle):
+    def start(self, world_class, patch_class=core.Patch, turtle_class=core.Turtle):
         world_class(patch_class=patch_class, turtle_class=turtle_class)
 
         # Let events come through pygame to this level.
@@ -74,13 +73,13 @@ class SimEngine:
             if event == gui.simple_gui.SETUP:
                 self.window[gui.simple_gui.GOSTOP].update(disabled=False)
                 self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
-                static.WORLD.setup(values)
-                gui.simple_gui.draw()
+                core.WORLD.setup(values)
+                self.simple_gui.draw(core.WORLD)
 
             if event == gui.simple_gui.GO_ONCE:
-                static.TICKS += 1
-                static.WORLD.step(event, values)
-                gui.simple_gui.draw()
+                core.WORLD.increment_ticks()
+                core.WORLD.step(event, values)
+                self.simple_gui.draw(core.WORLD)
 
             if event == gui.simple_gui.GOSTOP:
                 self.window[gui.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
