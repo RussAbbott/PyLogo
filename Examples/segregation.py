@@ -80,7 +80,8 @@ class SegregationWorld(World):
         self.percent_similar = None
         self.percent_unhappy = None
         self.unhappy_turtles = None
-        self.max_turtles_per_step = None
+        # This is an experimental number.
+        self.max_turtles_per_step = 60
 
     def done(self):
         return all(tur.is_happy for tur in self.turtles)
@@ -95,12 +96,14 @@ class SegregationWorld(World):
     def setup(self, values):
         super().setup(values)
         self.pct_similar_wanted = values['% similar wanted']
-        self.max_turtles_per_step = 60  # int(values['max turtles/step'])
+        # This is an experimental number.
+        # self.max_turtles_per_step = 60
         density = values['density']
 
         self.empty_patches = set()
         for patch in self.patches.flat:
             patch.set_color(Color('white'))
+            patch.neighbors_8()  # Calling it sets a cached value
 
             # Create the Turtles. The density is approximate.
             if randint(0, 100) <= density:
@@ -114,9 +117,11 @@ class SegregationWorld(World):
 
     def step(self, event, values):
         nbr_unhappy_turtles = len(self.unhappy_turtles)
-        min_bound = nbr_unhappy_turtles if nbr_unhappy_turtles >= 10 else max(1, round(nbr_unhappy_turtles/2))
-        nbr_to_move = min(min_bound, self.max_turtles_per_step)
-        for turtle in sample(self.unhappy_turtles, nbr_to_move):
+        # If there are small number of unhappy turtles, move them carefully.
+        # Otherwise move the smaller of self.max_turtles_per_step and nbr_unhappy_turtles
+        sample_size = max(1, round(nbr_unhappy_turtles/2)) if nbr_unhappy_turtles <= 10 else \
+                      min(self.max_turtles_per_step, nbr_unhappy_turtles)
+        for turtle in sample(self.unhappy_turtles, sample_size):
             turtle.find_new_spot_if_unhappy(self.empty_patches)
         self.update_all()
 
