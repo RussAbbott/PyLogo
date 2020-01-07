@@ -4,6 +4,9 @@ import os
 import pygame as pg
 from pygame.time import Clock
 
+# By import this file itself, can avoid the use of globals
+import PyLogo.core.gui as gui
+
 import PySimpleGUI as sg
 
 import tkinter as tk
@@ -35,11 +38,11 @@ simple_gui = None
 class SimpleGUI:
 
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15):
-        global simple_gui
-        simple_gui = self
+        # global simple_gui
+        gui.simple_gui = self
 
-        global PATCH_SIZE
-        PATCH_SIZE = patch_size
+        # global PATCH_SIZE
+        gui.PATCH_SIZE = patch_size
 
         self.EXIT = 'Exit'
         self.GO = 'go'

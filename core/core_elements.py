@@ -1,6 +1,7 @@
 
 from pygame.colordict import THECOLORS
 
+import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
 import PyLogo.core.utils as utils
 
@@ -92,7 +93,7 @@ class Patch(Block):
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        neighbors = [WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in deltas]
+        neighbors = [core.WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in deltas]
         return neighbors
 
     def remove_turtle(self, tur):
@@ -108,7 +109,7 @@ class Turtle(Block):
         if pixel_pos is None:
             pixel_pos = utils.CENTER_PIXEL()
         super().__init__(pixel_pos, color)
-        WORLD.turtles.add(self)
+        core.WORLD.turtles.add(self)
         self.patch().add_turtle(self)
         self.heading = 0
         self.velocity = utils.PixelVector2(0, 0)
@@ -155,15 +156,15 @@ class Turtle(Block):
 
     def patch(self) -> Patch:
         (row, col) = utils.pixel_pos_to_row_col(self.pixel_pos).as_tuple()
-        patch = WORLD.patches[row, col]
+        patch = core.WORLD.patches[row, col]
         return patch
 
 
 class World:
 
     def __init__(self, patch_class=Patch, turtle_class=Turtle):
-        global WORLD
-        WORLD = self
+        # global WORLD
+        core.WORLD = self
 
         self.TICKS = 0
 
