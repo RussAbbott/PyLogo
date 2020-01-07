@@ -22,7 +22,6 @@ class Block(Sprite):
         self.color = color
         self.pixel_pos = pixel_pos
         self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (static.PATCH_SIZE, static.PATCH_SIZE))
-        # print(self.rect)
         self.image = Surface((self.rect.w, self.rect.h))
         self.image.fill(color)
 
@@ -81,14 +80,11 @@ class Turtle(Block):
             # color = choice(static.NETLOGO_PRIMARY_COLORS)
             color = choice(static.PYGAME_COLORS)
         if pixel_pos is None:
-            # Get the center pixel
-            screen_rect = static.SCREEN.get_rect()
-            pixel_pos = utils.PixelVector2(round(screen_rect.width / 2), round(screen_rect.height / 2))
-            # pixel_pos = utils.CENTER_PIXEL()
-            # pixel_pos = cp
+            pixel_pos = utils.CENTER_PIXEL()
         super().__init__(pixel_pos, color)
         static.WORLD.turtles.add(self)
         self.patch().add_turtle(self)
+        self.heading = 0
         self.velocity = utils.PixelVector2(0, 0)
 
     def __str__(self):

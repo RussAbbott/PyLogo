@@ -41,10 +41,7 @@ class SimEngine:
                 break
 
             if static.WORLD.done():
-                # for element in [self.window['GoStop'], self.window[self.simple_gui.GO_ONCE]]:
-                #     element.update(disabled=True)
                 self.window['GoStop'].update(disabled=True)
-                # self.window[self.simple_gui.GO_ONCE].update(disabled=True)
                 break
 
             # static.TICKS are our local counter for the number of times we have gone around this loop.

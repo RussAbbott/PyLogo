@@ -32,6 +32,7 @@ NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('b
 
 SCREEN: Optional[pg.Surface] = None
 
+
 PATCH_ROWS = 51
 PATCH_COLS = 51
 

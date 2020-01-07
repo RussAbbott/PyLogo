@@ -1,7 +1,6 @@
 
 import os
 
-import PyLogo.core.utils as utils
 import PyLogo.core.static_values as static
 
 import pygame as pg
@@ -40,8 +39,6 @@ class SimpleGUI:
         pg.init()
         # Everything is drawn to static.SCREEN
         static.SCREEN = pg.display.set_mode(screen_pixel_shape)
-        utils.SCREEN_RECT = static.SCREEN.get_rect()
-        # print(utils.SCREEN_RECT)
 
     def draw(self):
         # Fill the screen with the background color, then: draw patches, draw turtles on top, update the display.
@@ -58,7 +55,7 @@ class SimpleGUI:
         upper_right_pixel = (0, static.SCREEN_PIXEL_WIDTH() - 1)
         col1 = [ *model_gui_elements,
 
-                 [sg.Text('_'  * 25)],
+                 [sg.Text('_' * 25)],
 
                  [sg.Button(self.SETUP, pad=((0, 10), (10, 0))),
                   sg.Button(self.GO_ONCE, disabled=True, button_color=('white', 'green'), pad=((0, 10), (10, 0))),
@@ -73,7 +70,7 @@ class SimpleGUI:
                           background_color='black', key='-GRAPH-')]]
 
         layout = [[sg.Column(col1), sg.Column(col2)]]
-        window: sg.PySimpleGUI.Window = sg.Window(caption, layout, margins=(5,20),
+        window: sg.PySimpleGUI.Window = sg.Window(caption, layout, margins=(5, 20),
                                                   return_keyboard_events=True, finalize=True)
         graph: sg.PySimpleGUI.Graph = window['-GRAPH-']
 

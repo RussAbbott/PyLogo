@@ -50,12 +50,12 @@ class RowCol:
         return self
 
 
-# def CENTER_PIXEL():
-#     rect = static.SCREEN.get_rect()
-#     cp = PixelVector2(round(rect.width/2), round(rect.height/2))
-#     return cp
-#
-#
+def CENTER_PIXEL():
+    rect = static.SCREEN.get_rect()
+    cp = PixelVector2(round(rect.width/2), round(rect.height/2))
+    return cp
+
+
 def extract_class_name(full_class_name: type):
     """
     full_class_name will be something like: <class 'PyLogo.core.static_values'>
