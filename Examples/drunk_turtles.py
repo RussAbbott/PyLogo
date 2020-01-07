@@ -1,21 +1,21 @@
 
 
 
-import sim_engine as se
+import core_elements as core
 
 
-class DrunkTurtle_Turtle(se.Turtle):
+class DrunkTurtle_Turtle(core.Turtle):
 
     def __init__(self):
         super().__init__()
         self.speed = 0
 
 
-class DrunkTurtle_World(se.BasicWorld):
+class DrunkTurtle_World(core.World):
 
     def __init__(self):
         super().__init__()
-        self.center_pixels = se.SimEngine.CENTER_PIXELS
+        self.center_pixels = core.SimEngine.CENTER_PIXELS
 
 
 

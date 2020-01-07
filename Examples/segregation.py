@@ -1,6 +1,5 @@
 
-import PyLogo.core.static_values as static
-from PyLogo.core.core_elements import World, Patch, Turtle
+import PyLogo.core.core_elements as core
 from PyLogo.core.sim_engine import SimEngine
 
 from pygame import Color
@@ -8,7 +7,7 @@ from pygame import Color
 from random import choice, randint, sample
 
 
-class SegregationTurtle(Turtle):
+class SegregationTurtle(core.Turtle):
 
     def __init__(self):
         super().__init__()
@@ -56,7 +55,7 @@ class SegregationTurtle(Turtle):
         Returns a fraction between 0 and 1.
         Never more than 1. Doesn't favor more similar patches over sufficiently similar patches.
         """
-        return min(1.0, self.pct_similar_here(patch)/static.WORLD.pct_similar_wanted)
+        return min(1.0, self.pct_similar_here(patch)/core.WORLD.pct_similar_wanted)
 
 
     def update(self):
@@ -64,15 +63,15 @@ class SegregationTurtle(Turtle):
         Determine pct_similar and whether this turtle is happy.
         """
         self.pct_similar = self.pct_similar_here(self.patch())
-        self.is_happy = self.pct_similar >= static.WORLD.pct_similar_wanted
+        self.is_happy = self.pct_similar >= core.WORLD.pct_similar_wanted
 
 
-class SegregationWorld(World):
+class SegregationWorld(core.World):
     """
       percent-similar: on the average, what percent of a turtle's neighbors are the same color as that turtle?
       percent-unhappy: what percent of the turtles are unhappy?
     """
-    def __init__(self, patch_class=Patch, turtle_class=SegregationTurtle):
+    def __init__(self, patch_class=core.Patch, turtle_class=SegregationTurtle):
         super().__init__(patch_class=patch_class, turtle_class=turtle_class)
 
         self.empty_patches = None
@@ -130,9 +129,9 @@ class SegregationWorld(World):
 
         # Update Globals
         percent_similar = round(sum(turtle.pct_similar for turtle in self.turtles)/len(self.turtles))
-        if static.TICKS == 0:
+        if core.WORLD.TICKS == 0:
             print()
-        print(f'\t{static.TICKS:2}. agents: {len(self.turtles)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{core.WORLD.TICKS:2}. agents: {len(self.turtles)};  %-similar: {percent_similar}%;  ', end='')
 
         self.unhappy_turtles = [turtle for turtle in self.turtles if not turtle.is_happy]
         unhappy_count = len(self.unhappy_turtles)

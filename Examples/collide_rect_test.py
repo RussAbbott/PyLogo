@@ -1,7 +1,7 @@
 
-import PyLogo.core.utils as utils
-from PyLogo.core.core_elements import Patch, Turtle, World
+import PyLogo.core.core_elements as core
 from PyLogo.core.sim_engine import SimEngine
+import PyLogo.core.utils as utils
 
 from pygame.color import Color
 from pygame.sprite import collide_rect
@@ -9,7 +9,7 @@ from pygame.sprite import collide_rect
 from random import randint, random
 
 
-class CollisionTest_Patch(Patch):
+class CollisionTest_Patch(core.Patch):
 
     def __init__(self, row_col: utils.RowCol):
         super().__init__(row_col)
@@ -22,13 +22,13 @@ class CollisionTest_Patch(Patch):
         self.image.fill(fill_color)
 
 
-class CollisionTest_Turtle(Turtle):
+class CollisionTest_Turtle(core.Turtle):
 
     def __init__(self):
         super().__init__(color=Color('red'))
 
 
-class CollisionTest_World(World):
+class CollisionTest_World(core.World):
     """
     A world in which the patches change to green when intersecting with a turtle.
     """

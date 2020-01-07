@@ -1,15 +1,14 @@
 
-import PyLogo.core.static_values as static
-import PyLogo.core.utils as utils
-from PyLogo.core.core_elements import World
+import PyLogo.core.core_elements as core
 from PyLogo.core.sim_engine import SimEngine
+import PyLogo.core.utils as utils
 
 from itertools import cycle
 
 from random import randint, random
 
 
-class Starburst_World(World):
+class Starburst_World(core.World):
     """
     A starburst world of turtles.
     No special Patches or Turtles.
@@ -36,7 +35,7 @@ class Starburst_World(World):
         """
         for turtle in self.turtles:
             turtle.move_by_velocity(values['Bounce?'])
-            if static.TICKS > 200 and random() < 0.02:
+            if core.WORLD.TICKS > 200 and random() < 0.02:
                 turtle.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
 
 
