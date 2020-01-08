@@ -1,6 +1,7 @@
 
 from pygame.colordict import THECOLORS
 
+# Importing this file eliminates the need for a globals declaration
 import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
 import PyLogo.core.utils as utils
@@ -19,12 +20,11 @@ from typing import Tuple
 
 def is_acceptable_color(rgb: Tuple[int, int, int]):
     """
-    Require reasonably bright colors (>= 150) that aren't washed out (<= 600)
-    and for which r, g, and b are not too close to each other.
+    Require reasonably bright colors for which r, g, and b are not too close to each other.
     """
     sum_rgb = sum(rgb)
     avg_rgb = sum_rgb/3
-    return 150 <= sum_rgb <= 600 and sum(abs(avg_rgb-x) for x in rgb) > 50
+    return 150 <= sum_rgb and sum(abs(avg_rgb-x) for x in rgb) > 100
 
 
 # These are colors defined by pygame that satisfy is_acceptable_color above.
@@ -78,16 +78,16 @@ class Patch(Block):
     def neighbors_4(self):
         if self._neighbors_4 is None:
             cardinal_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1))
-            self._neighbors_4 = self._neighbors(cardinal_deltas)
+            self._neighbors_4 = self.neighbors(cardinal_deltas)
         return self._neighbors_4
 
     def neighbors_8(self):
         if self._neighbors_8 is None:
             all_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
-            self._neighbors_8 = self._neighbors(all_deltas)
+            self._neighbors_8 = self.neighbors(all_deltas)
         return self._neighbors_8
 
-    def _neighbors(self, deltas):
+    def neighbors(self, deltas):
         """
         The neighbors of this patch determined by the deltas.
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
@@ -96,27 +96,44 @@ class Patch(Block):
         neighbors = [core.WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in deltas]
         return neighbors
 
-    def remove_turtle(self, tur):
-        self.turtles.remove(tur)
+    def remove_turtle(self, turtle):
+        self.turtles.remove(turtle)
 
 
 class Turtle(Block):
     def __init__(self, pixel_pos: utils.PixelVector2 = None, color=None):
         if color is None:
-            # Use either NETLOGO_PRIMARY_COLORS or NETLOGO_PRIMARY_COLORS from above
+            # Select a color at random from among NETLOGO_PRIMARY_COLORS or PYGAME_COLORS
+            
             # color = choice(NETLOGO_PRIMARY_COLORS)
             color = choice(PYGAME_COLORS)
         if pixel_pos is None:
             pixel_pos = utils.CENTER_PIXEL()
         super().__init__(pixel_pos, color)
         core.WORLD.turtles.add(self)
-        self.patch().add_turtle(self)
+        self.current_patch().add_turtle(self)
         self.heading = 0
         self.velocity = utils.PixelVector2(0, 0)
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}{(self.pixel_pos.x, self.pixel_pos.y)} on {self.patch()}'
+        return f'{class_name}{(self.pixel_pos.x, self.pixel_pos.y)} on {self.current_patch()}'
+
+    def bounce_off_screen_edge(self):
+        """ 
+       Bounce turtle off the screen edges 
+       """
+        screen_rect = gui.simple_gui.SCREEN.get_rect( )
+        turtle_rect = self.rect
+        if turtle_rect.right >= screen_rect.right or turtle_rect.left <= screen_rect.left:
+            self.velocity = utils.PixelVector2(self.velocity.x * (-1), self.velocity.y)
+        if turtle_rect.top <= screen_rect.top or turtle_rect.bottom >= screen_rect.bottom:
+            self.velocity = utils.PixelVector2(self.velocity.x, self.velocity.y * (-1))
+
+    def current_patch(self) -> Patch:
+        (row, col) = utils.pixel_pos_to_row_col(self.pixel_pos).as_tuple()
+        patch = core.WORLD.patches[row, col]
+        return patch
 
     def move_turtle(self, wrap):
         pass
@@ -129,13 +146,7 @@ class Turtle(Block):
 
     def move_by_velocity(self, bounce):
         if bounce:
-            # Bounce turtle off the screen edges
-            screen_rect = gui.simple_gui.SCREEN.get_rect()
-            turtle_rect = self.rect
-            if turtle_rect.right >= screen_rect.right or turtle_rect.left <= screen_rect.left:
-                self.velocity = utils.PixelVector2(self.velocity.x * (-1), self.velocity.y)
-            if turtle_rect.top <= screen_rect.top or turtle_rect.bottom >= screen_rect.bottom:
-                self.velocity = utils.PixelVector2(self.velocity.x, self.velocity.y * (-1))
+            self.bounce_off_screen_edge( )
         self.move_by_dxdy(self.velocity)
 
     def move_to_patch(self, patch):
@@ -147,23 +158,17 @@ class Turtle(Block):
         Move this turtle to its new xy pixel_pos.
         Add this turtle to the list of turtles in its new patch.
         """
-        current_patch: Patch = self.patch()
+        current_patch: Patch = self.current_patch()
         current_patch.remove_turtle(self)
         self.pixel_pos = xy.wrap()
         self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (gui.PATCH_SIZE, gui.PATCH_SIZE))
-        new_patch = self.patch()
+        new_patch = self.current_patch()
         new_patch.add_turtle(self)
-
-    def patch(self) -> Patch:
-        (row, col) = utils.pixel_pos_to_row_col(self.pixel_pos).as_tuple()
-        patch = core.WORLD.patches[row, col]
-        return patch
 
 
 class World:
 
     def __init__(self, patch_class=Patch, turtle_class=Turtle):
-        # global WORLD
         core.WORLD = self
 
         self.TICKS = 0
