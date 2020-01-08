@@ -4,23 +4,29 @@ from __future__ import annotations
 import PyLogo.core.gui as gui
 
 
-class PixelVector2:
+class PixelVector:
 
     def __init__(self, x, y):
-        # Wrap around the screen.
+        """
+        Wrap around the screen. x and y needn't be integers.
+        """
         self.x = x
         self.y = y
         self.wrap()
 
+    def __add__(self, other_pixel_vector: PixelVector):
+        new_pixel_vector = PixelVector(self.x + other_pixel_vector.x, self.y + other_pixel_vector.y)
+        return new_pixel_vector
+
     def __str__(self):
-        return f'PixelVector2{self.x, self.y}'
+        return f'PixelVector{self.x, self.y}'
 
     def as_tuple(self):
         return (self.x, self.y)
 
     def wrap(self):
-        rect = gui.simple_gui.SCREEN.get_rect()
-        screen_rect = rect
+        screen_rect = gui.simple_gui.SCREEN.get_rect()
+        # screen_rect = rect
         self.x = self.x % screen_rect.w
         self.y = self.y % screen_rect.h
         return self
@@ -53,7 +59,7 @@ class RowCol:
 def CENTER_PIXEL():
     from PyLogo.core.gui import simple_gui as simple_gui
     rect = simple_gui.SCREEN.get_rect()
-    cp = PixelVector2(round(rect.width/2), round(rect.height/2))
+    cp = PixelVector(round(rect.width/2), round(rect.height/2))
     return cp
 
 
@@ -72,7 +78,7 @@ def get_class_name(obj) -> str:
     return extract_class_name(full_class_name)
 
 
-def pixel_pos_to_row_col(pixel_pos: PixelVector2):
+def pixel_pos_to_row_col(pixel_pos: PixelVector):
     """
     Get the patch RowCol for this pixel_pos
     Leave a border of 1 pixel at the top and left of the patches
@@ -87,5 +93,5 @@ def row_col_to_pixel_pos(row_col: RowCol):
     Get the pixel position for this RowCol.
     Leave a border of 1 pixel at the top and left of the patches
     """
-    pv = PixelVector2(1 + gui.BLOCK_SPACING() * row_col.col, 1 + gui.BLOCK_SPACING() * row_col.row)
+    pv = PixelVector(1 + gui.BLOCK_SPACING() * row_col.col, 1 + gui.BLOCK_SPACING() * row_col.row)
     return pv

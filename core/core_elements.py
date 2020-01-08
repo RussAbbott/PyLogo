@@ -1,12 +1,14 @@
 
+from math import atan2, cos, pi, sin, sqrt
+
+import numpy as np
+
 from pygame.colordict import THECOLORS
 
 # Importing this file eliminates the need for a globals declaration
 import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
 import PyLogo.core.utils as utils
-
-import numpy as np
 
 from pygame.color import Color
 from pygame.rect import Rect
@@ -40,10 +42,10 @@ WORLD = None  # The world
 
 class Block(Sprite):
     """
-    A generic patch/turtle. Has a PixelVector2 but not necessarily a RowCol. Has a Color.
+    A generic patch/turtle. Has a PixelVector but not necessarily a RowCol. Has a Color.
     """
 
-    def __init__(self, pixel_pos: utils.PixelVector2, color=Color('black')):
+    def __init__(self, pixel_pos: utils.PixelVector, color=Color('black')):
         super().__init__()
         self.color = color
         self.pixel_pos = pixel_pos
@@ -51,8 +53,13 @@ class Block(Sprite):
         self.image = Surface((self.rect.w, self.rect.h))
         self.image.fill(color)
 
+    def distance_to_xy(self, xy: utils.PixelVector):
+        x_dist = self.pixel_pos.x - xy.x
+        y_dist = self.pixel_pos.y - xy.y
+        dist = sqrt(x_dist * x_dist + y_dist*y_dist)
+        return dist
+        
     def draw(self):
-        # import PyLogo.core.gui as gui
         gui.simple_gui.SCREEN.blit(self.image, self.rect)
 
     def set_color(self, color):
@@ -101,7 +108,7 @@ class Patch(Block):
 
 
 class Turtle(Block):
-    def __init__(self, pixel_pos: utils.PixelVector2 = None, color=None):
+    def __init__(self, pixel_pos: utils.PixelVector = None, color=None):
         if color is None:
             # Select a color at random from among NETLOGO_PRIMARY_COLORS or PYGAME_COLORS
             
@@ -113,36 +120,59 @@ class Turtle(Block):
         core.WORLD.turtles.add(self)
         self.current_patch().add_turtle(self)
         self.heading = 0
-        self.velocity = utils.PixelVector2(0, 0)
+        self.speed = 1
+        self.velocity = utils.PixelVector(0, 0)
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}{(self.pixel_pos.x, self.pixel_pos.y)} on {self.current_patch()}'
+        return f'{class_name}{(self.pixel_pos.x, self.pixel_pos.y, self.heading)} on {self.current_patch()}'
 
     def bounce_off_screen_edge(self):
         """ 
        Bounce turtle off the screen edges 
        """
-        screen_rect = gui.simple_gui.SCREEN.get_rect( )
-        turtle_rect = self.rect
-        if turtle_rect.right >= screen_rect.right or turtle_rect.left <= screen_rect.left:
-            self.velocity = utils.PixelVector2(self.velocity.x * (-1), self.velocity.y)
-        if turtle_rect.top <= screen_rect.top or turtle_rect.bottom >= screen_rect.bottom:
-            self.velocity = utils.PixelVector2(self.velocity.x, self.velocity.y * (-1))
+        sc_rect = gui.simple_gui.SCREEN.get_rect( )
+        t_rect = self.rect
+        t_vel = self.velocity
+        if sc_rect.right < t_rect.right and t_vel.x > 0 or t_rect.left < sc_rect.left and t_vel.x < 0:
+            self.velocity = utils.PixelVector(t_vel.x * (-1), t_vel.y)
+            while sc_rect.right < t_rect.right or t_rect.left < sc_rect.left:
+                self.move_by_dxdy(self.velocity)
+                t_rect = self.rect
+        if t_rect.bottom > sc_rect.bottom and t_vel.y > 0 or t_rect.top < sc_rect.top and t_vel.y < 0:
+            self.velocity = utils.PixelVector(t_vel.x, t_vel.y * (-1))
+            while t_rect.bottom > sc_rect.bottom or t_rect.top < sc_rect.top:
+                self.move_by_dxdy(self.velocity)
+                t_rect = self.rect
 
     def current_patch(self) -> Patch:
         (row, col) = utils.pixel_pos_to_row_col(self.pixel_pos).as_tuple()
         patch = core.WORLD.patches[row, col]
         return patch
 
+    def face_xy(self, xy: utils.PixelVector):
+        delta_x = max(1, xy.x - self.pixel_pos.x)
+        delta_y = xy.y - self.pixel_pos.y
+        self.heading = atan2(delta_y, delta_x) * 2 * pi
+
+    def forward(self, speed=None):
+        if speed is None:
+            speed = self.speed
+        angle = pi * (((self.heading - 90)*(-1) + 360) % 360) / 180
+        # dx and dy must be integers. They are the number of pixels to move.
+        dx = cos(angle) * speed
+        dy = (-1)*sin(angle) * speed
+        # print(self.heading, angle, speed, dx, dy)
+        self.move_by_dxdy(utils.PixelVector(dx, dy))
+
     def move_turtle(self, wrap):
         pass
 
-    def move_by_dxdy(self, dxdy: utils.PixelVector2):
+    def move_by_dxdy(self, dxdy: utils.PixelVector):
         """
         Move to self.pixel_pos + (dx, dy)
         """
-        self.move_to_xy(utils.PixelVector2(self.pixel_pos.x + dxdy.x, self.pixel_pos.y + dxdy.y))
+        self.move_to_xy(utils.PixelVector(self.pixel_pos.x + dxdy.x, self.pixel_pos.y + dxdy.y))
 
     def move_by_velocity(self, bounce):
         if bounce:
@@ -152,7 +182,7 @@ class Turtle(Block):
     def move_to_patch(self, patch):
         self.move_to_xy(patch.pixel_pos)
 
-    def move_to_xy(self, xy: utils.PixelVector2):
+    def move_to_xy(self, xy: utils.PixelVector):
         """
         Remove this turtle from the list of turtles at its current patch.
         Move this turtle to its new xy pixel_pos.
@@ -160,10 +190,16 @@ class Turtle(Block):
         """
         current_patch: Patch = self.current_patch()
         current_patch.remove_turtle(self)
-        self.pixel_pos = xy.wrap()
-        self.rect = Rect((self.pixel_pos.x, self.pixel_pos.y), (gui.PATCH_SIZE, gui.PATCH_SIZE))
+        self.pixel_pos = xy
+        self.rect = Rect((round(self.pixel_pos.x), round(self.pixel_pos.y)), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         new_patch = self.current_patch()
         new_patch.add_turtle(self)
+
+    def turn_left(self, delta_angles):
+        self.turn_right(-delta_angles)
+
+    def turn_right(self, delta_angles):
+        self.heading = (self.heading + delta_angles + 360) % 360
 
 
 class World:
@@ -174,13 +210,28 @@ class World:
         self.TICKS = 0
 
         self.patch_class = patch_class
-        self.patches: np.ndarray = np.ndarray([])
+        self.patches: np.ndarray = self.create_patches( )
+
 
         self.turtle_class = turtle_class
         self.turtles = set()
 
+    def create_patches(self):
+        # self.patches: np.ndarray = np.ndarray([])
+        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
+                              for r in range(gui.PATCH_ROWS)]
+        return np.array(patch_pseudo_array)
+
     def clear_all(self):
         self.turtles = set()
+
+    @staticmethod
+    def create_ordered_turtles(n):
+        """Create n Turtles with headings evenly spaced from 0 to 360"""
+        for i in range(n):
+            angle = i*360/n
+            turtle = Turtle()
+            turtle.heading = angle
 
     def done(self):
         return False
@@ -198,15 +249,16 @@ class World:
     def increment_ticks(self):
         self.TICKS += 1
 
+    def reset_all(self):
+        self.clear_all()
+        self.reset_ticks()
+        self.patches = self.create_patches( )
+
     def reset_ticks(self):
         self.TICKS = 0
 
     def setup(self, values):
-        self.clear_all()
-        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
-                              for r in range(gui.PATCH_ROWS)]
-        self.patches: np.ndarray = np.array(patch_pseudo_array)
-        self.reset_ticks()
+        pass
 
     def step(self, event, values):
         """

@@ -75,6 +75,7 @@ class SimEngine:
             if event == gui.simple_gui.SETUP:
                 self.window[gui.simple_gui.GOSTOP].update(disabled=False)
                 self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
+                self.WORLD.reset_all()
                 self.WORLD.setup(values)
                 self.simple_gui.draw(self.WORLD)
 
