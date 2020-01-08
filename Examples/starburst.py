@@ -15,16 +15,14 @@ class Starburst_World(core.World):
     """
 
     def setup(self, values):
-        super().setup(values)
-
         nbr_turtles = int(values['nbr_turtles'])
         for _ in range(nbr_turtles):
             # When created a turtle adds itself to self.turtles and to its patch's list of Turtles.
             self.turtle_class()
 
-        initial_velocities = cycle([utils.PixelVector2(-1, -1), utils.PixelVector2(-1, 1),
-                                    utils.PixelVector2(0, 0),
-                                    utils.PixelVector2(1, -1), utils.PixelVector2(1, 1)])
+        initial_velocities = cycle([utils.PixelVector(-1, -1), utils.PixelVector(-1, 1),
+                                    utils.PixelVector(0, 0),
+                                    utils.PixelVector(1, -1), utils.PixelVector(1, 1)])
         for (turtle, vel) in zip(self.turtles, initial_velocities):
             turtle.velocity = vel
 
@@ -36,15 +34,15 @@ class Starburst_World(core.World):
             turtle.move_by_velocity(values['Bounce?'])
             # After the turtles spread out, let them change velocity randomly
             if core.WORLD.TICKS > 150 and random() < 0.02:
-                turtle.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
+                turtle.velocity = utils.PixelVector(randint(-2, 2), randint(-2, 2))
 
 
 def main():
 
     from PySimpleGUI import Checkbox, Slider, Text
     gui_elements = [[Text('number of turtles')],
-                    [Slider(key='nbr_turtles', range=(1, 100), default_value=25, size=(10, 20),
-                            orientation='horizontal', pad=((0, 0), (0, 20)))],
+                    [Slider(key='nbr_turtles', range=(5, 100), resolution=5, default_value=25,
+                            orientation='horizontal', size=(10, 20), pad=((0, 0), (0, 20)))],
                     [Checkbox('Bounce?', key='Bounce?', default=True,
                               tooltip='Bounce back from the edges of the screen?')]]
 

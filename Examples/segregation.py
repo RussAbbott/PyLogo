@@ -45,9 +45,9 @@ class SegregationTurtle(core.Turtle):
         self.move_to_patch(patch)
         turtles_nearby_list = [tur for patch in self.current_patch().neighbors_8() for tur in patch.turtles]
         total_nearby_count = len(turtles_nearby_list)
-        # Isolated turtles, i.e., with no nearby neighbors, are considered to have 100% similar neighbors.
         similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
-        similarity = 100 if total_nearby_count == 0 else round(100 * similar_nearby_count / total_nearby_count)
+        # Isolated turtles, i.e., with no nearby neighbors, are considered to have 0% similar neighbors.
+        similarity = 0 if total_nearby_count == 0 else round(100 * similar_nearby_count / total_nearby_count)
         return similarity
 
     def pct_similarity_satisfied_here(self, patch) -> float:
@@ -93,7 +93,6 @@ class SegregationWorld(core.World):
             turtle.draw()
 
     def setup(self, values):
-        super().setup(values)
         density = values['density']
         pct_similar_wanted = values['% similar wanted']
 
@@ -144,13 +143,13 @@ def main():
 
     from PySimpleGUI import Combo, Slider, Text
     gui_elements = [[Text('density'),
-                    Slider(key='density', range=(50, 95), default_value=95, size=(10, 20),
-                           orientation='horizontal', pad=((0, 0), (0, 20)), resolution=5,
+                    Slider(key='density', range=(50, 95), resolution=5, size=(10, 20),
+                           default_value=90, orientation='horizontal', pad=((0, 0), (0, 20)),
                            tooltip='The ratio of households to housing units')],
 
                     [Text('% similar wanted'),
                     Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-                          background_color='skyblue', default_value=30,
+                          background_color='skyblue', default_value=100,
                           tooltip='The percentage of similar people to make someone happy.')],
                     ]
 

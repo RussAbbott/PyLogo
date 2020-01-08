@@ -27,7 +27,7 @@ class CollisionTest_Turtle(core.Turtle):
     def __init__(self):
         super().__init__(color=Color('red'))
         # Give each turtle a random initial velocity.
-        self.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
+        self.velocity = utils.PixelVector(randint(-2, 2), randint(-2, 2))
 
 
 class CollisionTest_World(core.World):
@@ -36,12 +36,10 @@ class CollisionTest_World(core.World):
     """
 
     def setup(self, values):
-        super().setup(values)
-
         nbr_turtles = int(values['nbr_turtles'])
         for i in range(nbr_turtles):
             # Adds itself to self.turtles and to its patch's list of Turtles.
-            turtle = self.turtle_class()
+            self.turtle_class()
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -53,7 +51,7 @@ class CollisionTest_World(core.World):
         for turtle in self.turtles:
             turtle.move_by_velocity(values['Bounce?'])
             if random() < 0.02:
-                turtle.velocity = utils.PixelVector2(randint(-2, 2), randint(-2, 2))
+                turtle.velocity = utils.PixelVector(randint(-2, 2), randint(-2, 2))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
