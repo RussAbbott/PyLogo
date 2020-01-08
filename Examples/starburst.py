@@ -19,7 +19,7 @@ class Starburst_World(core.World):
 
         nbr_turtles = int(values['nbr_turtles'])
         for _ in range(nbr_turtles):
-            # Adds itself to self.turtles and to its patch's list of Turtles.
+            # When created a turtle adds itself to self.turtles and to its patch's list of Turtles.
             self.turtle_class()
 
         initial_velocities = cycle([utils.PixelVector2(-1, -1), utils.PixelVector2(-1, 1),

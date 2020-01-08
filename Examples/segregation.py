@@ -13,6 +13,7 @@ class SegregationTurtle(core.Turtle):
         super().__init__()
         self.is_happy = None
         self.pct_similar = None
+        self.pct_similar_wanted = None
 
     def find_new_spot_if_unhappy(self, empty_patches):
         """
@@ -26,7 +27,7 @@ class SegregationTurtle(core.Turtle):
         """
         if not self.is_happy:
             # Keep track of current patch. Will add to empty patches after this Turtle moves.
-            current_patch = self.patch()
+            current_patch = self.current_patch()
             # Find one of the best available patches. The sample size of 25 is arbitrary.
             # It seems like a reasonable compromize between speed and number of steps.
             nbr_of_patches_to_sample = min(25, len(empty_patches))
@@ -42,7 +43,7 @@ class SegregationTurtle(core.Turtle):
         Returns 100 if no neighbors,
         """
         self.move_to_patch(patch)
-        turtles_nearby_list = [tur for patch in self.patch().neighbors_8() for tur in patch.turtles]
+        turtles_nearby_list = [tur for patch in self.current_patch().neighbors_8() for tur in patch.turtles]
         total_nearby_count = len(turtles_nearby_list)
         # Isolated turtles, i.e., with no nearby neighbors, are considered to have 100% similar neighbors.
         similar_nearby_count = len([tur for tur in turtles_nearby_list if tur.color == self.color])
@@ -55,15 +56,15 @@ class SegregationTurtle(core.Turtle):
         Returns a fraction between 0 and 1.
         Never more than 1. Doesn't favor more similar patches over sufficiently similar patches.
         """
-        return min(1.0, self.pct_similar_here(patch)/core.WORLD.pct_similar_wanted)
+        return min(1.0, self.pct_similar_here(patch)/self.pct_similar_wanted)
 
 
     def update(self):
         """
         Determine pct_similar and whether this turtle is happy.
         """
-        self.pct_similar = self.pct_similar_here(self.patch())
-        self.is_happy = self.pct_similar >= core.WORLD.pct_similar_wanted
+        self.pct_similar = self.pct_similar_here(self.current_patch())
+        self.is_happy = self.pct_similar >= self.pct_similar_wanted
 
 
 class SegregationWorld(core.World):
@@ -75,7 +76,6 @@ class SegregationWorld(core.World):
         super().__init__(patch_class=patch_class, turtle_class=turtle_class)
 
         self.empty_patches = None
-        self.pct_similar_wanted = None
         self.percent_similar = None
         self.percent_unhappy = None
         self.unhappy_turtles = None
@@ -94,8 +94,8 @@ class SegregationWorld(core.World):
 
     def setup(self, values):
         super().setup(values)
-        self.pct_similar_wanted = values['% similar wanted']
         density = values['density']
+        pct_similar_wanted = values['% similar wanted']
 
         self.empty_patches = set()
         for patch in self.patches.flat:
@@ -105,6 +105,7 @@ class SegregationWorld(core.World):
             # Create the Turtles. The density is approximate.
             if randint(0, 100) <= density:
                 turtle = SegregationTurtle()
+                turtle.pct_similar_wanted = pct_similar_wanted
                 turtle.set_color(choice([Color('blue'), Color('orange')]))
                 turtle.move_to_patch(patch)
             else:
