@@ -22,24 +22,18 @@ class CollisionTest_Patch(core.Patch):
         self.image.fill(fill_color)
 
 
-class CollisionTest_Turtle(core.Turtle):
-
-    def __init__(self):
-        super().__init__(color=Color('red'))
-        # Give each turtle a random initial velocity.
-        self.velocity = utils.PixelVector(uniform(-2, 2), uniform(-2, 2))
-
-
 class CollisionTest_World(core.World):
     """
     A world in which the patches change to green when intersecting with a turtle.
     """
 
     def setup(self):
-        nbr_turtles = int(values['nbr_turtles'])
+        nbr_turtles = int(core.WORLD.values['nbr_turtles'])
         for i in range(nbr_turtles):
             # Adds itself to self.turtles and to its patch's list of Turtles.
-            self.turtle_class()
+            turtle = self.turtle_class()
+            turtle.velocity = utils.Velocity(uniform(-2, 2), uniform(-2, 2))
+            turtle.set_color(Color('red'))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -50,8 +44,8 @@ class CollisionTest_World(core.World):
         """
         for turtle in self.turtles:
             turtle.move_by_velocity()
-            if random() < 0.02:
-                turtle.velocity = utils.PixelVector(randint(-2, 2), randint(-2, 2))
+            if random() < 0.01:
+                turtle.velocity = utils.Velocity(randint(-2, 2), randint(-2, 2))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -65,8 +59,8 @@ def main():
                             orientation='horizontal', size=(10, 20))],
                     ]
 
-    sim_engine = SimEngine(gui_elements, caption='Collision test')
-    sim_engine.start(CollisionTest_World, patch_class=CollisionTest_Patch, turtle_class=CollisionTest_Turtle)
+    sim_engine = SimEngine(gui_elements, caption='Collision test', bounce=False)
+    sim_engine.start(CollisionTest_World, patch_class=CollisionTest_Patch)
 
 
 if __name__ == "__main__":

@@ -93,8 +93,8 @@ class SegregationWorld(core.World):
             turtle.draw()
 
     def setup(self):
-        density = values['density']
-        pct_similar_wanted = values['% similar wanted']
+        density = core.WORLD.values['density']
+        pct_similar_wanted = core.WORLD.values['% similar wanted']
 
         self.empty_patches = set()
         for patch in self.patches.flat:
@@ -144,7 +144,7 @@ def main():
     from PySimpleGUI import Combo, Slider, Text
     gui_elements = [[Text('density'),
                     Slider(key='density', range=(50, 95), resolution=5, size=(10, 20),
-                           default_value=95, orientation='horizontal', pad=((0, 0), (0, 20)),
+                           default_value=90, orientation='horizontal', pad=((0, 0), (0, 20)),
                            tooltip='The ratio of households to housing units')],
 
                     [Text('% similar wanted'),
@@ -153,7 +153,7 @@ def main():
                           tooltip='The percentage of similar people to make someone happy.')],
                     ]
 
-    sim_engine = SimEngine(gui_elements, caption="Schelling's segregation model", patch_size=11)
+    sim_engine = SimEngine(gui_elements, caption="Schelling's segregation model", patch_size=13, bounce=None)
     sim_engine.start(SegregationWorld)
 
 
