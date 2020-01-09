@@ -141,27 +141,15 @@ class Turtle(Block):
        Bounce turtle off the screen edges
        """
         sc_rect = gui.simple_gui.SCREEN.get_rect()
-        # t_rect = self.rect
-        # center_pixel = utils.PixelVector(t_rect.centerx, t_rect.centery)
         center_pixel = self.center_pixel
-        next_center_pixel = center_pixel + dxdy + dxdy
+        next_center_pixel = center_pixel + dxdy
         if next_center_pixel.x <= sc_rect.left <= center_pixel.x or \
             center_pixel.x <= sc_rect.right <= next_center_pixel.x:
-            # print(f'\n{self.id}. next_center_pixel.x {round(next_center_pixel.x, 1)}, sc_rect.left {sc_rect.left}, '
-            #       f'center_pixel.x {center_pixel.x}, sc_rect.right {sc_rect.right}, '
-            #       f'next_center_pixel.x {round(next_center_pixel.x, 1)}')
-            # print(f'violates left-right. velocity: {t_vel.rounded()} -> ', end='')
             dxdy = utils.Velocity(dxdy.dx*(-1), dxdy.dy)
-            # print(self.velocity.rounded())
 
         if next_center_pixel.y <= sc_rect.top <= center_pixel.y or \
             center_pixel.y <= sc_rect.bottom <= next_center_pixel.y:
-            # print(f'\n{self.id}. next_center_pixel.y {round(next_center_pixel.y, 1)}, sc_rect.top {sc_rect.top}, '
-            #       f'center_pixel.y {center_pixel.y}, sc_rect.bottom {sc_rect.bottom}, '
-            #       f'next_center_pixel.y {round(next_center_pixel.y, 1)}')
-            # print(f'violates top-bottom. velocity: {t_vel.rounded()} -> ', end='')
             dxdy = utils.Velocity(dxdy.dx, dxdy.dy*(-1))
-            # print(self.velocity.rounded())
 
         return dxdy
 
