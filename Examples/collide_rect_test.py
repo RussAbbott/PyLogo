@@ -6,7 +6,7 @@ import PyLogo.core.utils as utils
 from pygame.color import Color
 from pygame.sprite import collide_rect
 
-from random import randint, random
+from random import randint, random, uniform
 
 
 class CollisionTest_Patch(core.Patch):
@@ -27,7 +27,7 @@ class CollisionTest_Turtle(core.Turtle):
     def __init__(self):
         super().__init__(color=Color('red'))
         # Give each turtle a random initial velocity.
-        self.velocity = utils.PixelVector(randint(-2, 2), randint(-2, 2))
+        self.velocity = utils.PixelVector(uniform(-2, 2), uniform(-2, 2))
 
 
 class CollisionTest_World(core.World):
@@ -35,7 +35,7 @@ class CollisionTest_World(core.World):
     A world in which the patches change to green when intersecting with a turtle.
     """
 
-    def setup(self, values):
+    def setup(self):
         nbr_turtles = int(values['nbr_turtles'])
         for i in range(nbr_turtles):
             # Adds itself to self.turtles and to its patch's list of Turtles.
@@ -44,12 +44,12 @@ class CollisionTest_World(core.World):
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
 
-    def step(self, event, values):
+    def step(self):
         """
         Update the world by moving the turtle and indicating the patches that intersect the turtle
         """
         for turtle in self.turtles:
-            turtle.move_by_velocity(values['Bounce?'])
+            turtle.move_by_velocity()
             if random() < 0.02:
                 turtle.velocity = utils.PixelVector(randint(-2, 2), randint(-2, 2))
 
@@ -60,10 +60,10 @@ class CollisionTest_World(core.World):
 def main():
 
     from PySimpleGUI import Checkbox, Slider, Text
-    gui_elements = [[Text('number of turtles')],
-                    [Slider(key='nbr_turtles', range=(1, 10), default_value=3,
-                            orientation='horizontal', pad=((0, 50), (0, 20)))],
-                    [Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]]
+    gui_elements = [[Text('nbr turtles', pad=((0, 5), (20, 0))),
+                     Slider(key='nbr_turtles', range=(1, 10), default_value=3,
+                            orientation='horizontal', size=(10, 20))],
+                    ]
 
     sim_engine = SimEngine(gui_elements, caption='Collision test')
     sim_engine.start(CollisionTest_World, patch_class=CollisionTest_Patch, turtle_class=CollisionTest_Turtle)

@@ -92,7 +92,7 @@ class SegregationWorld(core.World):
         for turtle in self.turtles:
             turtle.draw()
 
-    def setup(self, values):
+    def setup(self):
         density = values['density']
         pct_similar_wanted = values['% similar wanted']
 
@@ -112,7 +112,7 @@ class SegregationWorld(core.World):
 
         self.update_all()
 
-    def step(self, event, values):
+    def step(self):
         nbr_unhappy_turtles = len(self.unhappy_turtles)
         # If there are small number of unhappy turtles, move them carefully.
         # Otherwise move the smaller of self.max_turtles_per_step and nbr_unhappy_turtles
@@ -144,7 +144,7 @@ def main():
     from PySimpleGUI import Combo, Slider, Text
     gui_elements = [[Text('density'),
                     Slider(key='density', range=(50, 95), resolution=5, size=(10, 20),
-                           default_value=90, orientation='horizontal', pad=((0, 0), (0, 20)),
+                           default_value=95, orientation='horizontal', pad=((0, 0), (0, 20)),
                            tooltip='The ratio of households to housing units')],
 
                     [Text('% similar wanted'),
