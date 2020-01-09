@@ -147,12 +147,18 @@ def main():
                            default_value=90, orientation='horizontal', pad=((0, 0), (0, 20)),
                            tooltip='The ratio of households to housing units')],
 
-                    [Text('% similar wanted'),
+                    [Text('% similar wanted',
+                          tooltip='The percentage of similar people among the occupied 8 neighbors required ' +
+                                  'to make someone happy.'),
                     Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                           background_color='skyblue', default_value=100,
-                          tooltip='The percentage of similar people to make someone happy.')],
+                          tooltip='The percentage of similar people among the occupied 8 neighbors required ' +
+                                  'to make someone happy.')],
                     ]
 
+    # If bounce is None, there is no Bounce? checkbox.  It can also be True/False as its initial setting.
+    # When the model includes moving displayed Turtles, it's best to make the patch_size an odd number
+    # so that there is center pixel. That's where Turtles on that patch are display by default.
     sim_engine = SimEngine(gui_elements, caption="Schelling's segregation model", patch_size=13, bounce=None)
     sim_engine.start(SegregationWorld)
 
