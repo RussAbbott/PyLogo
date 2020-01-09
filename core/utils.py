@@ -7,16 +7,20 @@ import PyLogo.core.gui as gui
 class PixelVector:
 
     def __init__(self, x, y):
-        """
-        Wrap around the screen. x and y needn't be integers.
-        """
         self.x = x
         self.y = y
-        self.wrap()
 
-    def __add__(self, other_pixel_vector: PixelVector):
-        new_pixel_vector = PixelVector(self.x + other_pixel_vector.x, self.y + other_pixel_vector.y)
+    def __add__(self, velocity: utils.Velocity):
+        new_pixel_vector = PixelVector(self.x + velocity.dx, self.y + velocity.dy)
         return new_pixel_vector
+
+    def __eq__(self, other):
+        """Override the default Equals behavior"""
+        return self.x == other.x and self.y == other.y
+
+    def __ne__(self, other):
+        """Override the default Unequal behavior"""
+        return self.x != other.x or self.y != other.y
 
     def __str__(self):
         return f'PixelVector{self.x, self.y}'
@@ -26,10 +30,24 @@ class PixelVector:
 
     def wrap(self):
         screen_rect = gui.simple_gui.SCREEN.get_rect()
-        # screen_rect = rect
-        self.x = self.x % screen_rect.w
-        self.y = self.y % screen_rect.h
-        return self
+        new_pixel_vector = PixelVector(self.x % screen_rect.w, self.y % screen_rect.h)
+        return new_pixel_vector
+
+
+class Velocity:
+
+    def __init__(self, dx, dy):
+        self.dx = dx
+        self.dy = dy
+
+    def __str__(self):
+        return f'Velocity{self.dx, self.dy}'
+
+    def as_tuple(self):
+        return (self.dx, self.dy)
+
+    def rounded(self):
+        return Velocity(round(self.dx, 2), round(self.dy, 2))
 
 
 class RowCol:
@@ -59,7 +77,7 @@ class RowCol:
 def CENTER_PIXEL():
     from PyLogo.core.gui import simple_gui as simple_gui
     rect = simple_gui.SCREEN.get_rect()
-    cp = PixelVector(round(rect.width/2), round(rect.height/2))
+    cp = PixelVector(rect.centerx, rect.centery)
     return cp
 
 
@@ -78,20 +96,20 @@ def get_class_name(obj) -> str:
     return extract_class_name(full_class_name)
 
 
-def pixel_pos_to_row_col(pixel_pos: PixelVector):
+def center_pixel_to_row_col(center_pixel: PixelVector):
     """
-    Get the patch RowCol for this pixel_pos
-    Leave a border of 1 pixel at the top and left of the patches
+    Get the patch RowCol for this center_pixel
    """
-    row = (pixel_pos.y - 1) // gui.BLOCK_SPACING()
-    col = (pixel_pos.x - 1) // gui.BLOCK_SPACING()
-    return RowCol(row, col)
+    row = center_pixel.y // gui.BLOCK_SPACING()
+    col = center_pixel.x // gui.BLOCK_SPACING()
+    return RowCol(int(row), int(col))
 
 
-def row_col_to_pixel_pos(row_col: RowCol):
+def row_col_to_center_pixel(row_col: RowCol):
     """
     Get the pixel position for this RowCol.
     Leave a border of 1 pixel at the top and left of the patches
     """
-    pv = PixelVector(1 + gui.BLOCK_SPACING() * row_col.col, 1 + gui.BLOCK_SPACING() * row_col.row)
+    pv = PixelVector(1 + gui.BLOCK_SPACING() * row_col.col + gui.HALF_PATCH_SIZE(),
+                     1 + gui.BLOCK_SPACING() * row_col.row + gui.HALF_PATCH_SIZE())
     return pv

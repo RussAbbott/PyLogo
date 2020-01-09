@@ -46,8 +46,10 @@ class SimEngine:
                 break
 
             # TICKS are our local counter for the number of times we have gone around this loop.
-            self.WORLD.increment_ticks( )
-            self.WORLD.step(event, values)
+            self.WORLD.increment_ticks()
+
+            self.WORLD.save_values_and_step(event, values)
+
             self.simple_gui.draw(self.WORLD)
 
             # The next line limits how fast the simulation runs and is not a counter.
@@ -76,12 +78,12 @@ class SimEngine:
                 self.window[gui.simple_gui.GOSTOP].update(disabled=False)
                 self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
                 self.WORLD.reset_all()
-                self.WORLD.setup(values)
+                self.WORLD.save_values_and_setup(event, values)
                 self.simple_gui.draw(self.WORLD)
 
             if event == gui.simple_gui.GO_ONCE:
                 self.WORLD.increment_ticks()
-                self.WORLD.step(event, values)
+                self.WORLD.save_values_and_step(event, values)()
                 self.simple_gui.draw(self.WORLD)
 
             if event == gui.simple_gui.GOSTOP:
