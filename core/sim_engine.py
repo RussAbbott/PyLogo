@@ -8,7 +8,7 @@ from pygame.time import Clock
 
 class SimEngine:
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15):
+    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=True):
 
         # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
@@ -25,7 +25,7 @@ class SimEngine:
 
         self.WORLD = None
 
-        self.simple_gui = gui.SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size)
+        self.simple_gui = gui.SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
         self.window = gui.simple_gui.window
 
         pg.init()
@@ -83,7 +83,7 @@ class SimEngine:
 
             if event == gui.simple_gui.GO_ONCE:
                 self.WORLD.increment_ticks()
-                self.WORLD.save_values_and_step(event, values)()
+                self.WORLD.save_values_and_step(event, values)
                 self.simple_gui.draw(self.WORLD)
 
             if event == gui.simple_gui.GOSTOP:

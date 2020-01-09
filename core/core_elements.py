@@ -46,11 +46,11 @@ class Block(Sprite):
     """
     def __init__(self, center_pixel: utils.PixelVector, color=Color('black')):
         super().__init__()
-        self.color = color
         self.center_pixel = center_pixel
         self.rect = Rect((self.center_pixel.x - gui.HALF_PATCH_SIZE(), self.center_pixel.y - gui.HALF_PATCH_SIZE()),
                          (gui.PATCH_SIZE, gui.PATCH_SIZE))
         self.image = Surface((self.rect.w, self.rect.h))
+        self.color = color
         self.image.fill(color)
 
     def distance_to_xy(self, xy: utils.PixelVector):
@@ -77,7 +77,7 @@ class Patch(Block):
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}-{self.id}: {(self.row_col.row, self.row_col.col)}'
+        return f'{class_name}{(self.row_col.row, self.row_col.col)}'
 
     def add_turtle(self, tur):
         self.turtles.add(tur)

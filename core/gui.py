@@ -50,7 +50,7 @@ simple_gui = None
 
 class SimpleGUI:
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15):
+    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15, bounce=True):
         gui.simple_gui = self
 
         gui.PATCH_SIZE = patch_size
@@ -72,7 +72,8 @@ class SimpleGUI:
         self.model_gui_elements = model_gui_elements
 
         screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
-        self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements, screen_shape_width_height)
+        self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements,
+                                                              screen_shape_width_height, bounce=bounce)
 
         pg.init()
         # Everything is drawn to self.SCREEN
@@ -84,12 +85,18 @@ class SimpleGUI:
         element.draw( )
         pg.display.update( )
 
-    def make_window(self, caption, model_gui_elements, screen_shape_width_height):
+    def make_window(self, caption, model_gui_elements, screen_shape_width_height, bounce=True):
         """
         Create the window, including sg.Graph, the drawing surface.
         """
         # --------------------- PySimpleGUI window layout and creation --------------------
         hor_line = sg.Text('_' * 25, text_color='black')
+
+        bounce_checkboc = ''
+        if bounce is not None:
+            bounce_checkboc = [sg.Checkbox('Bounce?', key='Bounce?', default=bounce,
+                                           tooltip='Bounce back from the edges of the screen?')]
+
         col1 = [ *model_gui_elements,
 
                  [hor_line],
@@ -99,8 +106,10 @@ class SimpleGUI:
                   sg.Button(self.GO, disabled=True, button_color=('white', 'green'), pad=((0, 30), (10, 0)),
                             key=self.GOSTOP)],
 
-                 [sg.Checkbox('Bounce?', key='Bounce?', default=True,
-                              tooltip='Bounce back from the edges of the screen?')],
+                 bounce_checkboc,
+
+                 # ([sg.Checkbox('Bounce?', key='Bounce?', default=True,
+                 #               tooltip='Bounce back from the edges of the screen?')] if bounce else ''),
 
                  [hor_line],
 
