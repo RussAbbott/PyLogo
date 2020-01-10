@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
 
 
@@ -34,22 +35,6 @@ class PixelVector:
         return new_pixel_vector
 
 
-class Velocity:
-
-    def __init__(self, dx, dy):
-        self.dx = dx
-        self.dy = dy
-
-    def __str__(self):
-        return f'Velocity{self.dx, self.dy}'
-
-    def as_tuple(self):
-        return (self.dx, self.dy)
-
-    def rounded(self):
-        return Velocity(round(self.dx, 2), round(self.dy, 2))
-
-
 class RowCol:
 
     def __init__(self, row, col):
@@ -74,11 +59,44 @@ class RowCol:
         return self
 
 
+class Velocity:
+
+    def __init__(self, dx, dy):
+        self.dx = dx
+        self.dy = dy
+
+    def __str__(self):
+        return f'Velocity{self.dx, self.dy}'
+
+    def as_tuple(self):
+        return (self.dx, self.dy)
+
+    def rounded(self):
+        return Velocity(round(self.dx, 2), round(self.dy, 2))
+
+
+def angle_to_heading(angle):
+    heading = heading_to_angle(angle)
+    return heading
+
+
+def heading_to_angle(heading):
+    return (90 - heading) % 360
+
+
 def CENTER_PIXEL():
-    from PyLogo.core.gui import simple_gui as simple_gui
-    rect = simple_gui.SCREEN.get_rect()
+    rect = gui.simple_gui.SCREEN.get_rect()
     cp = PixelVector(rect.centerx, rect.centery)
     return cp
+
+
+def center_pixel_to_row_col(center_pixel: PixelVector):
+    """
+    Get the patch RowCol for this pixel
+   """
+    row = center_pixel.y // gui.BLOCK_SPACING()
+    col = center_pixel.x // gui.BLOCK_SPACING()
+    return RowCol(int(row), int(col))
 
 
 def extract_class_name(full_class_name: type):
@@ -94,15 +112,6 @@ def get_class_name(obj) -> str:
     """ Get the name of the object's class as a string. """
     full_class_name = type(obj)
     return extract_class_name(full_class_name)
-
-
-def center_pixel_to_row_col(center_pixel: PixelVector):
-    """
-    Get the patch RowCol for this center_pixel
-   """
-    row = center_pixel.y // gui.BLOCK_SPACING()
-    col = center_pixel.x // gui.BLOCK_SPACING()
-    return RowCol(int(row), int(col))
 
 
 def row_col_to_center_pixel(row_col: RowCol):

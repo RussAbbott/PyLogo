@@ -1,6 +1,7 @@
 
 import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
+import PyLogo.core.utils as utils
 
 import pygame as pg
 from pygame.time import Clock
@@ -98,3 +99,15 @@ class SimEngine:
                     break
 
             self.clock.tick(self.idle_fps)
+
+
+def PyLogo(world_class=core.World, gui_elements=None, caption=None,
+           patch_class=core.Patch, turtle_class=core.Turtle,
+           patch_size=11, bounce=True):
+    if gui_elements is None:
+        gui_elements = []
+    if caption is None:
+        caption = utils.extract_class_name(world_class)
+    sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
+    sim_engine.start(world_class, patch_class=patch_class, turtle_class=turtle_class)
+

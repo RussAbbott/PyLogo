@@ -62,6 +62,11 @@ class Block(Sprite):
     def draw(self):
         gui.simple_gui.SCREEN.blit(self.image, self.rect)
 
+
+    @staticmethod
+    def get_gui_value(key):
+        return core.WORLD.get_gui_value(key)
+
     def set_color(self, color):
         self.color = color
         self.image.fill(color)
@@ -134,7 +139,7 @@ class Turtle(Block):
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}-{self.id}: {(self.center_pixel.x, self.center_pixel.y, self.heading)}'
+        return f'{class_name}-{self.id}. pixel: {(self.center_pixel.x, self.center_pixel.y)}, heading: {self.heading}'
 
     def bounce_off_screen_edge(self, dxdy):
         """
@@ -159,18 +164,19 @@ class Turtle(Block):
         return patch
 
     def face_xy(self, xy: utils.PixelVector):
-        delta_x = max(1, xy.x - self.center_pixel.x)
-        delta_y = xy.y - self.center_pixel.y
-        self.heading = atan2(delta_y, delta_x) * 2 * pi
+        delta_x = xy.x - self.center_pixel.x
+        # Subtract in reverse to compensate for the reversal of the y axis.
+        delta_y = self.center_pixel.y - xy.y
+        atn2 = atan2(delta_y, delta_x)
+        angle = (atn2 / (2 * pi) ) * 360
+        self.heading = utils.angle_to_heading(angle)
 
     def forward(self, speed=None):
         if speed is None:
             speed = self.speed
         angle = pi * (((self.heading - 90)*(-1) + 360) % 360) / 180
-        # dx and dy must be integers. They are the number of pixels to move.
         dx = cos(angle) * speed
         dy = (-1)*sin(angle) * speed
-        # print(self.heading, angle, speed, dx, dy)
         self.move_by_dxdy(utils.Velocity(dx, dy))
 
     def move_turtle(self, wrap):
@@ -180,7 +186,7 @@ class Turtle(Block):
         """
         Move to self.center_pixel + (dx, dy)
         """
-        if core.WORLD.values['Bounce?']:
+        if self.get_gui_value('Bounce?'):
             new_dxdy = self.bounce_off_screen_edge(dxdy)
             if dxdy is self.velocity:
                 self.velocity = new_dxdy
@@ -232,7 +238,6 @@ class World:
         self.turtles = set()
 
     def create_patches(self):
-        # self.patches: np.ndarray = np.ndarray([])
         patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
         return np.array(patch_pseudo_array)
@@ -261,6 +266,11 @@ class World:
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """
         pass
+
+    @staticmethod
+    def get_gui_value(key):
+        value = core.WORLD.values.get(key, None)
+        return int(value) if isinstance(value, float) and value == int(value) else value
 
     def increment_ticks(self):
         self.TICKS += 1
