@@ -76,76 +76,81 @@ class DrunkenTurtle_World(core.World):
     def __init__(self, patch_class=core.Patch, turtle_class=core.Turtle):
         super().__init__(patch_class=patch_class, turtle_class=turtle_class)
         self.reference_turtle = None
+        self.current_figure_counter = 0
+        self.current_figure = 'random'
 
-    def setup(self, values):
-        nbr_turtles = int(values['nbr_turtles'])
+    def setup(self):
+        nbr_turtles = int(self.get_gui_value('nbr_turtles'))
         self.create_ordered_turtles(nbr_turtles)
         self.reference_turtle = list(self.turtles)[0]
         for turtle in self.turtles:
             turtle.speed = 1
-            print(f'pos: {turtle}')
             turtle.forward(100)
-            print(f'pos: {turtle}')
             turtle.turn_right(90)
-            print(f'pos: {turtle}')
-        # for turtle in sorted(self.turtles, key=lambda t: t.heading):
-        #     print(f'pos: {turtle}')
-        print( )
 
-    def step(self, event, values):
-        """
-      ask turtles [fd speed]
-      let dist-turtle-0-to-0-0 [distancexy 0 0] of turtle 0
-      if dist-turtle-0-to-0-0 > outer - turtle-size / 2 [ask turtles [ facexy 0 0 fd 1 ]]
-      if random 100 < 15  [ask turtles [rt 25]]
-      if random 100 < 15  [ask turtles [lt 25]]
-
-        to  move - along - circle[r]
-            fd(pi * r / 180) * (speed / 50)
-            rt  speed / 50
-
-        end
-        """
-        r = 100
+    def go_in_circle(self, r):
         for turtle in self.turtles:
-            # turtle.forward(r)
-            # turtle.forward((pi * r / 180)  * (turtle.speed/5 ))
             turtle.forward(2 * pi * r / 360)
-            turtle.turn_right(1/360)
-            print(f'pos: {turtle}')
+            turtle.turn_right(1)
 
-        # for turtle in self.turtles:
-        #     turtle.forward()
-        #
-        # if self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL()) >= 300:
-        #     for turtle in self.turtles:
-        #         turtle.face_xy(utils.CENTER_PIXEL())
-        #         turtle.forward(1)
-        #
-        # turned = False
-        # if random() < 0.15:
-        #     turned = True
-        #     for turtle in self.turtles:
-        #         turtle.turn_right(25)
-        # elif random() < 0.15:
-        #     turned = True
-        #     for turtle in self.turtles:
-        #         turtle.turn_left(25)
-        #
-        # if turned:
-        #     print()
-        #     for turtle in sorted(self.turtles, key=lambda t: t.heading):
-        #         print(f'heading: {turtle.heading}; dist: {round(turtle.distance_to_xy(utils.CENTER_PIXEL()))}')
-        #     print()
-        #
+    def go_randomly(self):
+        for turtle in self.turtles:
+            turtle.forward()
+
+        if random() < 0.15:
+            for turtle in self.turtles:
+                turtle.turn_right(25)
+        elif random() < 0.15:
+            for turtle in self.turtles:
+                turtle.turn_left(25)
+
+    def grow_shrink(self):
+        for turtle in self.turtles:
+            turtle.face_xy(utils.CENTER_PIXEL())
+            if self.current_figure == 'grow':
+                turtle.turn_right(180)
+            turtle.forward()
+
+    def get_figure(self):
+        self.current_figure = self.get_gui_value('figure')
+        self.current_figure_counter = 100
+
+    def step(self):
+        if self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL()) >= 250 and self.current_figure != 'shrink':
+            self.current_figure = 'shrink'
+            self.current_figure_counter = 1
+
+        elif self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL()) <= 50 and self.current_figure != 'grow':
+            self.current_figure = 'grow'
+            self.current_figure_counter = 1
+
+        elif self.current_figure_counter == 0:
+            self.get_figure()
+
+        else:
+            self.current_figure_counter -= 1
+
+        if self.current_figure == 'circle':
+            r = 100
+            self.go_in_circle(r)
+        elif self.current_figure == 'random':
+            self.go_randomly( )
+        elif self.current_figure == 'grow' or self.current_figure == 'shrink':
+            self.grow_shrink()
+        else:
+            print(f'Error no figure: ({self.current_figure}, {self.current_figure_counter})')
+
 
 def main():
 
-    from PySimpleGUI import Checkbox, Slider, Text
-    gui_elements = [[Text('number of turtles')],
-                    [Slider(key='nbr_turtles', range=(int(1), int(72)), default_value=1,
-                            orientation='horizontal', pad=((0, 50), (0, 20)))],
-                    [Checkbox('Bounce?', key='Bounce?', tooltip='Bounce off the edges of the screen?')]]
+    from PySimpleGUI import Checkbox, Combo, Slider, Text
+    gui_elements = [[Text('nbr of turtles'),
+                     Slider(key='nbr_turtles', range=(1, 100), default_value=16, size=(8, 20),
+                            orientation='horizontal', pad=((0, 0), (0, 20)))],
+
+                    [Text('Figure to trace'), Combo(['circle', 'random', 'square'], key='figure',
+                                                    default_value='random')]
+                    ]
 
     sim_engine = SimEngine(gui_elements, caption='Synchronized drunken turtles')
     sim_engine.start(DrunkenTurtle_World)
