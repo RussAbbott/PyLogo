@@ -1,6 +1,5 @@
 
 import PyLogo.core.core_elements as core
-from PyLogo.core.sim_engine import SimEngine
 import PyLogo.core.utils as utils
 
 from itertools import cycle
@@ -15,9 +14,9 @@ class Starburst_World(core.World):
     """
 
     def setup(self):
-        nbr_turtles = int(core.WORLD.values['nbr_turtles'])
+        nbr_turtles = self.get_gui_value('nbr_turtles')
         for _ in range(nbr_turtles):
-            # When created a turtle adds itself to self.turtles and to its patch's list of Turtles.
+            # When created, a turtle adds itself to self.turtles and to its patch's list of Turtles.
             self.turtle_class()
 
         initial_velocities = cycle([utils.Velocity(-1, -1), utils.Velocity(-1, 1),
@@ -36,17 +35,13 @@ class Starburst_World(core.World):
                 turtle.velocity = utils.Velocity(uniform(-2, 2), uniform(-2, 2))
 
 
-def main():
-
-    from PySimpleGUI import Checkbox, Slider, Text
-    gui_elements = [[Text('nbr turtles', pad=((0, 5), (20, 0))),
-                     Slider(key='nbr_turtles', range=(5, 100), resolution=5, default_value=25,
-                            orientation='horizontal', size=(10, 20))],
-                    ]
-
-    sim_engine = SimEngine(gui_elements, caption='Starburst')
-    sim_engine.start(Starburst_World)
+# ############################################## Define GUI ############################################## #
+import PySimpleGUI as sg
+gui_elements = [ [sg.Text('nbr turtles', pad=((0, 5), (20, 0))),
+                  sg.Slider(key='nbr_turtles', range=(5, 100), resolution=5, default_value=25,
+                            orientation='horizontal', size=(10, 20))] ]
 
 
 if __name__ == "__main__":
-    main()
+    from PyLogo.core.sim_engine import PyLogo
+    PyLogo(Starburst_World, gui_elements, 'Starburst')

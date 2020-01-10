@@ -51,17 +51,13 @@ class CollisionTest_World(core.World):
             patch.update_collision_color(self.turtles)
 
 
-def main():
-
-    from PySimpleGUI import Checkbox, Slider, Text
-    gui_elements = [[Text('nbr turtles', pad=((0, 5), (20, 0))),
-                     Slider(key='nbr_turtles', range=(1, 10), default_value=3,
-                            orientation='horizontal', size=(10, 20))],
-                    ]
-
-    sim_engine = SimEngine(gui_elements, caption='Collision test', bounce=False)
-    sim_engine.start(CollisionTest_World, patch_class=CollisionTest_Patch)
-
+# ############################################## Define GUI ############################################## #
+import PySimpleGUI as sg
+gui_elements = [[sg.Text('nbr turtles', pad=((0, 5), (20, 0))),
+                 sg.Slider(key='nbr_turtles', range=(1, 10), default_value=3,
+                           orientation='horizontal', size=(10, 20))],
+                ]
 
 if __name__ == "__main__":
-    main()
+    from PyLogo.core.sim_engine import PyLogo
+    PyLogo(CollisionTest_World, gui_elements, 'Collision test', patch_class=CollisionTest_Patch, bounce=False)

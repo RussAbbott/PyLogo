@@ -63,7 +63,7 @@
 """
 
 import PyLogo.core.core_elements as core
-from PyLogo.core.sim_engine import SimEngine
+from PyLogo.core.sim_engine import PyLogo, SimEngine
 import PyLogo.core.utils as utils
 
 from math import pi
@@ -141,20 +141,16 @@ class DrunkenTurtle_World(core.World):
             print(f'Error no figure: ({self.current_figure}, {self.current_figure_counter})')
 
 
-def main():
+# ############################################## Define GUI ############################################## #
+import PySimpleGUI as sg
+gui_elements = [[sg.Text('nbr of turtles'),
+                 sg.Slider(key='nbr_turtles', range=(1, 100), default_value=16, size=(8, 20),
+                           orientation='horizontal', pad=((0, 0), (0, 20)))],
 
-    from PySimpleGUI import Checkbox, Combo, Slider, Text
-    gui_elements = [[Text('nbr of turtles'),
-                     Slider(key='nbr_turtles', range=(1, 100), default_value=16, size=(8, 20),
-                            orientation='horizontal', pad=((0, 0), (0, 20)))],
-
-                    [Text('Figure to trace'), Combo(['circle', 'random', 'square'], key='figure',
-                                                    default_value='random')]
-                    ]
-
-    sim_engine = SimEngine(gui_elements, caption='Synchronized drunken turtles')
-    sim_engine.start(DrunkenTurtle_World)
-
+                [sg.Text('Figure to trace'),
+                 sg.Combo(['circle', 'random', 'square'], key='figure', default_value='random')]
+                ]
 
 if __name__ == "__main__":
-    main()
+    from PyLogo.core.sim_engine import PyLogo
+    PyLogo(DrunkenTurtle_World, gui_elements, 'Synchronized drunken turtles', bounce=None)
