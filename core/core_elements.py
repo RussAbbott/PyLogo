@@ -32,6 +32,7 @@ def is_acceptable_color(rgb: Tuple[int, int, int]):
 # These are colors defined by pygame that satisfy is_acceptable_color above.
 PYGAME_COLORS = [rgba for rgba in THECOLORS.values() if is_acceptable_color(rgba[:3])]
 
+# These are NetLogo primary colors.
 NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('brown'), Color('yellow'),
                           Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
                           Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
@@ -114,14 +115,15 @@ class Patch(Block):
 
 class Turtle(Block):
 
+    color_palette = None
+
     id = 0
 
     def __init__(self, center_pixel: utils.PixelVector = None, color=None):
         if color is None:
-            # Select a color at random from among NETLOGO_PRIMARY_COLORS or PYGAME_COLORS
-            
-            # color = choice(NETLOGO_PRIMARY_COLORS)
-            color = choice(PYGAME_COLORS)
+            # Select a color at random from the color_palette
+            # Turtle.color_palette is set during World.setup().
+            color = choice(Turtle.color_palette)
 
         # Can't make this a default value because it isn't defined when the default values is compiled
         if center_pixel is None:
@@ -286,6 +288,7 @@ class World:
     def save_values_and_setup(self, event, values):
         self.event = event
         self.values = values
+        Turtle.color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
         self.setup()
 
     def setup(self):
