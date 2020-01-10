@@ -110,21 +110,20 @@ class SegregationWorld(core.World):
         return colors.values()
 
     def setup(self):
-        density = core.WORLD.values['density']
-        pct_similar_wanted = core.WORLD.values['% similar wanted']
+        density = self.get_gui_value('density')
+        pct_similar_wanted = self.get_gui_value('% similar wanted')
 
         (color_a, color_b) = self.select_the_colors()
 
         self.empty_patches = set()
         for patch in self.patches.flat:
             patch.set_color(Color('white'))
-            patch.neighbors_8()  # Calling it sets a cached value
+            patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
 
             # Create the Turtles. The density is approximate.
             if randint(0, 100) <= density:
                 turtle = SegregationTurtle()
                 turtle.pct_similar_wanted = pct_similar_wanted
-                # turtle.set_color(choice([Color('blue'), Color('orange')]))
                 turtle.set_color(choice([color_a, color_b]))
                 turtle.move_to_patch(patch)
             else:
