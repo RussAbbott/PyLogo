@@ -92,9 +92,28 @@ class SegregationWorld(core.World):
         for turtle in self.turtles:
             turtle.draw()
 
+    @staticmethod
+    def select_the_colors():
+        """
+        Require reasonably intense colors for which r, g, and b are not too close to each other
+        and which are reasonably different.
+        """
+        color_ranges = {'color_a': (0, 100), 'color_b': (180, 250)}
+        colors = {}
+        while len(colors) < 2:
+            for (color_id, color_range) in color_ranges.items():
+                for rgb in sample(core.Turtle.color_palette, len(core.Turtle.color_palette)):
+                    avg_rgb = sum(rgb[:3]) / 3
+                    if color_range[0] <= avg_rgb <= color_range[1] and sum(abs(avg_rgb - x) for x in rgb) > 100 and \
+                        (color_id == 'color_a' or sum(abs(c2-c1) for (c1, c2) in zip(colors['color_a'], rgb)) > 400):
+                        colors[color_id] = rgb
+        return colors.values()
+
     def setup(self):
         density = core.WORLD.values['density']
         pct_similar_wanted = core.WORLD.values['% similar wanted']
+
+        (color_a, color_b) = self.select_the_colors()
 
         self.empty_patches = set()
         for patch in self.patches.flat:
@@ -105,7 +124,8 @@ class SegregationWorld(core.World):
             if randint(0, 100) <= density:
                 turtle = SegregationTurtle()
                 turtle.pct_similar_wanted = pct_similar_wanted
-                turtle.set_color(choice([Color('blue'), Color('orange')]))
+                # turtle.set_color(choice([Color('blue'), Color('orange')]))
+                turtle.set_color(choice([color_a, color_b]))
                 turtle.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
