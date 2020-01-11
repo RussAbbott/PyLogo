@@ -1,6 +1,5 @@
 
 import PyLogo.core.core_elements as core
-from PyLogo.core.sim_engine import PyLogo, SimEngine
 import PyLogo.core.utils as utils
 
 from math import pi
@@ -40,7 +39,7 @@ class Synchronized_Turtle_World(core.World):
 
     def go_randomly(self):
         for turtle in self.turtles:
-            turtle.heading = turtle.cached_heading
+            turtle.set_heading(turtle.cached_heading)
             turtle.forward()
 
         if random() < 0.05:

@@ -4,7 +4,7 @@ import PyLogo.core.utils as utils
 
 from itertools import cycle
 
-from random import randint, random, uniform
+from random import random, uniform
 
 
 class Starburst_World(core.World):
@@ -23,7 +23,7 @@ class Starburst_World(core.World):
                                     utils.Velocity(0, 0),
                                     utils.Velocity(1, -1), utils.Velocity(1, 1)])
         for (turtle, vel) in zip(self.turtles, initial_velocities):
-            turtle.velocity = vel
+            turtle.set_velocity(vel)
 
     def step(self):
         """
@@ -32,7 +32,7 @@ class Starburst_World(core.World):
         for turtle in self.turtles:
             turtle.move_by_velocity()
             if core.WORLD.TICKS > 150 and random() < 0.01:
-                turtle.velocity = utils.Velocity(uniform(-2, 2), uniform(-2, 2))
+                turtle.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
 
 
 # ############################################## Define GUI ############################################## #
