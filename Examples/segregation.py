@@ -98,16 +98,24 @@ class SegregationWorld(core.World):
         Require reasonably intense colors for which r, g, and b are not too close to each other
         and which are reasonably different.
         """
-        color_ranges = {'color_a': (0, 100), 'color_b': (180, 250)}
-        colors = {}
-        while len(colors) < 2:
-            for (color_id, color_range) in color_ranges.items():
-                for rgb in sample(core.Turtle.color_palette, len(core.Turtle.color_palette)):
-                    avg_rgb = sum(rgb[:3]) / 3
-                    if color_range[0] <= avg_rgb <= color_range[1] and sum(abs(avg_rgb - x) for x in rgb) > 100 and \
-                        (color_id == 'color_a' or sum(abs(c2-c1) for (c1, c2) in zip(colors['color_a'], rgb)) > 400):
-                        colors[color_id] = rgb
-        return colors.values()
+        while True:
+            # Each color_4 element is (r, g, b, a)
+            colors_4 = sample(core.Turtle.color_palette, 2)
+            # Discard the 'a' value
+            colors = [color[:3] for color in colors_4]
+            # Reject any color that's too close to gray (gray_measure).
+            too_gray = False
+            for color in colors:
+                rgb_avg = sum(color)/3
+                gray_measure = sum(abs(rgb_avg-ci) for ci in color)
+                too_gray = too_gray or gray_measure < 75
+            if too_gray:
+                continue
+            # Reject any pair of colors that are too close to each other.
+            rgb_pairs = zip(colors[0], colors[1])
+            colors_diff = sum(abs(c1 - c2) for (c1, c2) in rgb_pairs)
+            if colors_diff > 400:
+                return colors
 
     def setup(self):
         density = self.get_gui_value('density')
