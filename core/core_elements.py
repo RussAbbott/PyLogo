@@ -3,17 +3,19 @@ from math import atan2, cos, pi, sin, sqrt
 
 import numpy as np
 
-from pygame.colordict import THECOLORS
-
 # Importing this file eliminates the need for a globals declaration
+# noinspection PyUnresolvedReferences
 import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
 import PyLogo.core.utils as utils
 
+import pygame as pg
 from pygame.color import Color
+from pygame.colordict import THECOLORS
 from pygame.rect import Rect
 from pygame.sprite import Sprite
 from pygame.surface import Surface
+import pygame.transform as pgt
 
 from random import choice
 
@@ -52,7 +54,7 @@ class Block(Sprite):
                          (gui.PATCH_SIZE, gui.PATCH_SIZE))
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = color
-        self.image.fill(color)
+        # self.image.fill(color)
 
     def distance_to_xy(self, xy: utils.PixelVector):
         x_dist = self.center_pixel.x - xy.x
@@ -66,7 +68,7 @@ class Block(Sprite):
 
     @staticmethod
     def get_gui_value(key):
-        return core.WORLD.get_gui_value(key)
+        return WORLD.get_gui_value(key)
 
     def set_color(self, color):
         self.color = color
@@ -106,7 +108,7 @@ class Patch(Block):
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        neighbors = [core.WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple()] for (r, c) in deltas]
+        neighbors = [WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple( )] for (r, c) in deltas]
         return neighbors
 
     def remove_turtle(self, turtle):
@@ -130,14 +132,26 @@ class Turtle(Block):
             center_pixel = utils.CENTER_PIXEL()
 
         super().__init__(center_pixel, color)
+        self.original_image = Surface((self.rect.w, self.rect.h))
+        # self.original_image.set_alpha(0)
+
+        pg.draw.polygon(self.original_image,
+                        self.color,
+                        [utils.V2(gui.PATCH_SIZE, gui.PATCH_SIZE),
+                         utils.V2(gui.HALF_PATCH_SIZE( ), 0),
+                         utils.V2(0, gui.PATCH_SIZE),
+                         utils.V2(gui.HALF_PATCH_SIZE( ), gui.PATCH_SIZE*3/4),
+                         ])
+
+        self.image = self.original_image
 
         Turtle.id += 1
         self.id = Turtle.id
-        core.WORLD.turtles.add(self)
+        WORLD.turtles.add(self)
         self.current_patch().add_turtle(self)
         self.heading = 0
         self.speed = 1
-        self.velocity: utils.Velocity = utils.Velocity(0, 0)
+        self.set_velocity(utils.Velocity(0, 0))
 
     def __str__(self):
         class_name = utils.get_class_name(self)
@@ -162,7 +176,7 @@ class Turtle(Block):
 
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
-        patch = core.WORLD.patches[row_col.row, row_col.col]
+        patch = WORLD.patches[row_col.row, row_col.col]
         return patch
 
     def face_xy(self, xy: utils.PixelVector):
@@ -171,7 +185,7 @@ class Turtle(Block):
         delta_y = self.center_pixel.y - xy.y
         atn2 = atan2(delta_y, delta_x)
         angle = (atn2 / (2 * pi) ) * 360
-        self.heading = utils.angle_to_heading(angle)
+        self.set_heading(utils.angle_to_heading(angle))
 
     def forward(self, speed=None):
         if speed is None:
@@ -191,7 +205,7 @@ class Turtle(Block):
         if self.get_gui_value('Bounce?'):
             new_dxdy = self.bounce_off_screen_edge(dxdy)
             if dxdy is self.velocity:
-                self.velocity = new_dxdy
+                self.set_velocity(new_dxdy)
             dxdy = new_dxdy
         self.move_to_xy(self.center_pixel + dxdy)
 
@@ -215,11 +229,22 @@ class Turtle(Block):
         new_patch = self.current_patch( )
         new_patch.add_turtle(self)
 
+    def set_heading(self, angle):
+        self.heading = angle
+        self.image = self.original_image
+        self.image = pgt.rotate(self.image, -angle)
+        # self.image = pgt.scale2x(self.image)
+        # self.image = pgt.rotozoom(self.image, -angle, 2)
+
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
 
     def turn_right(self, delta_angles):
-        self.heading = (self.heading + delta_angles + 360) % 360
+        self.set_heading((self.heading + delta_angles + 360) % 360)
+
+    def set_velocity(self, velocity):
+        self.velocity = velocity
+        self.face_xy(self.center_pixel + velocity)
 
 
 class World:
@@ -251,9 +276,9 @@ class World:
     def create_ordered_turtles(n):
         """Create n Turtles with headings evenly spaced from 0 to 360"""
         for i in range(n):
-            angle = i*360/n
             turtle = Turtle()
-            turtle.heading = angle
+            angle = i*360/n
+            turtle.set_heading(angle)
 
     def done(self):
         return False

@@ -1,8 +1,11 @@
 
 from __future__ import annotations
 
-import PyLogo.core.core_elements as core
 import PyLogo.core.gui as gui
+# noinspection PyUnresolvedReferences
+import PyLogo.core.utils as utils
+
+from pygame.math import Vector2
 
 
 class PixelVector:
@@ -122,3 +125,8 @@ def row_col_to_center_pixel(row_col: RowCol):
     pv = PixelVector(1 + gui.BLOCK_SPACING() * row_col.col + gui.HALF_PATCH_SIZE(),
                      1 + gui.BLOCK_SPACING() * row_col.row + gui.HALF_PATCH_SIZE())
     return pv
+
+
+def V2(x, y):
+    # noinspection PyArgumentList
+    return Vector2(float(x), float(y))
