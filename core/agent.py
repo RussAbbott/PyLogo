@@ -33,18 +33,18 @@ NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('b
                           Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
 
 
-class Turtle(Block):
+class Agent(Block):
 
     color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
 
 
     id = 0
 
-    def __init__(self, center_pixel: utils.PixelVector = None, color=None, scale_factor=1.4):
+    def __init__(self, center_pixel: utils.PixelVector = None, color=None, scale=1.4):
         if color is None:
             # Select a color at random from the color_palette
-            # Turtle.color_palette is set during World.setup().
-            color = choice(Turtle.color_palette)
+            # Agent.color_palette is set during World.setup().
+            color = choice(Agent.color_palette)
 
         # Can't make this a default value because it isn't defined when the default values is compiled
         if center_pixel is None:
@@ -63,17 +63,17 @@ class Turtle(Block):
                          utils.V2(gui.HALF_PATCH_SIZE( ), gui.PATCH_SIZE*3/4),
                          ])
 
-        self.scale_factor = scale_factor
+        self.scale = scale
 
-        # pixels = int(scale_factor*gui.BLOCK_SPACING())
+        # pixels = int(scale*gui.BLOCK_SPACING())
         # self.original_image = pgt.smoothscale(self.original_image, (pixels, pixels))
         # self.image = self.original_image
 
 
-        Turtle.id += 1
-        self.id = Turtle.id
-        core.WORLD.turtles.add(self)
-        self.current_patch().add_turtle(self)
+        Agent.id += 1
+        self.id = Agent.id
+        core.WORLD.agents.add(self)
+        self.current_patch().add_agent(self)
         self.heading = 0
         self.speed = 1
         # To keep PyCharm happy.
@@ -87,7 +87,7 @@ class Turtle(Block):
 
     def bounce_off_screen_edge(self, dxdy):
         """
-       Bounce turtle off the screen edges
+       Bounce agent off the screen edges
        """
         sc_rect = gui.simple_gui.SCREEN.get_rect()
         center_pixel = self.center_pixel
@@ -110,11 +110,11 @@ class Turtle(Block):
     def draw(self):
         # self.image = self.original_image
         # rotated_image = pgt.rotate(self.original_image, -self.heading)
-        # pixels = int(self.scale_factor*gui.BLOCK_SPACING())
+        # pixels = int(self.scale*gui.BLOCK_SPACING())
         # self.image = pgt.smoothscale(rotated_image, (pixels, pixels))
         # self.image = self.original_image
         #
-        pixels = int(self.scale_factor*gui.BLOCK_SPACING())
+        pixels = int(self.scale*gui.BLOCK_SPACING())
         scaled_image = pgt.smoothscale(self.original_image, (pixels, pixels))
         self.image = pgt.rotate(scaled_image, -self.heading)
 
@@ -148,7 +148,7 @@ class Turtle(Block):
         new_heading = utils.angle_to_heading(angle)
         return new_heading
 
-    def move_turtle(self, wrap):
+    def move_agent(self, wrap):
         pass
 
     def move_by_dxdy(self, dxdy: utils.Velocity):
@@ -170,17 +170,17 @@ class Turtle(Block):
 
     def move_to_xy(self, xy: utils.PixelVector):
         """
-        Remove this turtle from the list of turtles at its current patch.
-        Move this turtle to its new xy center_pixel.
-        Add this turtle to the list of turtles in its new patch.
+        Remove this agent from the list of agents at its current patch.
+        Move this agent to its new xy center_pixel.
+        Add this agent to the list of agents in its new patch.
         """
         current_patch: Patch = self.current_patch()
-        current_patch.remove_turtle(self)
+        current_patch.remove_agent(self)
         self.center_pixel: utils.PixelVector = xy.wrap()
         r = self.rect
         (r.x, r.y) = (self.center_pixel.x-gui.HALF_PATCH_SIZE(), self.center_pixel.y-gui.HALF_PATCH_SIZE())
         new_patch = self.current_patch( )
-        new_patch.add_turtle(self)
+        new_patch.add_agent(self)
 
     def set_heading(self, angle):
         self.heading = angle
@@ -194,3 +194,7 @@ class Turtle(Block):
     def set_velocity(self, velocity):
         self.velocity = velocity
         self.face_xy(self.center_pixel + velocity)
+
+
+class Turtle(Agent):
+    pass

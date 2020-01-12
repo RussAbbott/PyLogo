@@ -20,7 +20,7 @@ WORLD = None  # The world
 
 class Block(Sprite):
     """
-    A generic patch/turtle. Has a PixelVector but not necessarily a RowCol. Has a Color.
+    A generic patch/agent. Has a PixelVector but not necessarily a RowCol. Has a Color.
     """
     def __init__(self, center_pixel: utils.PixelVector, color=Color('black')):
         super().__init__()
@@ -52,7 +52,7 @@ class Patch(Block):
     def __init__(self, row_col: utils.RowCol, color=Color('black')):
         super().__init__(utils.row_col_to_center_pixel(row_col), color)
         self.row_col = row_col
-        self.turtles = set()
+        self.agents = set()
         self._neighbors_4 = None
         self._neighbors_8 = None
 
@@ -60,8 +60,8 @@ class Patch(Block):
         class_name = utils.get_class_name(self)
         return f'{class_name}{(self.row_col.row, self.row_col.col)}'
 
-    def add_turtle(self, tur):
-        self.turtles.add(tur)
+    def add_agent(self, tur):
+        self.agents.add(tur)
 
     def neighbors_4(self):
         if self._neighbors_4 is None:
@@ -84,13 +84,13 @@ class Patch(Block):
         neighbors = [WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple( )] for (r, c) in deltas]
         return neighbors
 
-    def remove_turtle(self, turtle):
-        self.turtles.remove(turtle)
+    def remove_agent(self, agent):
+        self.agents.remove(agent)
 
 
 class World:
 
-    def __init__(self, patch_class, turtle_class):
+    def __init__(self, patch_class, agent_class):
         core.WORLD = self
 
         self.event = None
@@ -102,8 +102,8 @@ class World:
         self.patches: np.ndarray = self.create_patches( )
 
 
-        self.turtle_class = turtle_class
-        self.turtles = set()
+        self.agent_class = agent_class
+        self.agents = set()
 
     def create_patches(self):
         patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
@@ -111,14 +111,14 @@ class World:
         return np.array(patch_pseudo_array)
 
     def clear_all(self):
-        self.turtles = set()
+        self.agents = set()
 
-    def create_ordered_turtles(self, n):
-        """Create n Turtles with headings evenly spaced from 0 to 360"""
+    def create_ordered_agents(self, n):
+        """Create n Agents with headings evenly spaced from 0 to 360"""
         for i in range(n):
-            turtle = self.turtle_class()
+            agent = self.agent_class()
             angle = i*360/n
-            turtle.set_heading(angle)
+            agent.set_heading(angle)
 
     def done(self):
         return False
@@ -127,8 +127,8 @@ class World:
         for patch in self.patches.flat:
             patch.draw()
 
-        for turtle in self.turtles:
-            turtle.draw()
+        for agent in self.agents:
+            agent.draw()
 
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """
@@ -153,7 +153,7 @@ class World:
     def save_values_and_setup(self, event, values):
         self.event = event
         self.values = values
-        # Turtle.color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
+        # Agent.color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
         self.setup()
 
     def setup(self):
