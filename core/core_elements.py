@@ -124,9 +124,11 @@ class Turtle(Block):
                          utils.V2(gui.HALF_PATCH_SIZE( ), gui.PATCH_SIZE*3/4),
                          ])
 
-        pixels = int(scale_factor*gui.BLOCK_SPACING())
-        self.original_image = pgt.smoothscale(self.original_image, (pixels, pixels))
-        self.image = self.original_image
+        self.scale_factor = scale_factor
+
+        # pixels = int(scale_factor*gui.BLOCK_SPACING())
+        # self.original_image = pgt.smoothscale(self.original_image, (pixels, pixels))
+        # self.image = self.original_image
 
 
         Turtle.id += 1
@@ -167,21 +169,28 @@ class Turtle(Block):
         return patch
 
     def draw(self):
-        image_rect = self.image.get_rect()
-        (center_x, center_y) = self.center_pixel.as_tuple()
-        # cur_patch = self.current_patch()
-        self.rect = Rect(center_x - image_rect.width/2, center_y - image_rect.height/2,
-                         image_rect.width, image_rect.height)
+        # self.image = self.original_image
+        # rotated_image = pgt.rotate(self.original_image, -self.heading)
+        # pixels = int(self.scale_factor*gui.BLOCK_SPACING())
+        # self.image = pgt.smoothscale(rotated_image, (pixels, pixels))
+        # self.image = self.original_image
+        #
+        pixels = int(self.scale_factor*gui.BLOCK_SPACING())
+        scaled_image = pgt.smoothscale(self.original_image, (pixels, pixels))
+        self.image = pgt.rotate(scaled_image, -self.heading)
+
+        # image_rect = self.image.get_rect()
+        # (center_x, center_y) = self.center_pixel.as_tuple()
+        # # cur_patch = self.current_patch()
+        # self.rect = Rect(center_x - image_rect.width/2, center_y - image_rect.height/2,
+        #                  image_rect.width, image_rect.height)
+        self.rect = self.image.get_rect(center=self.center_pixel.as_tuple())
         # print(f'{self}, {cur_patch}-{cur_patch.center_pixel}, image: {image_rect}-{image_rect.center}, {self.rect}')
         super().draw()
 
     def face_xy(self, xy: utils.PixelVector):
-        delta_x = xy.x - self.center_pixel.x
-        # Subtract in reverse to compensate for the reversal of the y axis.
-        delta_y = self.center_pixel.y - xy.y
-        atn2 = atan2(delta_y, delta_x)
-        angle = (atn2 / (2 * pi) ) * 360
-        self.set_heading(utils.angle_to_heading(angle))
+        new_heading = self.heading_to_xy(xy)
+        self.set_heading(new_heading)
 
     def forward(self, speed=None):
         if speed is None:
@@ -190,6 +199,15 @@ class Turtle(Block):
         dx = cos(angle) * speed
         dy = (-1)*sin(angle) * speed
         self.move_by_dxdy(utils.Velocity(dx, dy))
+
+    def heading_to_xy(self, xy):
+        delta_x = xy.x - self.center_pixel.x
+        # Subtract in reverse to compensate for the reversal of the y axis.
+        delta_y = self.center_pixel.y - xy.y
+        atn2 = atan2(delta_y, delta_x)
+        angle = (atn2 / (2 * pi) ) * 360
+        new_heading = utils.angle_to_heading(angle)
+        return new_heading
 
     def move_turtle(self, wrap):
         pass
@@ -227,8 +245,8 @@ class Turtle(Block):
 
     def set_heading(self, angle):
         self.heading = angle
-        self.image = self.original_image
-        self.image = pgt.rotate(self.image, -angle)
+        # self.image = self.original_image
+        # self.image = pgt.rotate(self.image, -angle)
 
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
