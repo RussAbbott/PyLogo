@@ -62,7 +62,7 @@ class SimEngine:
         return self.NORMAL
 
     def start(self, world_class, patch_class, turtle_class):
-        self.world = world_class(patch_class=patch_class, turtle_class=turtle_class)
+        self.world = world_class(patch_class, turtle_class)
 
         # Let events come through pygame to this level.
         pg.event.set_grab(False)
