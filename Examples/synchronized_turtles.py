@@ -51,7 +51,7 @@ class Synchronized_Turtle_World(core.World):
             turtle.cached_heading = turtle.heading
 
     def grow_shrink(self, grow_or_shrink):
-        offset = randint(-90, 90) + choice([-90, 90])
+        offset = choice([-60, 60])
         for turtle in self.turtles:
             if grow_or_shrink == 'grow':
                 turtle.turn_right(180)
