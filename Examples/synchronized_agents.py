@@ -7,17 +7,17 @@ from math import pi
 from random import choice, randint, random
 
 
-class Synchronized_Turtle_World(core.World):
+class Synchronized_Agent_World(core.World):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.reference_turtle = None
+        self.reference_agent = None
         self.current_figure = None
         self.breathing_phase = 'inhale'
 
     def do_a_step(self):
         if self.current_figure in ['clockwise', 'counter-clockwise']:
-            r = self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL())
+            r = self.reference_agent.distance_to_xy(utils.CENTER_PIXEL())
             self.go_in_circle(r)
         elif self.current_figure == 'breathe':
             self.breathe()
@@ -27,63 +27,63 @@ class Synchronized_Turtle_World(core.World):
             print(f'Error. No current figure: ({self.current_figure})')
 
     def breathe(self):
-        for turtle in self.turtles:
+        for agent in self.agents:
             if self.breathing_phase == 'inhale':
-                turtle.turn_left(180)
-            turtle.forward()
+                agent.turn_left(180)
+            agent.forward()
 
     def go_in_circle(self, r):
-        for turtle in self.turtles:
-            turtle.turn_left(90 if self.current_figure == 'clockwise' else -90)
-            turtle.forward(2 * pi * r / 360)
+        for agent in self.agents:
+            agent.turn_left(90 if self.current_figure == 'clockwise' else -90)
+            agent.forward(2 * pi * r / 360)
 
     def go_randomly(self):
-        for turtle in self.turtles:
-            turtle.set_heading(turtle.cached_heading)
-            turtle.forward()
+        for agent in self.agents:
+            agent.set_heading(agent.cached_heading)
+            agent.forward()
 
         if random() < 0.04:
             angle = randint(-15, 15)
-            for turtle in self.turtles:
-                turtle.turn_right(angle)
+            for agent in self.agents:
+                agent.turn_right(angle)
 
-        for turtle in self.turtles:
-            turtle.cached_heading = turtle.heading
+        for agent in self.agents:
+            agent.cached_heading = agent.heading
 
     def grow_shrink(self, grow_or_shrink):
         offset = choice([-60, 60])
-        for turtle in self.turtles:
+        for agent in self.agents:
             if grow_or_shrink == 'grow':
-                turtle.turn_right(180)
-            turtle.forward()
-            turtle.cached_heading = turtle.heading + offset
+                agent.turn_right(180)
+            agent.forward()
+            agent.cached_heading = agent.heading + offset
             # Set the breathing phase whether or not we are currently breathing.
             self.breathing_phase = 'inhale' if grow_or_shrink == 'grow' else 'exhale'
 
     def setup(self):
-        nbr_turtles = self.get_gui_value('nbr_turtles')
-        self.create_ordered_turtles(nbr_turtles)
-        self.reference_turtle = list(self.turtles)[0]
-        for turtle in self.turtles:
-            turtle.cached_heading = turtle.heading
-            turtle.speed = 1
-            turtle.forward(100)
-            turtle.turn_right(90)
+        nbr_agents = self.get_gui_value('nbr_agents')
+        self.create_ordered_agents(nbr_agents)
+        self.reference_agent = list(self.agents)[0]
+        for agent in self.agents:
+            agent.cached_heading = agent.heading
+            agent.speed = 1
+            agent.forward(100)
+            agent.turn_right(90)
 
     def step(self):
         # For simplicity, start each step by facing the center.
-        for turtle in self.turtles:
-            turtle.face_xy(utils.CENTER_PIXEL( ))
+        for agent in self.agents:
+            agent.face_xy(utils.CENTER_PIXEL( ))
         if self.take_emergency_action():
             return
         self.current_figure = self.get_gui_value('figure')
         self.do_a_step()
         
     def take_emergency_action(self):
-        if self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL()) >= 250:
+        if self.reference_agent.distance_to_xy(utils.CENTER_PIXEL()) >= 250:
             self.grow_shrink('shrink')
             return True
-        elif self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL()) <= 50:
+        elif self.reference_agent.distance_to_xy(utils.CENTER_PIXEL()) <= 50:
             self.grow_shrink('grow')
             return True
         return False
@@ -91,8 +91,8 @@ class Synchronized_Turtle_World(core.World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_elements = [[sg.Text('nbr of turtles'),
-                 sg.Slider(key='nbr_turtles', range=(1, 100), default_value=16, size=(8, 20),
+gui_elements = [[sg.Text('nbr of agents'),
+                 sg.Slider(key='nbr_agents', range=(1, 100), default_value=16, size=(8, 20),
                            orientation='horizontal', pad=((0, 0), (0, 20)))],
 
                 [sg.Text('Figure to trace'),
@@ -102,4 +102,4 @@ gui_elements = [[sg.Text('nbr of turtles'),
 
 if __name__ == "__main__":
     from PyLogo.Examples.main import PyLogo
-    PyLogo(Synchronized_Turtle_World, gui_elements, 'Synchronized turtles', bounce=None)
+    PyLogo(Synchronized_Agent_World, gui_elements, 'Synchronized agents', bounce=None)

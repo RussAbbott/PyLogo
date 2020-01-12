@@ -15,44 +15,44 @@ class CollisionTest_Patch(core.Patch):
         # Each patch gets a hit_color
         self.hit_color = Color('white')
 
-    def update_collision_color(self, turtles):
-        collides = any([collide_rect(self, turtle) for turtle in turtles])
+    def update_collision_color(self, agents):
+        collides = any([collide_rect(self, agent) for agent in agents])
         fill_color = self.hit_color if collides else self.color
         self.image.fill(fill_color)
 
 
 class CollisionTest_World(core.World):
     """
-    A world in which the patches change to green when intersecting with a turtle.
+    A world in which the patches change to green when intersecting with a agent.
     """
 
     def setup(self):
-        nbr_turtles = int(core.WORLD.values['nbr_turtles'])
-        for i in range(nbr_turtles):
-            # Adds itself to self.turtles and to its patch's list of Turtles.
-            turtle = self.turtle_class(color=Color('red'), scale_factor=1.4)
-            turtle.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
+        nbr_agents = int(core.WORLD.values['nbr_agents'])
+        for i in range(nbr_agents):
+            # Adds itself to self.agents and to its patch's list of Agents.
+            agent = self.agent_class(color=Color('red'), scale=1.4)
+            agent.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
 
         for patch in self.patches.flat:
-            patch.update_collision_color(self.turtles)
+            patch.update_collision_color(self.agents)
 
     def step(self):
         """
-        Update the world by moving the turtle and indicating the patches that intersect the turtle
+        Update the world by moving the agent and indicating the patches that intersect the agent
         """
-        for turtle in self.turtles:
-            turtle.move_by_velocity()
+        for agent in self.agents:
+            agent.move_by_velocity()
             if random() < 0.01:
-                turtle.set_velocity(utils.Velocity(randint(-2, 2), randint(-2, 2)))
+                agent.set_velocity(utils.Velocity(randint(-2, 2), randint(-2, 2)))
 
         for patch in self.patches.flat:
-            patch.update_collision_color(self.turtles)
+            patch.update_collision_color(self.agents)
 
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_elements = [[sg.Text('nbr turtles', pad=((0, 5), (20, 0))),
-                 sg.Slider(key='nbr_turtles', range=(1, 10), default_value=3,
+gui_elements = [[sg.Text('nbr agents', pad=((0, 5), (20, 0))),
+                 sg.Slider(key='nbr_agents', range=(1, 10), default_value=3,
                            orientation='horizontal', size=(10, 20))],
                 ]
 
