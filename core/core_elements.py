@@ -22,24 +22,6 @@ from random import choice
 from typing import Tuple
 
 
-def is_acceptable_color(rgb: Tuple[int, int, int]):
-    """
-    Require reasonably bright colors for which r, g, and b are not too close to each other.
-    """
-    sum_rgb = sum(rgb)
-    avg_rgb = sum_rgb/3
-    return 150 <= sum_rgb and sum(abs(avg_rgb-x) for x in rgb) > 100
-
-
-# These are colors defined by pygame that satisfy is_acceptable_color above.
-PYGAME_COLORS = [rgba for rgba in THECOLORS.values() if is_acceptable_color(rgba[:3])]
-
-# These are NetLogo primary colors.
-NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('brown'), Color('yellow'),
-                          Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
-                          Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
-
-
 WORLD = None  # The world
 
 
@@ -50,11 +32,9 @@ class Block(Sprite):
     def __init__(self, center_pixel: utils.PixelVector, color=Color('black')):
         super().__init__()
         self.center_pixel = center_pixel
-        self.rect = Rect((self.center_pixel.x - gui.HALF_PATCH_SIZE(), self.center_pixel.y - gui.HALF_PATCH_SIZE()),
-                         (gui.PATCH_SIZE, gui.PATCH_SIZE))
+        self.rect = Rect(center_pixel.as_tuple(), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = color
-        # self.image.fill(color)
 
     def distance_to_xy(self, xy: utils.PixelVector):
         x_dist = self.center_pixel.x - xy.x
@@ -84,7 +64,7 @@ class Patch(Block):
         self._neighbors_8 = None
 
     def __str__(self):
-        class_name = utils.get_class_name(self)
+        class_name = get_class_name(self)
         return f'{class_name}{(self.row_col.row, self.row_col.col)}'
 
     def add_turtle(self, tur):
@@ -121,7 +101,7 @@ class Turtle(Block):
 
     id = 0
 
-    def __init__(self, center_pixel: utils.PixelVector = None, color=None):
+    def __init__(self, center_pixel: utils.PixelVector = None, color=None, scale_factor=1.4):
         if color is None:
             # Select a color at random from the color_palette
             # Turtle.color_palette is set during World.setup().
@@ -132,8 +112,9 @@ class Turtle(Block):
             center_pixel = utils.CENTER_PIXEL()
 
         super().__init__(center_pixel, color)
-        self.original_image = Surface((self.rect.w, self.rect.h))
-        # self.original_image.set_alpha(0)
+        # self.original_image = Surface((self.rect.w, self.rect.h)).convert_alpha()
+        self.original_image = self.image.convert_alpha()
+        self.original_image.fill((0, 0, 0, 0))
 
         pg.draw.polygon(self.original_image,
                         self.color,
@@ -143,7 +124,10 @@ class Turtle(Block):
                          utils.V2(gui.HALF_PATCH_SIZE( ), gui.PATCH_SIZE*3/4),
                          ])
 
+        pixels = int(scale_factor*gui.BLOCK_SPACING())
+        self.original_image = pgt.smoothscale(self.original_image, (pixels, pixels))
         self.image = self.original_image
+
 
         Turtle.id += 1
         self.id = Turtle.id
@@ -151,11 +135,14 @@ class Turtle(Block):
         self.current_patch().add_turtle(self)
         self.heading = 0
         self.speed = 1
+        # To keep PyCharm happy.
+        self.velocity = None
         self.set_velocity(utils.Velocity(0, 0))
 
     def __str__(self):
-        class_name = utils.get_class_name(self)
-        return f'{class_name}-{self.id}. pixel: {(self.center_pixel.x, self.center_pixel.y)}, heading: {self.heading}'
+        class_name = get_class_name(self)
+        return f'{class_name}-{self.id}@{(self.center_pixel.x, self.center_pixel.y)}: ' \
+               f'heading: {round(self.heading, 2)}'
 
     def bounce_off_screen_edge(self, dxdy):
         """
@@ -178,6 +165,15 @@ class Turtle(Block):
         row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
         patch = WORLD.patches[row_col.row, row_col.col]
         return patch
+
+    def draw(self):
+        image_rect = self.image.get_rect()
+        (center_x, center_y) = self.center_pixel.as_tuple()
+        # cur_patch = self.current_patch()
+        self.rect = Rect(center_x - image_rect.width/2, center_y - image_rect.height/2,
+                         image_rect.width, image_rect.height)
+        # print(f'{self}, {cur_patch}-{cur_patch.center_pixel}, image: {image_rect}-{image_rect.center}, {self.rect}')
+        super().draw()
 
     def face_xy(self, xy: utils.PixelVector):
         delta_x = xy.x - self.center_pixel.x
@@ -233,8 +229,6 @@ class Turtle(Block):
         self.heading = angle
         self.image = self.original_image
         self.image = pgt.rotate(self.image, -angle)
-        # self.image = pgt.scale2x(self.image)
-        # self.image = pgt.rotozoom(self.image, -angle, 2)
 
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
@@ -272,11 +266,10 @@ class World:
     def clear_all(self):
         self.turtles = set()
 
-    @staticmethod
-    def create_ordered_turtles(n):
+    def create_ordered_turtles(self, n):
         """Create n Turtles with headings evenly spaced from 0 to 360"""
         for i in range(n):
-            turtle = Turtle()
+            turtle = self.turtle_class()
             angle = i*360/n
             turtle.set_heading(angle)
 
@@ -329,3 +322,50 @@ class World:
         Update the world. Override for each world
         """
         pass
+
+
+def is_acceptable_color(rgb: Tuple[int, int, int]):
+    """
+    Require reasonably bright colors for which r, g, and b are not too close to each other.
+    """
+    sum_rgb = sum(rgb)
+    avg_rgb = sum_rgb/3
+    return 150 <= sum_rgb and sum(abs(avg_rgb-x) for x in rgb) > 100
+
+
+# These are colors defined by pygame that satisfy is_acceptable_color above.
+PYGAME_COLORS = [rgba for rgba in THECOLORS.values() if is_acceptable_color(rgba[:3])]
+
+# These are NetLogo primary colors.
+NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('brown'), Color('yellow'),
+                          Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
+                          Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
+
+
+def extract_class_name(full_class_name: type):
+    """
+    full_class_name will be something like: <class 'PyLogo.core.static_values'>
+    We return the str: static_values. Take the final segment [-1] after segmenting
+    at '.' and then drop the final two characters [:-2].
+    """
+    return str(full_class_name).split('.')[-1][:-2]
+
+
+def get_class_name(obj) -> str:
+    """ Get the name of the object's class as a string. """
+    full_class_name = type(obj)
+    return extract_class_name(full_class_name)
+
+
+from PyLogo.core.sim_engine import SimEngine
+
+
+def PyLogo(world_class=World, gui_elements=None, caption=None,
+           patch_class=Patch, turtle_class=Turtle,
+           patch_size=11, bounce=True):
+    if gui_elements is None:
+        gui_elements = []
+    if caption is None:
+        caption = extract_class_name(world_class)
+    sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
+    sim_engine.start(world_class, patch_class=patch_class, turtle_class=turtle_class)

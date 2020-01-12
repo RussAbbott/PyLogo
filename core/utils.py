@@ -102,21 +102,6 @@ def center_pixel_to_row_col(center_pixel: PixelVector):
     return RowCol(int(row), int(col))
 
 
-def extract_class_name(full_class_name: type):
-    """
-    full_class_name will be something like: <class 'PyLogo.core.static_values'>
-    We return the str: static_values. Take the final segment [-1] after segmenting
-    at '.' and then drop the final two characters [:-2].
-    """
-    return str(full_class_name).split('.')[-1][:-2]
-
-
-def get_class_name(obj) -> str:
-    """ Get the name of the object's class as a string. """
-    full_class_name = type(obj)
-    return extract_class_name(full_class_name)
-
-
 def row_col_to_center_pixel(row_col: RowCol):
     """
     Get the pixel position for this RowCol.
@@ -129,4 +114,4 @@ def row_col_to_center_pixel(row_col: RowCol):
 
 def V2(x, y):
     # noinspection PyArgumentList
-    return Vector2(float(x), float(y))
+    return Vector2(x, y)

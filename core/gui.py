@@ -5,6 +5,7 @@ import pygame as pg
 from pygame.time import Clock
 
 # By importing this file itself, can avoid the use of globals
+# noinspection PyUnresolvedReferences
 import PyLogo.core.gui as gui
 
 import PySimpleGUI as sg
@@ -79,41 +80,37 @@ class SimpleGUI:
         # Everything is drawn to self.SCREEN
         self.SCREEN = pg.display.set_mode(screen_shape_width_height)
 
-    def draw(self, element):
-        # Fill the screen with the background color, draw the element, and update the display.
+    def fill_screen(self):
         self.SCREEN.fill(self.screen_color)
-        element.draw( )
-        pg.display.update( )
 
     def make_window(self, caption, model_gui_elements, screen_shape_width_height, bounce=True):
         """
         Create the window, including sg.Graph, the drawing surface.
         """
         # --------------------- PySimpleGUI window layout and creation --------------------
-        hor_line = sg.Text('_' * 25, text_color='black')
+        hor_separator_line = [sg.Text('_' * 25, text_color='black')]
 
-        bounce_checkboc = ''
+        bounce_checkbox_line = ''
         if bounce is not None:
-            bounce_checkboc = [sg.Checkbox('Bounce?', key='Bounce?', default=bounce,
-                                           tooltip='Bounce back from the edges of the screen?')]
+            bounce_checkbox_line = [sg.Checkbox('Bounce?', key='Bounce?', default=bounce,
+                                    tooltip='Bounce back from the edges of the screen?')]
+
+        setup_go_line = [
+            sg.Button(self.SETUP, pad=((0, 10), (10, 0))),
+            sg.Button(self.GO_ONCE, disabled=True, button_color=('white', 'green'), pad=((0, 10), (10, 0))),
+            sg.Button(self.GO, disabled=True, button_color=('white', 'green'), pad=((0, 30), (10, 0)),
+                      key=self.GOSTOP)   ]
+
+
+        exit_button_line = [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((70, 0), (10, 0)))]
 
         col1 = [ *model_gui_elements,
-
-                 [hor_line],
-
-                 [sg.Button(self.SETUP, pad=((0, 10), (10, 0))),
-                  sg.Button(self.GO_ONCE, disabled=True, button_color=('white', 'green'), pad=((0, 10), (10, 0))),
-                  sg.Button(self.GO, disabled=True, button_color=('white', 'green'), pad=((0, 30), (10, 0)),
-                            key=self.GOSTOP)],
-
-                 bounce_checkboc,
-
-                 # ([sg.Checkbox('Bounce?', key='Bounce?', default=True,
-                 #               tooltip='Bounce back from the edges of the screen?')] if bounce else ''),
-
-                 [hor_line],
-
-                 [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((70, 0), (10, 0)))] ]
+                 hor_separator_line,
+                 setup_go_line,
+                 bounce_checkbox_line,
+                 hor_separator_line,
+                 exit_button_line
+                 ]
 
         lower_left_pixel_xy = (0, screen_shape_width_height[1]-1)
         upper_right_pixel_xy = (screen_shape_width_height[0]-1, 0)

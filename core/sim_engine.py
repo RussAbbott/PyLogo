@@ -1,7 +1,5 @@
 
-import PyLogo.core.core_elements as core
-import PyLogo.core.gui as gui
-import PyLogo.core.utils as utils
+from PyLogo.core.gui import SimpleGUI
 
 import pygame as pg
 from pygame.time import Clock
@@ -24,43 +22,47 @@ class SimEngine:
         self.fps = 60
         self.idle_fps = 10
 
-        self.WORLD = None
+        self.world = None
 
-        self.simple_gui = gui.SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
-        self.window = gui.simple_gui.window
+        self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
+        self.window = self.simple_gui.window
 
         pg.init()
+
+    def draw_world(self):
+        # Fill the screen with the background color, draw the world, and update the display.
+        self.simple_gui.fill_screen()
+        self.world.draw()
+        pg.display.update()
 
     def run_model(self):
         while True:
             (event, values) = self.window.read(timeout=10)
 
-            if event in (None, gui.simple_gui.EXIT):
-                return gui.simple_gui.EXIT
+            if event in (None, self.simple_gui.EXIT):
+                return self.simple_gui.EXIT
 
             if event == 'GoStop':
-                self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
+                # Disable the GO_ONCE button
+                self.window[self.simple_gui.GO_ONCE].update(disabled=False)
                 break
 
-            if self.WORLD.done():
+            if self.world.done():
                 self.window['GoStop'].update(disabled=True)
                 break
 
             # TICKS are our local counter for the number of times we have gone around this loop.
-            self.WORLD.increment_ticks()
-
-            self.WORLD.save_values_and_step(event, values)
-
-            self.simple_gui.draw(self.WORLD)
-
-            # The next line limits how fast the simulation runs and is not a counter.
+            self.world.increment_ticks()
+            self.world.save_values_and_step(event, values)
+            self.draw_world()
+            # The next line limits how fast the simulation runs. It is not a counter.
             self.clock.tick(self.fps)
 
-        self.WORLD.final_thoughts()
+        self.world.final_thoughts()
         return self.NORMAL
 
-    def start(self, world_class, patch_class=core.Patch, turtle_class=core.Turtle):
-        self.WORLD = world_class(patch_class=patch_class, turtle_class=turtle_class)
+    def start(self, world_class, patch_class, turtle_class):
+        self.world = world_class(patch_class=patch_class, turtle_class=turtle_class)
 
         # Let events come through pygame to this level.
         pg.event.set_grab(False)
@@ -71,43 +73,31 @@ class SimEngine:
                             self.CTRL_D, self.CTRL_d]:
             (event, values) = self.window.read(timeout=10)
 
-            if event in (None, gui.simple_gui.EXIT):
+            if event in (None, self.simple_gui.EXIT):
                 self.window.close()
                 break
 
-            if event == gui.simple_gui.SETUP:
-                self.window[gui.simple_gui.GOSTOP].update(disabled=False)
-                self.window[gui.simple_gui.GO_ONCE].update(disabled=False)
-                self.WORLD.reset_all()
-                self.WORLD.save_values_and_setup(event, values)
-                self.simple_gui.draw(self.WORLD)
+            if event == self.simple_gui.SETUP:
+                self.window[self.simple_gui.GOSTOP].update(disabled=False)
+                self.window[self.simple_gui.GO_ONCE].update(disabled=False)
+                self.world.reset_all()
+                self.world.save_values_and_setup(event, values)
+                self.draw_world()
 
-            if event == gui.simple_gui.GO_ONCE:
-                self.WORLD.increment_ticks()
-                self.WORLD.save_values_and_step(event, values)
-                self.simple_gui.draw(self.WORLD)
+            if event == self.simple_gui.GO_ONCE:
+                self.world.increment_ticks()
+                self.world.save_values_and_step(event, values)
+                self.draw_world()
 
-            if event == gui.simple_gui.GOSTOP:
-                self.window[gui.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
-                self.window[gui.simple_gui.GO_ONCE].update(disabled=True)
-                self.window[gui.simple_gui.SETUP].update(disabled=True)
+            if event == self.simple_gui.GOSTOP:
+                self.window[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
+                self.window[self.simple_gui.GO_ONCE].update(disabled=True)
+                self.window[self.simple_gui.SETUP].update(disabled=True)
                 returned_value = self.run_model()
                 self.window['GoStop'].update(text='go', button_color=('white', 'green'))
-                self.window[gui.simple_gui.SETUP].update(disabled=False)
-                if returned_value == gui.simple_gui.EXIT:
+                self.window[self.simple_gui.SETUP].update(disabled=False)
+                if returned_value == self.simple_gui.EXIT:
                     self.window.close()
                     break
 
             self.clock.tick(self.idle_fps)
-
-
-def PyLogo(world_class=core.World, gui_elements=None, caption=None,
-           patch_class=core.Patch, turtle_class=core.Turtle,
-           patch_size=11, bounce=True):
-    if gui_elements is None:
-        gui_elements = []
-    if caption is None:
-        caption = utils.extract_class_name(world_class)
-    sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
-    sim_engine.start(world_class, patch_class=patch_class, turtle_class=turtle_class)
-
