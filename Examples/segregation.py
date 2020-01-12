@@ -1,6 +1,5 @@
 
 import PyLogo.core.core_elements as core
-from PyLogo.core.sim_engine import SimEngine
 
 from pygame import Color
 
@@ -183,5 +182,5 @@ gui_elements = [[sg.Text('density'),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.sim_engine import PyLogo
+    from PyLogo.core.core_elements import PyLogo
     PyLogo(SegregationWorld, gui_elements, "Schelling's segregation model", patch_size=13, bounce=None)

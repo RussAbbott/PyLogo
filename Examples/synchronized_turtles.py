@@ -4,7 +4,7 @@ import PyLogo.core.utils as utils
 
 from math import pi
 
-from random import randint, random
+from random import choice, randint, random
 
 
 class Synchronized_Turtle_World(core.World):
@@ -15,7 +15,7 @@ class Synchronized_Turtle_World(core.World):
         self.current_figure = None
         self.breathing_phase = 'inhale'
 
-    def do_one_step(self):
+    def do_a_step(self):
         if self.current_figure in ['clockwise', 'counter-clockwise']:
             r = self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL())
             self.go_in_circle(r)
@@ -42,8 +42,8 @@ class Synchronized_Turtle_World(core.World):
             turtle.set_heading(turtle.cached_heading)
             turtle.forward()
 
-        if random() < 0.05:
-            angle = randint(-180, 180)
+        if random() < 0.04:
+            angle = randint(-15, 15)
             for turtle in self.turtles:
                 turtle.turn_right(angle)
 
@@ -51,10 +51,12 @@ class Synchronized_Turtle_World(core.World):
             turtle.cached_heading = turtle.heading
 
     def grow_shrink(self, grow_or_shrink):
+        offset = randint(-90, 90) + choice([-90, 90])
         for turtle in self.turtles:
             if grow_or_shrink == 'grow':
                 turtle.turn_right(180)
             turtle.forward()
+            turtle.cached_heading = turtle.heading + offset
             # Set the breathing phase whether or not we are currently breathing.
             self.breathing_phase = 'inhale' if grow_or_shrink == 'grow' else 'exhale'
 
@@ -75,7 +77,7 @@ class Synchronized_Turtle_World(core.World):
         if self.take_emergency_action():
             return
         self.current_figure = self.get_gui_value('figure')
-        self.do_one_step()
+        self.do_a_step()
         
     def take_emergency_action(self):
         if self.reference_turtle.distance_to_xy(utils.CENTER_PIXEL()) >= 250:
@@ -99,5 +101,5 @@ gui_elements = [[sg.Text('nbr of turtles'),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.sim_engine import PyLogo
+    from PyLogo.core.core_elements import PyLogo
     PyLogo(Synchronized_Turtle_World, gui_elements, 'Synchronized turtles', bounce=None)

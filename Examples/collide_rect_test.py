@@ -1,6 +1,5 @@
 
 import PyLogo.core.core_elements as core
-from PyLogo.core.sim_engine import SimEngine
 import PyLogo.core.utils as utils
 
 from pygame.color import Color
@@ -14,7 +13,7 @@ class CollisionTest_Patch(core.Patch):
     def __init__(self, row_col: utils.RowCol):
         super().__init__(row_col)
         # Each patch gets a hit_color
-        self.hit_color = Color('green')
+        self.hit_color = Color('white')
 
     def update_collision_color(self, turtles):
         collides = any([collide_rect(self, turtle) for turtle in turtles])
@@ -31,9 +30,8 @@ class CollisionTest_World(core.World):
         nbr_turtles = int(core.WORLD.values['nbr_turtles'])
         for i in range(nbr_turtles):
             # Adds itself to self.turtles and to its patch's list of Turtles.
-            turtle = self.turtle_class()
-            turtle.velocity = utils.Velocity(uniform(-2, 2), uniform(-2, 2))
-            turtle.set_color(Color('red'))
+            turtle = self.turtle_class(color=Color('red'), scale_factor=1.4)
+            turtle.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -45,7 +43,7 @@ class CollisionTest_World(core.World):
         for turtle in self.turtles:
             turtle.move_by_velocity()
             if random() < 0.01:
-                turtle.velocity = utils.Velocity(randint(-2, 2), randint(-2, 2))
+                turtle.set_velocity(utils.Velocity(randint(-2, 2), randint(-2, 2)))
 
         for patch in self.patches.flat:
             patch.update_collision_color(self.turtles)
@@ -59,5 +57,5 @@ gui_elements = [[sg.Text('nbr turtles', pad=((0, 5), (20, 0))),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.sim_engine import PyLogo
+    from PyLogo.core.core_elements import PyLogo
     PyLogo(CollisionTest_World, gui_elements, 'Collision test', patch_class=CollisionTest_Patch, bounce=False)
