@@ -80,6 +80,7 @@ class SegregationWorld(core.World):
         self.unhappy_turtles = None
         # This is an experimental number.
         self.max_turtles_per_step = 60
+        self.patch_color = Color('white')
 
     def done(self):
         return all(tur.is_happy for tur in self.turtles)
@@ -89,7 +90,11 @@ class SegregationWorld(core.World):
             if not patch.turtles:
                 patch.draw()
         for turtle in self.turtles:
-            turtle.draw()
+            current_patch = turtle.current_patch()
+            current_patch.set_color(turtle.color)
+            current_patch.draw()
+            current_patch.set_color(self.patch_color)
+            # turtle.draw()
 
     @staticmethod
     def select_the_colors():
@@ -124,7 +129,7 @@ class SegregationWorld(core.World):
 
         self.empty_patches = set()
         for patch in self.patches.flat:
-            patch.set_color(Color('white'))
+            patch.set_color(self.patch_color)
             patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
 
             # Create the Turtles. The density is approximate.
