@@ -101,5 +101,5 @@ gui_elements = [[sg.Text('nbr of turtles'),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.core_elements import PyLogo
+    from PyLogo.Examples.main import PyLogo
     PyLogo(Synchronized_Turtle_World, gui_elements, 'Synchronized turtles', bounce=None)

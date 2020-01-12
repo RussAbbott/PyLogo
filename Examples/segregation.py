@@ -1,12 +1,14 @@
 
+from PyLogo.core.agent import Turtle
 import PyLogo.core.core_elements as core
+from PyLogo.core.core_elements import Patch, World
 
 from pygame import Color
 
 from random import choice, randint, sample
 
 
-class SegregationTurtle(core.Turtle):
+class SegregationTurtle(Turtle):
 
     def __init__(self):
         super().__init__()
@@ -66,12 +68,12 @@ class SegregationTurtle(core.Turtle):
         self.is_happy = self.pct_similar >= self.pct_similar_wanted
 
 
-class SegregationWorld(core.World):
+class SegregationWorld(World):
     """
       percent-similar: on the average, what percent of a turtle's neighbors are the same color as that turtle?
       percent-unhappy: what percent of the turtles are unhappy?
     """
-    def __init__(self, patch_class=core.Patch, turtle_class=SegregationTurtle):
+    def __init__(self, patch_class=Patch, turtle_class=SegregationTurtle):
         super().__init__(patch_class=patch_class, turtle_class=turtle_class)
 
         self.empty_patches = None
@@ -104,7 +106,7 @@ class SegregationWorld(core.World):
         """
         while True:
             # Each color_4 element is (r, g, b, a)
-            colors_4 = sample(core.Turtle.color_palette, 2)
+            colors_4 = sample(Turtle.color_palette, 2)
             # Discard the 'a' value
             colors = [color[:3] for color in colors_4]
             # Reject any color that's too close to gray (gray_measure).
@@ -187,5 +189,5 @@ gui_elements = [[sg.Text('density'),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.core_elements import PyLogo
+    from PyLogo.Examples.main import PyLogo
     PyLogo(SegregationWorld, gui_elements, "Schelling's segregation model", patch_size=13, bounce=None)

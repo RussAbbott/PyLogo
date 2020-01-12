@@ -57,5 +57,5 @@ gui_elements = [[sg.Text('nbr turtles', pad=((0, 5), (20, 0))),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.core_elements import PyLogo
+    from PyLogo.Examples.main import PyLogo
     PyLogo(CollisionTest_World, gui_elements, 'Collision test', patch_class=CollisionTest_Patch, bounce=False)
