@@ -3,11 +3,11 @@ from math import sqrt
 
 import numpy as np
 
+import PyLogo.core.gui as gui
+import PyLogo.core.utils as utils
 # Importing this file eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
 import PyLogo.core.world_patch_block as wpb
-import PyLogo.core.gui as gui
-import PyLogo.core.utils as utils
 
 from pygame.color import Color
 from pygame.rect import Rect
@@ -117,8 +117,8 @@ class World:
         """Create n Agents with headings evenly spaced from 0 to 360"""
         for i in range(n):
             agent = self.agent_class()
-            angle = i*360/n
-            agent.set_heading(angle)
+            heading = i*360/n
+            agent.set_heading(heading)
 
     def done(self):
         return False
