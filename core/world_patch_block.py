@@ -5,7 +5,7 @@ import numpy as np
 
 # Importing this file eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
-import PyLogo.core.core_elements as core
+import PyLogo.core.world_patch_block as wpb
 import PyLogo.core.gui as gui
 import PyLogo.core.utils as utils
 
@@ -91,7 +91,7 @@ class Patch(Block):
 class World:
 
     def __init__(self, patch_class, agent_class):
-        core.WORLD = self
+        wpb.WORLD = self
 
         self.event = None
         self.values = None
@@ -136,7 +136,7 @@ class World:
 
     @staticmethod
     def get_gui_value(key):
-        value = core.WORLD.values.get(key, None)
+        value = wpb.WORLD.values.get(key, None)
         return int(value) if isinstance(value, float) and value == int(value) else value
 
     def increment_ticks(self):

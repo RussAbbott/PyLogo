@@ -5,8 +5,8 @@ from pygame.color import Color
 from pygame.colordict import THECOLORS
 import pygame.transform as pgt
 
-import PyLogo.core.core_elements as core
-from PyLogo.core.core_elements import Block, Patch
+import PyLogo.core.world_patch_block as wpb
+from PyLogo.core.world_patch_block import Block, Patch
 import PyLogo.core.gui as gui
 import PyLogo.core.utils as utils
 
@@ -37,7 +37,6 @@ class Agent(Block):
 
     color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
 
-
     id = 0
 
     def __init__(self, center_pixel: utils.PixelVector = None, color=None, scale=1.4):
@@ -46,7 +45,8 @@ class Agent(Block):
             # Agent.color_palette is set during World.setup().
             color = choice(Agent.color_palette)
 
-        # Can't make this a default value because it isn't defined when the default values is compiled
+        # Can't make this a default value because utils.CENTER_PIXEL() isn't defined
+        # when the default values are compiled
         if center_pixel is None:
             center_pixel = utils.CENTER_PIXEL()
 
@@ -72,7 +72,7 @@ class Agent(Block):
 
         Agent.id += 1
         self.id = Agent.id
-        core.WORLD.agents.add(self)
+        wpb.WORLD.agents.add(self)
         self.current_patch().add_agent(self)
         self.heading = 0
         self.speed = 1
@@ -104,7 +104,7 @@ class Agent(Block):
 
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
-        patch = core.WORLD.patches[row_col.row, row_col.col]
+        patch = wpb.WORLD.patches[row_col.row, row_col.col]
         return patch
 
     def draw(self):
@@ -128,28 +128,16 @@ class Agent(Block):
         super().draw()
 
     def face_xy(self, xy: utils.PixelVector):
-        new_heading = self.heading_to_xy(xy)
+        new_heading = self.towards_xy(xy)
         self.set_heading(new_heading)
 
     def forward(self, speed=None):
         if speed is None:
             speed = self.speed
-        angle = pi * (((self.heading - 90)*(-1) + 360) % 360) / 180
+        angle = pi * self.normalize_angle_360(self.heading - 90)*(-1) / 180
         dx = cos(angle) * speed
         dy = (-1)*sin(angle) * speed
         self.move_by_dxdy(utils.Velocity(dx, dy))
-
-    def heading_to_xy(self, xy):
-        delta_x = xy.x - self.center_pixel.x
-        # Subtract in reverse to compensate for the reversal of the y axis.
-        delta_y = self.center_pixel.y - xy.y
-        atn2 = atan2(delta_y, delta_x)
-        angle = (atn2 / (2 * pi) ) * 360
-        new_heading = utils.angle_to_heading(angle)
-        return new_heading
-
-    def move_agent(self, wrap):
-        pass
 
     def move_by_dxdy(self, dxdy: utils.Velocity):
         """
@@ -182,14 +170,32 @@ class Agent(Block):
         new_patch = self.current_patch( )
         new_patch.add_agent(self)
 
+    @staticmethod
+    def normalize_angle_360(angle):
+        return angle % 360
+
+    def normalize_angle_180(self, angle):
+        normalized_angle = self.normalize_angle_360(angle)
+        return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
+
     def set_heading(self, angle):
         self.heading = angle
+
+    def towards_xy(self, xy):
+        """ The heading to face the point (x, y) """
+        delta_x = xy.x - self.center_pixel.x
+        # Subtract in reverse to compensate for the reversal of the y axis.
+        delta_y = self.center_pixel.y - xy.y
+        atn2 = atan2(delta_y, delta_x)
+        angle = (atn2 / (2 * pi) ) * 360
+        new_heading = utils.angle_to_heading(angle)
+        return new_heading
 
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
 
     def turn_right(self, delta_angles):
-        self.set_heading((self.heading + delta_angles + 360) % 360)
+        self.set_heading(self.normalize_angle_360(self.heading + delta_angles))
 
     def set_velocity(self, velocity):
         self.velocity = velocity
