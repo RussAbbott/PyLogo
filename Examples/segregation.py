@@ -1,7 +1,7 @@
 
 from PyLogo.core.agent import Agent
-import PyLogo.core.core_elements as core
-from PyLogo.core.core_elements import Patch, World
+import PyLogo.core.world_patch_block as wpb
+from PyLogo.core.world_patch_block import Patch, World
 
 from pygame import Color
 
@@ -162,9 +162,9 @@ class SegregationWorld(World):
 
         # Update Globals
         percent_similar = round(sum(agent.pct_similar for agent in self.agents)/len(self.agents))
-        if core.WORLD.TICKS == 0:
+        if wpb.WORLD.TICKS == 0:
             print()
-        print(f'\t{core.WORLD.TICKS:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{wpb.WORLD.TICKS:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
 
         self.unhappy_agents = [agent for agent in self.agents if not agent.is_happy]
         unhappy_count = len(self.unhappy_agents)
@@ -180,14 +180,14 @@ gui_elements = [[sg.Text('density'),
                           tooltip='The ratio of households to housing units')],
 
                 [sg.Text('% similar wanted',
-                         tooltip='The percentage of similar people among the occupied 8 neighbors required ' +
+                         tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
                                  'to make someone happy.'),
                 sg.Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                          background_color='skyblue', default_value=100,
-                         tooltip='The percentage of similar people among the occupied 8 neighbors required ' +
+                         tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
                                  'to make someone happy.')],
                 ]
 
 if __name__ == "__main__":
     from PyLogo.Examples.main import PyLogo
-    PyLogo(SegregationWorld, gui_elements, "Schelling's segregation model", patch_size=13, bounce=None)
+    PyLogo(SegregationWorld, "Schelling's segregation model", gui_elements, bounce=None)

@@ -1,5 +1,5 @@
 
-import PyLogo.core.core_elements as core
+import PyLogo.core.world_patch_block as wpb
 import PyLogo.core.utils as utils
 
 from math import pi
@@ -7,7 +7,7 @@ from math import pi
 from random import choice, randint, random
 
 
-class Synchronized_Agent_World(core.World):
+class Synchronized_Agent_World(wpb.World):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -73,7 +73,7 @@ class Synchronized_Agent_World(core.World):
     def step(self):
         # For simplicity, start each step by facing the center.
         for agent in self.agents:
-            agent.face_xy(utils.CENTER_PIXEL( ))
+            agent.face_xy(utils.CENTER_PIXEL())
         if self.take_emergency_action():
             return
         self.current_figure = self.get_gui_value('figure')
@@ -102,4 +102,4 @@ gui_elements = [[sg.Text('nbr of agents'),
 
 if __name__ == "__main__":
     from PyLogo.Examples.main import PyLogo
-    PyLogo(Synchronized_Agent_World, gui_elements, 'Synchronized agents', bounce=None)
+    PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_elements, bounce=None)

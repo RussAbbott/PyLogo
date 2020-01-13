@@ -1,5 +1,5 @@
 
-import PyLogo.core.core_elements as core
+import PyLogo.core.world_patch_block as wpb
 import PyLogo.core.utils as utils
 
 from pygame.color import Color
@@ -9,7 +9,7 @@ from itertools import cycle
 from random import random, uniform
 
 
-class Starburst_World(core.World):
+class Starburst_World(wpb.World):
     """
     A starburst world of agents.
     No special Patches or Agents.
@@ -35,7 +35,7 @@ class Starburst_World(core.World):
         """
         for agent in self.agents:
             agent.move_by_velocity()
-            if core.WORLD.TICKS > 150 and random() < 0.01:
+            if wpb.WORLD.TICKS > 150 and random() < 0.01:
                 agent.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
 
 
@@ -48,4 +48,4 @@ gui_elements = [ [sg.Text('nbr agents', pad=((0, 5), (20, 0))),
 
 if __name__ == "__main__":
     from PyLogo.Examples.main import PyLogo
-    PyLogo(Starburst_World, gui_elements, 'Starburst')
+    PyLogo(Starburst_World, 'Starburst', gui_elements)
