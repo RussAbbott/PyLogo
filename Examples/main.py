@@ -1,11 +1,11 @@
 from PyLogo.core.agent import Agent
-from PyLogo.core.world_patch_block import Patch, World
 from PyLogo.core.sim_engine import SimEngine
 import PyLogo.core.utils as utils
+from PyLogo.core.world_patch_block import Patch, World
 
 
 def PyLogo(world_class=World, caption=None, gui_elements=None,
-           patch_class=Patch, agent_class=Agent,
+           agent_class=Agent, patch_class=Patch,
            patch_size=11, bounce=True):
     if gui_elements is None:
         gui_elements = []

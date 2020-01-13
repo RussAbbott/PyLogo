@@ -1,6 +1,6 @@
 
-import PyLogo.core.world_patch_block as wpb
 import PyLogo.core.utils as utils
+import PyLogo.core.world_patch_block as wpb
 
 from pygame.color import Color
 
@@ -27,12 +27,14 @@ class Starburst_World(wpb.World):
         for (agent, vel) in zip(self.agents, initial_velocities):
             agent.set_velocity(vel)
 
+        # So we can see where the agents are initially put. (Currently not accurate. Should be center of patch.)
         self.patches[25, 25].set_color(Color('white'))
 
     def step(self):
         """
         Update the world by moving the agents.
         """
+        self.patches[25, 25].set_color(self.patches[0, 0].color)
         for agent in self.agents:
             agent.move_by_velocity()
             if wpb.WORLD.TICKS > 150 and random() < 0.01:

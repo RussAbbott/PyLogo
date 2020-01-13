@@ -1,6 +1,6 @@
 
-import PyLogo.core.world_patch_block as wpb
 import PyLogo.core.utils as utils
+import PyLogo.core.world_patch_block as wpb
 
 from pygame.color import Color
 from pygame.sprite import collide_rect

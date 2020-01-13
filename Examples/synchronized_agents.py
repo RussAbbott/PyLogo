@@ -1,6 +1,6 @@
 
-import PyLogo.core.world_patch_block as wpb
 import PyLogo.core.utils as utils
+import PyLogo.core.world_patch_block as wpb
 
 from math import pi
 
@@ -33,21 +33,17 @@ class Synchronized_Agent_World(wpb.World):
             agent.forward()
 
     def go_in_circle(self, r):
+        """ Recall that at the start of each step the agent is set to point to the center. """
         for agent in self.agents:
             agent.turn_left(90 if self.current_figure == 'clockwise' else -90)
             agent.forward(2 * pi * r / 360)
 
     def go_randomly(self):
+        random_delta = randint(-15, 15) if random() < 0.1 else 0
         for agent in self.agents:
             agent.set_heading(agent.cached_heading)
+            agent.turn_right(random_delta)
             agent.forward()
-
-        if random() < 0.04:
-            angle = randint(-15, 15)
-            for agent in self.agents:
-                agent.turn_right(angle)
-
-        for agent in self.agents:
             agent.cached_heading = agent.heading
 
     def grow_shrink(self, grow_or_shrink):
