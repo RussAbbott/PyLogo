@@ -162,9 +162,9 @@ class SegregationWorld(World):
 
         # Update Globals
         percent_similar = round(sum(agent.pct_similar for agent in self.agents)/len(self.agents))
-        if wpb.WORLD.TICKS == 0:
+        if wpb.THE_WORLD.TICKS == 0:
             print()
-        print(f'\t{wpb.WORLD.TICKS:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{wpb.THE_WORLD.TICKS:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
 
         self.unhappy_agents = [agent for agent in self.agents if not agent.is_happy]
         unhappy_count = len(self.unhappy_agents)

@@ -1,13 +1,13 @@
 
 import PyLogo.core.utils as utils
-import PyLogo.core.world_patch_block as wpb
+from PyLogo.core.world_patch_block import World
 
 from math import pi
 
 from random import choice, randint, random
 
 
-class Synchronized_Agent_World(wpb.World):
+class Synchronized_Agent_World(World):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,6 +1,7 @@
 
 import PyLogo.core.utils as utils
 import PyLogo.core.world_patch_block as wpb
+from PyLogo.core.world_patch_block import Patch, World
 
 from pygame.color import Color
 from pygame.sprite import collide_rect
@@ -8,7 +9,7 @@ from pygame.sprite import collide_rect
 from random import randint, random, uniform
 
 
-class CollisionTest_Patch(wpb.Patch):
+class CollisionTest_Patch(Patch):
 
     def __init__(self, row_col: utils.RowCol):
         super().__init__(row_col)
@@ -21,13 +22,13 @@ class CollisionTest_Patch(wpb.Patch):
         self.image.fill(fill_color)
 
 
-class CollisionTest_World(wpb.World):
+class CollisionTest_World(World):
     """
     A world in which the patches change to green when intersecting with a agent.
     """
 
     def setup(self):
-        nbr_agents = int(wpb.WORLD.values['nbr_agents'])
+        nbr_agents = int(wpb.THE_WORLD.values['nbr_agents'])
         for i in range(nbr_agents):
             # Adds itself to self.agents and to its patch's list of Agents.
             agent = self.agent_class(color=Color('red'))
