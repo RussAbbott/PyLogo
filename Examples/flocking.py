@@ -109,7 +109,6 @@ from pygame import Color
 from PyLogo.core.agent import Agent
 import PyLogo.core.gui as gui
 import PyLogo.core.utils as utils
-import PyLogo.core.world_patch_block as wpb
 from PyLogo.core.world_patch_block import World
 
 from math import atan2, cos, sin
@@ -154,7 +153,8 @@ class Flocking_Agent(Agent):
 
     def flock(self):
         vision_limit_in_pixels = World.get_gui_value('vision') * gui.BLOCK_SPACING()
-        flockmates = [agent for agent in wpb.THE_WORLD.agents if self.distance_to(agent) < vision_limit_in_pixels]
+        # flockmates = [agent for agent in wpb.THE_WORLD.agents if self.distance_to(agent) < vision_limit_in_pixels]
+        flockmates = [agent for agent in self.the_world().agents if self.distance_to(agent) < vision_limit_in_pixels]
         if len(flockmates) == 0:
             return
         nearest_neighbor = min(flockmates, key=lambda fm: self.distance_to(fm))
@@ -226,5 +226,6 @@ gui_elements = [
 
 
 if __name__ == "__main__":
-    from PyLogo.Examples.main import PyLogo
+    # from PyLogo.Examples.main import PyLogo
+    from PyLogo.core.agent import PyLogo
     PyLogo(Flocking_World, 'Flocking', gui_elements, agent_class=Flocking_Agent, bounce=None)

@@ -1,6 +1,5 @@
 
 from PyLogo.core.agent import Agent
-import PyLogo.core.world_patch_block as wpb
 from PyLogo.core.world_patch_block import Patch, World
 
 from pygame import Color
@@ -162,9 +161,9 @@ class SegregationWorld(World):
 
         # Update Globals
         percent_similar = round(sum(agent.pct_similar for agent in self.agents)/len(self.agents))
-        if wpb.THE_WORLD.TICKS == 0:
+        if self.the_world().TICKS == 0:
             print()
-        print(f'\t{wpb.THE_WORLD.TICKS:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{self.the_world().TICKS:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
 
         self.unhappy_agents = [agent for agent in self.agents if not agent.is_happy]
         unhappy_count = len(self.unhappy_agents)
@@ -189,5 +188,6 @@ gui_elements = [[sg.Text('density'),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.Examples.main import PyLogo
+    # from PyLogo.Examples.main import PyLogo
+    from PyLogo.core.agent import PyLogo
     PyLogo(SegregationWorld, "Schelling's segregation model", gui_elements, bounce=None)

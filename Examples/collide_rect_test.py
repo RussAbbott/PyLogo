@@ -1,6 +1,5 @@
 
 import PyLogo.core.utils as utils
-import PyLogo.core.world_patch_block as wpb
 from PyLogo.core.world_patch_block import Patch, World
 
 from pygame.color import Color
@@ -28,7 +27,8 @@ class CollisionTest_World(World):
     """
 
     def setup(self):
-        nbr_agents = int(wpb.THE_WORLD.values['nbr_agents'])
+        # nbr_agents = int(wpb.THE_WORLD.values['nbr_agents'])
+        nbr_agents = int(self.get_gui_value('nbr_agents'))
         for i in range(nbr_agents):
             # Adds itself to self.agents and to its patch's list of Agents.
             agent = self.agent_class(color=Color('red'))
@@ -57,5 +57,6 @@ gui_elements = [[sg.Text('nbr agents', pad=((0, 5), (20, 0))),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.Examples.main import PyLogo
+    # from PyLogo.Examples.main import PyLogo
+    from PyLogo.core.agent import PyLogo
     PyLogo(CollisionTest_World, 'Collision test', gui_elements, patch_class=CollisionTest_Patch, bounce=False)
