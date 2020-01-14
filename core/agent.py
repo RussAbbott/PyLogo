@@ -17,7 +17,7 @@ from PyLogo.core.utils import V2
 import PyLogo.core.world_patch_block as wpb
 from PyLogo.core.world_patch_block import Block, Patch
 
-from random import choice
+from random import choice, randint
 
 from typing import Tuple
 
@@ -70,13 +70,12 @@ class Agent(Block):
 
         Agent.id += 1
         self.id = Agent.id
-        wpb.WORLD.agents.add(self)
+        wpb.THE_WORLD.agents.add(self)
         self.current_patch().add_agent(self)
-        self.heading = 0
+        self.heading = randint(0, 360)
         self.speed = 1
         # To keep PyCharm happy.
         self.velocity = None
-        self.set_velocity(utils.Velocity(0, 0))
 
     def __str__(self):
         class_name = utils.get_class_name(self)
@@ -123,8 +122,12 @@ class Agent(Block):
 
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
-        patch = wpb.WORLD.patches[row_col.row, row_col.col]
+        patch = wpb.THE_WORLD.patches[row_col.row, row_col.col]
         return patch
+
+    def distance_to(self, other):
+        return self.center_pixel.distance_to(other.center_pixel)
+
 
     def draw(self):
 
@@ -145,6 +148,12 @@ class Agent(Block):
             speed = self.speed
         dxdy = utils.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
+
+    def heading_to(self, target):
+        """ The heading to face the target """
+        from_pixel = self.center_pixel
+        to_pixel = target.center_pixel
+        return utils.heading_from_to(from_pixel, to_pixel)
 
     def map_point(self, pxl: utils.PixelVector) -> Vector2:
         abstract_center_pixel = utils.PixelVector(1/2, 1/2)
@@ -180,14 +189,21 @@ class Agent(Block):
         """
         current_patch: Patch = self.current_patch()
         current_patch.remove_agent(self)
-        self.center_pixel: utils.PixelVector = xy.wrap()
-        r = self.rect
-        (r.x, r.y) = (self.center_pixel.x-HALF_PATCH_SIZE(), self.center_pixel.y-HALF_PATCH_SIZE())
+        self.set_center_pixel(xy)
         new_patch = self.current_patch( )
         new_patch.add_agent(self)
 
-    def set_heading(self, angle):
-        self.heading = angle
+    def set_center_pixel(self, xy: utils.PixelVector):
+        self.center_pixel: utils.PixelVector = xy.wrap()
+        r = self.rect
+        (r.x, r.y) = (self.center_pixel.x - HALF_PATCH_SIZE(), self.center_pixel.y - HALF_PATCH_SIZE())
+
+    def set_color(self, color):
+        self.color = color
+        self.base_image = self.create_base_image()
+
+    def set_heading(self, heading):
+        self.heading = heading
 
     @staticmethod
     def heading_from_to(from_pixel, xy):

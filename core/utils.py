@@ -3,11 +3,17 @@ from __future__ import annotations
 
 from math import atan2, cos, pi, sin, sqrt
 
+from pygame.color import Color
+
 import PyLogo.core.gui as gui
 # noinspection PyUnresolvedReferences
 import PyLogo.core.utils as utils
 
 from pygame.math import Vector2
+
+from math import copysign
+
+from random import randint
 
 
 class PixelVector:
@@ -122,6 +128,12 @@ def center_pixel_to_row_col(center_pixel: PixelVector):
     return RowCol(int(row), int(col))
 
 
+def color_random_variation(color: Color):
+    # noinspection PyArgumentList
+    new_color = Color(color.r+randint(-40, 0), color.g+randint(-40, 0), color.b+randint(0, 40), 255)
+    return new_color
+
+
 def extract_class_name(full_class_name: type):
     """
     full_class_name will be something like: <class 'PyLogo.core.static_values'>
@@ -166,9 +178,6 @@ def heading_to_dxdy(heading) -> Velocity:
     vel = Velocity(dx, dy)
     return vel
 
-"""
-        angle = pi * self.normalize_angle_360(self.heading - 90)*(-1) / 180
-"""
 
 def normalize_angle_360(angle):
     return angle % 360
@@ -189,8 +198,29 @@ def row_col_to_center_pixel(row_col: RowCol) -> PixelVector:
     return pv
 
 
+def subtract_headings(a, b):
+    """
+    subtract heading b from heading a
+    Since larger headings are to the right (clockwise), if (a-b) is negative, that means b is to the right of a.
+    To get from b to a we must turn to the left. Similarly for positive results.
+
+    Normalize to values between -180 and +180 to ensure that larger numbers are to the right .
+    """
+    a_180 = utils.normalize_angle_180(a)
+    b_180 = utils.normalize_angle_180(b)
+    return a_180 - b_180
+
+
+def turn_amount(turn, max_turn):
+    # copysign returns the first argument but with the sign of the second.
+    # copysign(x, y) = abs(x) * (y/abs(y))
+    # turn_amount = min(abs(turn), max_turn) * (turn/abs(turn))
+    return copysign(min(abs(turn), max_turn), turn)
+
+
 def V_to_PV(v: Vector2) -> PixelVector:
     return PixelVector(v.x, v.y)
+
 
 def V_to_Vel(v: Vector2) -> Velocity:
     return Velocity(v.x, v.y)

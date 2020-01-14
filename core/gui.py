@@ -32,6 +32,11 @@ PATCH_ROWS = 51
 PATCH_COLS = 51
 
 
+def HOR_SEP(length=25):
+    return [sg.Text('_' * length, text_color='black')]
+
+
+
 def SCREEN_PIXEL_WIDTH():
     """
     Includes pixel x coordinates range(SCREEN_PIXEL_WIDTH())
@@ -88,7 +93,7 @@ class SimpleGUI:
         Create the window, including sg.Graph, the drawing surface.
         """
         # --------------------- PySimpleGUI window layout and creation --------------------
-        hor_separator_line = [sg.Text('_' * 25, text_color='black')]
+        # hor_separator_line = [sg.Text('_' * 25, text_color='black')]
 
         bounce_checkbox_line = ''
         if bounce is not None:
@@ -105,10 +110,10 @@ class SimpleGUI:
         exit_button_line = [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((70, 0), (10, 0)))]
 
         col1 = [ *model_gui_elements,
-                 hor_separator_line,
+                 gui.HOR_SEP(),
                  setup_go_line,
                  bounce_checkbox_line,
-                 hor_separator_line,
+                 gui.HOR_SEP(),
                  exit_button_line
                  ]
 
