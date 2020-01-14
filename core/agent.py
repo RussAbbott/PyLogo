@@ -12,10 +12,10 @@ import pygame.transform as pgt
 import PyLogo.core.agent as agent
 import PyLogo.core.gui as gui
 from PyLogo.core.gui import HALF_PATCH_SIZE, PATCH_SIZE
+from PyLogo.core.sim_engine import SimEngine
 import PyLogo.core.utils as utils
 from PyLogo.core.utils import V2
-import PyLogo.core.world_patch_block as wpb
-from PyLogo.core.world_patch_block import Block, Patch
+from PyLogo.core.world_patch_block import Block, Patch, World
 
 from random import choice, randint
 
@@ -70,7 +70,7 @@ class Agent(Block):
 
         Agent.id += 1
         self.id = Agent.id
-        wpb.THE_WORLD.agents.add(self)
+        self.the_world().agents.add(self)
         self.current_patch().add_agent(self)
         self.heading = randint(0, 360)
         self.speed = 1
@@ -122,7 +122,7 @@ class Agent(Block):
 
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
-        patch = wpb.THE_WORLD.patches[row_col.row, row_col.col]
+        patch = self.the_world().patches[row_col.row, row_col.col]
         return patch
 
     def distance_to(self, other):
@@ -229,3 +229,13 @@ class Agent(Block):
 
 class Turtle(Agent):
     pass
+
+def PyLogo(world_class=World, caption=None, gui_elements=None,
+           agent_class=Agent, patch_class=Patch,
+           patch_size=11, bounce=True):
+    if gui_elements is None:
+        gui_elements = []
+    if caption is None:
+        caption = utils.extract_class_name(world_class)
+    sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
+    sim_engine.start(world_class, patch_class, agent_class)

@@ -15,7 +15,7 @@ from pygame.sprite import Sprite
 from pygame.surface import Surface
 
 
-THE_WORLD = None  # The world
+# THE_WORLD = None  # The world
 
 
 class Block(Sprite):
@@ -41,12 +41,16 @@ class Block(Sprite):
 
     @staticmethod
     def get_gui_value(key):
-        return THE_WORLD.get_gui_value(key)
+        return World.THE_WORLD.get_gui_value(key)
 
     def set_color(self, color):
         self.color = color
         self.image.fill(color)
-        
+
+    @staticmethod
+    def the_world():
+        return World.THE_WORLD
+
 
 class Patch(Block):
     def __init__(self, row_col: utils.RowCol, color=Color('black')):
@@ -81,7 +85,7 @@ class Patch(Block):
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        neighbors = [THE_WORLD.patches[(self.row_col + utils.RowCol(r, c)).as_tuple( )] for (r, c) in deltas]
+        neighbors = [self.the_world().patches[(self.row_col + utils.RowCol(r, c)).as_int_tuple()] for (r, c) in deltas]
         return neighbors
 
     def remove_agent(self, agent):
@@ -90,8 +94,11 @@ class Patch(Block):
 
 class World:
 
+    THE_WORLD = None
+
     def __init__(self, patch_class, agent_class):
-        wpb.THE_WORLD = self
+        # wpb.THE_WORLD = self
+        World.THE_WORLD = self
 
         self.event = None
         self.values = None
@@ -140,7 +147,7 @@ class World:
 
     @staticmethod
     def get_gui_value(key):
-        value = wpb.THE_WORLD.values.get(key, None)
+        value = World.THE_WORLD.values.get(key, None)
         return int(value) if isinstance(value, float) and value == int(value) else value
 
     def increment_ticks(self):
@@ -173,3 +180,7 @@ class World:
         Update the world. Override for each world
         """
         pass
+
+    @staticmethod
+    def the_world():
+        return World.THE_WORLD

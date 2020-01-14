@@ -1,110 +1,191 @@
 
 from __future__ import annotations
 
-from math import atan2, cos, pi, sin, sqrt
+from math import atan2, cos, pi, sin
 
 from pygame.color import Color
+from pygame import Vector2
 
 import PyLogo.core.gui as gui
 # noinspection PyUnresolvedReferences
 import PyLogo.core.utils as utils
 
-from pygame.math import Vector2
 
 from math import copysign
-
 from random import randint
 
 
-class PixelVector:
+class V2(Vector2):
 
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def __add__(self, velocity: utils.Velocity):
-        new_pixel_vector = PixelVector(self.x + velocity.dx, self.y + velocity.dy)
-        return new_pixel_vector
-
-    def __eq__(self, other):
-        """Override the default Equals behavior"""
-        return self.x == other.x and self.y == other.y
+    def __add__(self, v: Vector2):
+        # Returns a Vector2 because __add__ is done at that level
+        sum: Vector2 = super().__add__(v)
+        cls = type(self)
+        new_inst = self.vector2_to_subclass(sum, cls)
+        # new_pixel_vector: PixelVector = self.PV(sum)
+        return new_inst
 
     def __mul__(self, scalar):
-        new_pixel_vector = PixelVector(scalar * self.x, scalar * self.y)
-        return new_pixel_vector
-
-    def __ne__(self, other):
-        """Override the default Unequal behavior"""
-        return self.x != other.x or self.y != other.y
-
-    def __str__(self):
-        return f'PixelVector{self.x, self.y}'
+        # Returns a Vector2 because __mul__ is done at that level
+        product: Vector2 = super().__mul__(scalar)
+        cls = type(self)
+        new_inst = self.vector2_to_subclass(product, cls)
+        return new_inst
 
     def as_tuple(self):
         return (self.x, self.y)
 
-    def as_V2(self):
-        return V2(self.x, self.y)
-
-    def distance_to(self, xy: PixelVector):
-        return sqrt((self.x - xy.x)**2 + (self.y - xy.y)**2)
+    def as_int_tuple(self):
+        return (int(self.x), int(self.y))
 
     def round(self, prec=2):
-        return PixelVector(round(self.x, prec), round(self.y, prec))
+        clas = type(self)
+        return clas(round(self.x, prec), round(self.y, prec))
+
+    @staticmethod
+    def vector2_to_subclass(v: Vector2, cls):
+        return cls(v.x, v.y)
+
+    def wrap3(self, x_limit, y_limit):
+        self.x = self.x % x_limit
+        self.y = self.y % y_limit
+        return self
+
+
+
+class PixelVector(V2):
+
+    def __init__(self, x, y):
+        # noinspection PyArgumentList
+        super().__init__(x, y)
+
+    # def __add__(self, velocity: utils.Velocity):
+    #     # Returns a Vector2 because __add__ is done at that level
+    #     sum: Vector2 = super().__add__(velocity)
+    #     new_pixel_vector: PixelVector = self.PV(sum)
+    #     return new_pixel_vector
+
+    # def __eq__(self, other):
+    #     """Override the default Equals behavior"""
+    #     return self.x == other.x and self.y == other.y
+    #
+    # def __mul__(self, scalar):
+    #     # Returns a Vector2 because __mul__ is done at that level
+    #     product: Vector2 = super().__mul__(scalar)
+    #     new_pixel_vector = self.PV(product)
+    #     return new_pixel_vector
+
+        # new_pixel_vector = PixelVector(scalar * self.x, scalar * self.y)
+        # return new_pixel_vector
+    #
+    # def __ne__(self, other):
+    #     """Override the default Unequal behavior"""
+    #     return self.x != other.x or self.y != other.y
+
+    # @staticmethod
+    # def PV(v: Vector2):
+    #     return PixelVector(v.x, v.y)
+        # def __init__(self, v: Vector2):
+        #     super().__init__(v.x, v.y)
+
+    def __str__(self):
+        return f'PixelVector{self.x, self.y}'
+
+    # def as_tuple(self):
+    #     return (self.x, self.y)
+    #
+    # def as_V2(self):
+    #     return V2(self.x, self.y)
+    #
+    # def distance_to(self, xy: PixelVector):
+    #     return sqrt((self.x - xy.x)**2 + (self.y - xy.y)**2)
+    #
+    # def round(self, prec=2):
+    #     return PixelVector(round(self.x, prec), round(self.y, prec))
 
     def wrap(self):
         screen_rect = gui.simple_gui.SCREEN.get_rect()
-        new_pixel_vector = PixelVector(self.x % screen_rect.w, self.y % screen_rect.h)
-        return new_pixel_vector
+        wrapped = self.wrap3(screen_rect.w, screen_rect.h)
+        return wrapped
+
+        # new_pixel_vector = PixelVector(self.x % screen_rect.w, self.y % screen_rect.h)
+        # return new_pixel_vector
 
 
-class RowCol:
+class RowCol(V2):
 
     def __init__(self, row, col):
+        # noinspection PyArgumentList
+        super().__init__(row, col)
         # Wrap around the patch grid.
-        self.row = row
-        self.col = col
+        # self.row = row
+        # self.col = col
         self.wrap()
 
-    def __add__(self, other_row_col: RowCol):
-        new_row_col = RowCol(self.row + other_row_col.row, self.col + other_row_col.col)
-        return new_row_col
+    # def __add__(self, other_row_col: RowCol):
+    #     new_row_col = RowCol(self.row + other_row_col.row, self.col + other_row_col.col)
+    #     return new_row_col
+
+    # def __add__(self, other_row_col: RowCol):
+    #     # Returns a Vector2 because __add__ is done at that level
+    #     sum: Vector2 = super().__add__(other_row_col)
+    #     new_pixel_vector = self.PV(sum)
+    #     return new_pixel_vector
 
     def __str__(self):
         return f'RowCol{self.row, self.col}'
 
-    def as_tuple(self):
-        return (self.row, self.col)
+    # def as_tuple(self):
+    #     return (self.row, self.col)
+
+    @property
+    def col(self):
+        return int(self.y)
+
+    @property
+    def row(self):
+        return int(self.x)
 
     def wrap(self):
-        self.row = self.row % gui.PATCH_ROWS
-        self.col = self.col % gui.PATCH_COLS
-        return self
+        wrapped = self.wrap3(gui.PATCH_ROWS, gui.PATCH_COLS)
+        return wrapped
+        # self.x = self.row % gui.PATCH_ROWS
+        # self.y = self.col % gui.PATCH_COLS
+        # return self
 
 
-class Velocity:
+class Velocity(V2):
 
     def __init__(self, dx, dy):
-        self.dx = dx
-        self.dy = dy
+        # noinspection PyArgumentList
+        super().__init__(dx, dy)
 
-    def __add__(self, other_velocity: Velocity):
-        new_velocity = Velocity(self.dx + other_velocity.dx, self.dy + other_velocity.dy)
-        return new_velocity
-
-    def __mul__(self, scalar):
-        new_velocity = Velocity(scalar * self.dx, scalar * self.dy)
-        return new_velocity
+    # def __add__(self, other_velocity: Velocity):
+    #     new_velocity = Velocity(self.dx + other_velocity.dx, self.dy + other_velocity.dy)
+    #     return new_velocity
+    #
+    # def __mul__(self, scalar):
+    #     new_velocity = Velocity(scalar * self.dx, scalar * self.dy)
+    #     return new_velocity
 
     def __str__(self):
         return f'Velocity{self.dx, self.dy}'
 
-    def as_tuple(self):
-        return (self.dx, self.dy)
+    # def as_tuple(self):
+    #     return (self.dx, self.dy)
 
-    def rounded(self):
-        return Velocity(round(self.dx, 2), round(self.dy, 2))
+    # This decorator allows you to call the function without parentheses: v = Velocity(3, 4); v.dx -> 3
+    # Inside the class must use self.dx, and self.dy.
+    @property
+    def dx(self):
+        return self.x
+
+    @property
+    def dy(self):
+        return self.y
+
+    # def rounded(self):
+    #     return Velocity(round(self.dx, 2), round(self.dy, 2))
 
 
 def angle_to_heading(angle):
@@ -226,6 +307,12 @@ def V_to_Vel(v: Vector2) -> Velocity:
     return Velocity(v.x, v.y)
 
 
-def V2(x, y) -> Vector2:
-    # noinspection PyArgumentList
-    return Vector2(x, y)
+if __name__ == "__main__":
+    pv = PixelVector(1.234, 5.678)
+    print(pv.round(2))
+
+    vel = Velocity(1.234, 5.678)
+    print(vel.round(2))
+
+    rc = RowCol(3, 4)
+    print(rc.as_tuple())
