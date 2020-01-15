@@ -57,6 +57,5 @@ gui_elements = [[sg.Text('nbr agents', pad=((0, 5), (20, 0))),
                 ]
 
 if __name__ == "__main__":
-    # from PyLogo.Examples.main import PyLogo
     from PyLogo.core.agent import PyLogo
     PyLogo(CollisionTest_World, 'Collision test', gui_elements, patch_class=CollisionTest_Patch, bounce=False)

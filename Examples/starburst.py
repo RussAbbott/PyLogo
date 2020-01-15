@@ -50,6 +50,5 @@ gui_elements = [ [sg.Text('nbr agents', pad=((0, 5), (20, 0))),
 
 
 if __name__ == "__main__":
-    # from PyLogo.Examples.main import PyLogo
     from PyLogo.core.agent import PyLogo
     PyLogo(Starburst_World, 'Starburst', gui_elements)

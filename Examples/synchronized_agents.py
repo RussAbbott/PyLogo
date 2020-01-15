@@ -97,6 +97,5 @@ gui_elements = [[sg.Text('nbr of agents'),
                 ]
 
 if __name__ == "__main__":
-    # from PyLogo.Examples.main import PyLogo
     from PyLogo.core.agent import PyLogo
     PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_elements, bounce=None)
