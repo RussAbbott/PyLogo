@@ -1,11 +1,10 @@
 
-from math import atan2, pi, sqrt
+from math import sqrt
 
 import pygame as pg
 from pygame.color import Color
 from pygame.colordict import THECOLORS
 from pygame import Surface
-from pygame.math import Vector2
 import pygame.transform as pgt
 
 # noinspection PyUnresolvedReferences
@@ -14,7 +13,6 @@ import PyLogo.core.gui as gui
 from PyLogo.core.gui import HALF_PATCH_SIZE, PATCH_SIZE
 from PyLogo.core.sim_engine import SimEngine
 import PyLogo.core.utils as utils
-from PyLogo.core.utils import V2
 from PyLogo.core.world_patch_block import Block, Patch, World
 
 from random import choice, randint
@@ -39,9 +37,8 @@ NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('b
                           Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
                           Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
 
-# noinspection PyArgumentList
-SHAPES = {'netlogo_figure': ((V2(1, 1), V2(0.5, 0), V2(0, 1), V2(0.5, 3/4)),
-                             [])}
+# Since it's use as a default value, can't be a list.
+SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4))}
 
 
 class Agent(Block):
@@ -52,7 +49,7 @@ class Agent(Block):
 
     SQRT_2 = sqrt(2)
 
-    def __init__(self, center_pixel=None, color=None, scale=1.4, shape=agent.SHAPES['netlogo_figure'][0]):
+    def __init__(self, center_pixel=None, color=None, scale=1.4, shape=agent.SHAPES['netlogo_figure']):
         # Can't make this a default value because utils.CENTER_PIXEL() isn't defined
         # when the default values are compiled
         if center_pixel is None:
@@ -82,6 +79,9 @@ class Agent(Block):
         class_name = utils.get_class_name(self)
         return f'{class_name}-{self.id}@{(self.center_pixel.round(2))}: heading: {round(self.heading, 2)}'
 
+    def agents(self):
+        return self.the_world().agents
+
     def bounce_off_screen_edge(self, dxdy):
         """
        Bounce agent off the screen edges
@@ -103,7 +103,8 @@ class Agent(Block):
         base_image = self.create_blank_base_image()
 
         # Instead of using pgt.smoothscale to scale the image, scale the polygon instead.
-        scaled_shape = [(v2 * self.scale*PATCH_SIZE).as_tuple() for v2 in self.shape]
+        factor = self.scale*PATCH_SIZE
+        scaled_shape = [(v[0]*factor,  v[1]*factor) for v in self.shape]
         pg.draw.polygon(base_image, self.color, scaled_shape)
         return base_image
 
@@ -114,12 +115,12 @@ class Agent(Block):
         blank_base_image.fill((0, 0, 0, 0))
         return blank_base_image
 
-    def create_image_to_draw(self):
-        new_points = [self.map_point(utils.V_to_PV(pt)) for pt in self.shape]
-        base_image = self.create_blank_base_image()
-        pg.draw.polygon(base_image, self.color, new_points)
-        return base_image
-
+    # def create_image_to_draw(self):
+    #     new_points = [self.map_point(utils.V_to_PV(pt)) for pt in self.shape]
+    #     base_image = self.create_blank_base_image()
+    #     pg.draw.polygon(base_image, self.color, new_points)
+    #     return base_image
+    #
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
         patch = self.the_world().patches[row_col.row, row_col.col]
@@ -156,19 +157,30 @@ class Agent(Block):
         dxdy = utils.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
 
+    # @staticmethod
+    # def heading_from_to(from_pixel, to_pixel):
+    #     """ The heading to face the point (x, y) """
+    #     delta_x = to_pixel.x - from_pixel.x
+    #     # Subtract in reverse to compensate for the reversal of the y axis.
+    #     delta_y = from_pixel.y - to_pixel.y
+    #     atn2 = atan2(delta_y, delta_x)
+    #     angle = (atn2 / (2 * pi) ) * 360
+    #     new_heading = utils.angle_to_heading(angle)
+    #     return new_heading
+    #
     def heading_toward(self, target):
         """ The heading to face the target """
         from_pixel = self.center_pixel
         to_pixel = target.center_pixel
         return utils.heading_from_to(from_pixel, to_pixel)
 
-    def map_point(self, pxl: utils.PixelVector) -> Vector2:
-        abstract_center_pixel = utils.PixelVector(1/2, 1/2)
-        homed_pxl = pxl - abstract_center_pixel
-        rot_home_p = homed_pxl.rotate(self.heading)
-        restored_pxl = rot_home_p + abstract_center_pixel
-        return restored_pxl
-
+    # def map_point(self, pxl: utils.PixelVector) -> Vector2:
+    #     abstract_center_pixel = utils.PixelVector(1/2, 1/2)
+    #     homed_pxl = pxl - abstract_center_pixel
+    #     rot_home_p = homed_pxl.rotate(self.heading)
+    #     restored_pxl = rot_home_p + abstract_center_pixel
+    #     return restored_pxl
+    #
     def move_by_dxdy(self, dxdy: utils.Velocity):
         """
         Move to self.center_pixel + (dx, dy)
@@ -210,17 +222,6 @@ class Agent(Block):
     def set_heading(self, heading):
         self.heading = heading
 
-    @staticmethod
-    def heading_from_to(from_pixel, xy):
-        """ The heading to face the point (x, y) """
-        delta_x = xy.x - from_pixel.x
-        # Subtract in reverse to compensate for the reversal of the y axis.
-        delta_y = from_pixel.y - xy.y
-        atn2 = atan2(delta_y, delta_x)
-        angle = (atn2 / (2 * pi) ) * 360
-        new_heading = utils.angle_to_heading(angle)
-        return new_heading
-
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
 
@@ -245,11 +246,3 @@ def PyLogo(world_class=World, caption=None, gui_elements=None,
         caption = utils.extract_class_name(world_class)
     sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
     sim_engine.start(world_class, patch_class, agent_class)
-
-
-
-if __name__ == '__main__':
-    # noinspection PyArgumentList
-    v = Vector2(1, 1)
-    v1 = v.rotate(45)
-    print(v1)

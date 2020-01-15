@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 from pygame.color import Color
-from pygame import Vector2
+# from pygame import Vector2
 
 import PyLogo.core.gui as gui
 # noinspection PyUnresolvedReferences
 import PyLogo.core.utils as utils
 
-
+from functools import lru_cache
 from math import copysign
 from random import randint
 
@@ -56,10 +56,10 @@ class V2:     # (Vector2):
         clas = type(self)
         return clas(round(self.x, prec), round(self.y, prec))
 
-    @staticmethod
-    def vector2_to_subclass(v: Vector2, cls):
-        return cls(v.x, v.y)
-
+    # @staticmethod
+    # def vector2_to_subclass(v: Vector2, cls):
+    #     return cls(v.x, v.y)
+    #
     def wrap3(self, x_limit, y_limit):
         self.x = self.x % x_limit
         self.y = self.y % y_limit
@@ -199,12 +199,14 @@ def color_random_variation(color: Color):
     return new_color
 
 
+@lru_cache(maxsize=360)
 def dx(heading):
     angle = utils.heading_to_angle(heading)
     delta_x = utils.cos(angle)
     return delta_x
 
 
+@lru_cache(maxsize=360)
 def dy(heading):
     angle = utils.heading_to_angle(heading)
     delta_y = utils.sin(angle)
@@ -245,6 +247,7 @@ def heading_to_angle(heading):
     return normalize_angle_360(90 - heading)
 
 
+@lru_cache(maxsize=360)
 def heading_to_dxdy(heading) -> Velocity:
     """ Convert a heading to a (dx, dy) pair as a unit velocity """
     # angle = normalize_angle_360(heading - 90) * (-1) * pi/180
@@ -295,14 +298,14 @@ def turn_amount(turn, max_turn):
     return copysign(min(abs(turn), max_turn), turn)
 
 
-def V_to_PV(v: Vector2) -> PixelVector:
-    return PixelVector(v.x, v.y)
-
-
-def V_to_Vel(v: Vector2) -> Velocity:
-    return Velocity(v.x, v.y)
-
-
+# def V_to_PV(v: Vector2) -> PixelVector:
+#     return PixelVector(v.x, v.y)
+#
+#
+# def V_to_Vel(v: Vector2) -> Velocity:
+#     return Velocity(v.x, v.y)
+#
+#
 if __name__ == "__main__":
     pv = PixelVector(1.234, 5.678)
     print(pv.round(2))
