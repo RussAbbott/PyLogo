@@ -129,7 +129,8 @@ class Flocking_Agent(Agent):
     def align(self, flockmates):
         max_align_turn = self.get_gui_value('max-align-turn')
         average_flockmate_heading = self.average_flockmate_heading(flockmates)
-        self.turn_toward_or_away(average_flockmate_heading, max_align_turn)
+        amount_to_turn = utils.turn_toward_amount(self.heading, average_flockmate_heading, max_align_turn)
+        self.turn_right(amount_to_turn)
 
     def average_flockmate_heading(self, flockmates):
         # dx and dy are the x and y components of traveling one unit in the heading direction.
@@ -151,32 +152,29 @@ class Flocking_Agent(Agent):
     def cohere(self, flockmates):
         max_cohere_turn = self.get_gui_value('max-cohere-turn')
         avg_heading_toward_flockmates = self.average_heading_toward_flockmates(flockmates)
-        self.turn_toward_or_away(avg_heading_toward_flockmates, max_cohere_turn)
+        amount_to_turn = utils.turn_toward_amount(self.heading, avg_heading_toward_flockmates, max_cohere_turn)
+        self.turn_right(amount_to_turn)
 
     def flock(self):
         self.speed = self.get_gui_value('speed')
-        vision_limit_in_pixels = self.get_gui_value('vision') * gui.BLOCK_SPACING()
-        flockmates = [agent for agent in self.agents()    # self.the_world().agents
-                      if agent is not self and self.distance_to(agent) < vision_limit_in_pixels]
-        if len(flockmates) == 0:
-            return
-        nearest_neighbor = min(flockmates, key=lambda fm: self.distance_to(fm))
 
-        if self.distance_to(nearest_neighbor) < self.get_gui_value('minimum separation') * gui.BLOCK_SPACING():
-            self.separate(nearest_neighbor)
-        else:
-            self.align(flockmates)
-            self.cohere(flockmates)
+        # NetLogo allows one to specify the units in the Gui widget.
+        vision_limit_in_pixels = self.get_gui_value('vision') * gui.BLOCK_SPACING()
+        flockmates = self.in_radius(vision_limit_in_pixels)
+        if len(flockmates) > 0:
+            nearest_neighbor = min(flockmates, key=lambda flockmate: self.distance_to(flockmate))
+
+            # NetLogo allows one to specify the units in the Gui widget.
+            min_separation = self.get_gui_value('minimum separation') * gui.BLOCK_SPACING()
+            if self.distance_to(nearest_neighbor) < min_separation:
+                self.separate(nearest_neighbor)
+            else:
+                self.align(flockmates)
+                self.cohere(flockmates)
 
     def separate(self, nearest_neighbor):
         max_separate_turn = self.get_gui_value('max-sep-turn')
-        self.turn_toward_or_away(nearest_neighbor.heading, max_separate_turn, toward=False)
-
-    def turn_toward_or_away(self, new_heading, max_turn, toward=True):
-        heading_delta = utils.subtract_headings(new_heading, self.heading)
-        if not toward:
-            heading_delta = 180 + heading_delta
-        amount_to_turn = utils.turn_amount(heading_delta, max_turn)
+        amount_to_turn = utils.turn_away_amount(self.heading, nearest_neighbor.heading, max_separate_turn)
         self.turn_right(amount_to_turn)
 
 
