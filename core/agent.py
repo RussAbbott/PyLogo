@@ -83,6 +83,11 @@ class Agent(Block):
     def agents(self):
         return self.the_world().agents
 
+    def agents_in_radius(self, distance):
+        qualifying_agents = [agent for agent in self.agents()
+                             if agent is not self and self.distance_to(agent) < distance]
+        return qualifying_agents
+
     def bounce_off_screen_edge(self, dxdy):
         """
        Bounce agent off the screen edges
@@ -152,11 +157,6 @@ class Agent(Block):
         from_pixel = self.center_pixel
         to_pixel = target.center_pixel
         return utils.heading_from_to(from_pixel, to_pixel)
-
-    def in_radius(self, distance):
-        qualifying_agents = [agent for agent in self.agents()
-                             if agent is not self and self.distance_to(agent) < distance]
-        return qualifying_agents
 
     def move_by_dxdy(self, dxdy: utils.Velocity):
         """
