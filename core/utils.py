@@ -258,8 +258,8 @@ def subtract_headings(a, b):
     To get from b to a we must turn b by a-b.
 
       a
-     |
-    |_____ b
+     /
+    /_____ b
 
     Since larger headings are to the right (clockwise), if (a-b) is negative, that means b is to the right of a,
     as in the diagram. So we must turn negatively, i.e., counter-clockwise.
