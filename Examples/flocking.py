@@ -47,7 +47,7 @@ end
 ;;; SEPARATE
 
 to separate  ;; turtle procedure
-  turn-away ([heading] of nearest-neighbor) max-separate-turn
+  turn-away ([heading] of nearest-neighbor) max-sep-turn
 end
 
 ;;; ALIGN
@@ -156,7 +156,7 @@ class Flocking_Agent(Agent):
     def flock(self):
         self.speed = self.get_gui_value('speed')
         vision_limit_in_pixels = self.get_gui_value('vision') * gui.BLOCK_SPACING()
-        flockmates = [agent for agent in self.the_world().agents
+        flockmates = [agent for agent in self.agents()    # self.the_world().agents
                       if agent is not self and self.distance_to(agent) < vision_limit_in_pixels]
         if len(flockmates) == 0:
             return
@@ -169,7 +169,7 @@ class Flocking_Agent(Agent):
             self.cohere(flockmates)
 
     def separate(self, nearest_neighbor):
-        max_separate_turn = self.get_gui_value('max-separate-turn')
+        max_separate_turn = self.get_gui_value('max-sep-turn')
         self.turn_toward_or_away(nearest_neighbor.heading, max_separate_turn, toward=False)
 
     def turn_toward_or_away(self, new_heading, max_turn, toward=True):
@@ -206,21 +206,21 @@ gui_elements = [
 
                 [sg.Text('speed', pad=((0, 5), (20, 0)),
                          tooltip='The speed of the agents'),
-                 sg.Slider(key='speed', range=(0, 5), resolution=0.5, default_value=1, orientation='horizontal',
+                 sg.Slider(key='speed', range=(0, 5), resolution=0.5, default_value=3, orientation='horizontal',
                            size=(10, 20), tooltip='The speed of the agents')],
 
                 gui.HOR_SEP(30),
 
-                [sg.Text('minimum separation', pad=((0, 5), (20, 0)),
+                [sg.Text('min separation', pad=((0, 5), (20, 0)),
                          tooltip='The minimum acceptable patch-lengths to nearest neighbor'),
                  sg.Slider(key='minimum separation', range=(1, 5), resolution=0.5, default_value=2, size=(10, 20),
                            orientation='horizontal',
                            tooltip='The minimum acceptable patch-lengths to nearest neighbor')],
 
-                [sg.Text('max-separate-turn', pad=((0, 5), (20, 0)),
+                [sg.Text('max-sep-turn', pad=((0, 5), (20, 0)),
                          tooltip='The most degrees (in angles) an agent can turn '
                                  'to move away from its nearest neighbor'),
-                 sg.Slider(key='max-separate-turn', range=(1, 20), resolution=0.5, default_value=1.5,
+                 sg.Slider(key='max-sep-turn', range=(1, 20), resolution=0.5, default_value=1.5,
                            orientation='horizontal', size=(10, 20),
                            tooltip='The most degrees (in angles) an agent can turn '
                                    'to move away from its nearest neighbor')],
@@ -229,13 +229,13 @@ gui_elements = [
 
                 [sg.Text('max-cohere-turn', pad=((0, 5), (20, 0)),
                          tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates'),
-                 sg.Slider(key='max-cohere-turn', range=(1, 20), resolution=0.25, default_value=3,
+                 sg.Slider(key='max-cohere-turn', range=(1, 20), resolution=0.5, default_value=3,
                            orientation='horizontal', size=(10, 20),
                            tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates')],
 
                 [sg.Text('max-align-turn', pad=((0, 5), (20, 0)),
                          tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates'),
-                 sg.Slider(key='max-align-turn', range=(0, 20), resolution=0.25, default_value=5,
+                 sg.Slider(key='max-align-turn', range=(0, 20), resolution=0.5, default_value=3,
                            orientation='horizontal', size=(10, 20),
                            tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates')],
 
