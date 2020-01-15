@@ -103,7 +103,7 @@ class Agent(Block):
         base_image = self.create_blank_base_image()
 
         # Instead of using pgt.smoothscale to scale the image, scale the polygon instead.
-        scaled_shape = [v2 * self.scale*PATCH_SIZE for v2 in self.shape]
+        scaled_shape = [(v2 * self.scale*PATCH_SIZE).as_tuple() for v2 in self.shape]
         pg.draw.polygon(base_image, self.color, scaled_shape)
         return base_image
 
@@ -168,13 +168,6 @@ class Agent(Block):
         rot_home_p = homed_pxl.rotate(self.heading)
         restored_pxl = rot_home_p + abstract_center_pixel
         return restored_pxl
-
-        # heading = utils.heading_from_to(abstract_center_pixel, pxl)
-        # dxdy = utils.heading_to_dxdy(heading)
-        # dist = abstract_center_pixel.distance_to(pxl)
-        # scaled_dist = dist * self.scale * PATCH_SIZE
-        # new_pxl = self.center_pixel + dxdy * scaled_dist
-        # return new_pxl.as_V2()
 
     def move_by_dxdy(self, dxdy: utils.Velocity):
         """

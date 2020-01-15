@@ -13,24 +13,37 @@ from math import copysign
 from random import randint
 
 
-class V2(Vector2):
+class V2:     # (Vector2):
 
-    def __add__(self, v: Vector2):
-        # Returns a Vector2 because __add__ is done at that level
-        sum: Vector2 = super().__add__(v)
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __add__(self, v: V2):
+        xx = self.x + v.x
+        yy = self.y + v.y
         cls = type(self)
-        new_inst = self.vector2_to_subclass(sum, cls)
-        # new_pixel_vector: PixelVector = self.PV(sum)
-        return new_inst
+        return cls(xx, yy)
+        # # Returns a Vector2 because __add__ is done at that level
+        # sum: Vector2 = super().__add__(v)
+        # cls = type(self)
+        # new_inst = self.vector2_to_subclass(sum, cls)
+        # # new_pixel_vector: PixelVector = self.PV(sum)
+        # return new_inst
 
     def __mul__(self, scalar):
-        # Returns a Vector2 because __mul__ is done at that level
-        product: Vector2 = super().__mul__(scalar)
+        xx = self.x * scalar
+        yy = self.y * scalar
         cls = type(self)
-        new_inst = self.vector2_to_subclass(product, cls)
-        return new_inst
+        return cls(xx, yy)
 
-    def __sub__(self, v: Vector2):
+        # # Returns a Vector2 because __mul__ is done at that level
+        # product: Vector2 = super().__mul__(scalar)
+        # cls = type(self)
+        # new_inst = self.vector2_to_subclass(product, cls)
+        # return new_inst
+
+    def __sub__(self, v: V2):
         return self + v*(-1)
 
     def as_tuple(self):
@@ -66,13 +79,16 @@ class PixelVector(V2):
     def distance_to(self, other):
         screen_width = gui.SCREEN_PIXEL_WIDTH()
         screen_height = gui.SCREEN_PIXEL_HEIGHT()
-        end_pts = [((self + a + b).wrap3(screen_width, screen_height),
-                    (other + a + b).wrap3(screen_width, screen_height))
+        end_pts = [((self + a + b).wrap3(screen_width, screen_height),      #.as_tuple(),
+                    (other + a + b).wrap3(screen_width, screen_height)      #.as_tuple()
+                    )
                    for a in [utils.PixelVector(0, 0), utils.PixelVector(screen_width/2, 0)]
                    for b in [utils.PixelVector(0, 0), utils.PixelVector(0, screen_height/2)]
                    ]
         # noinspection PyArgumentList
-        dist = min(Vector2(start).distance_to(end) for (start, end) in end_pts)
+        # dist = min(Vector2(start).distance_to(end) for (start, end) in end_pts)
+        dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
+        # dist = min(Vector2(start).distance_to(end) for (start, end) in end_pts)
         return dist
 
     def wrap(self):
