@@ -164,7 +164,6 @@ class World:
     def save_values_and_setup(self, event, values):
         self.event = event
         self.values = values
-        # Agent.color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
         self.setup()
 
     def setup(self):

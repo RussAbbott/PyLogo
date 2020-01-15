@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-from math import atan2, cos, pi, sin
-
 from pygame.color import Color
 from pygame import Vector2
 
@@ -32,6 +30,9 @@ class V2(Vector2):
         new_inst = self.vector2_to_subclass(product, cls)
         return new_inst
 
+    def __sub__(self, v: Vector2):
+        return self + v*(-1)
+
     def as_tuple(self):
         return (self.x, self.y)
 
@@ -59,57 +60,25 @@ class PixelVector(V2):
         # noinspection PyArgumentList
         super().__init__(x, y)
 
-    # def __add__(self, velocity: utils.Velocity):
-    #     # Returns a Vector2 because __add__ is done at that level
-    #     sum: Vector2 = super().__add__(velocity)
-    #     new_pixel_vector: PixelVector = self.PV(sum)
-    #     return new_pixel_vector
-
-    # def __eq__(self, other):
-    #     """Override the default Equals behavior"""
-    #     return self.x == other.x and self.y == other.y
-    #
-    # def __mul__(self, scalar):
-    #     # Returns a Vector2 because __mul__ is done at that level
-    #     product: Vector2 = super().__mul__(scalar)
-    #     new_pixel_vector = self.PV(product)
-    #     return new_pixel_vector
-
-        # new_pixel_vector = PixelVector(scalar * self.x, scalar * self.y)
-        # return new_pixel_vector
-    #
-    # def __ne__(self, other):
-    #     """Override the default Unequal behavior"""
-    #     return self.x != other.x or self.y != other.y
-
-    # @staticmethod
-    # def PV(v: Vector2):
-    #     return PixelVector(v.x, v.y)
-        # def __init__(self, v: Vector2):
-        #     super().__init__(v.x, v.y)
-
     def __str__(self):
         return f'PixelVector{self.x, self.y}'
 
-    # def as_tuple(self):
-    #     return (self.x, self.y)
-    #
-    # def as_V2(self):
-    #     return V2(self.x, self.y)
-    #
-    # def distance_to(self, xy: PixelVector):
-    #     return sqrt((self.x - xy.x)**2 + (self.y - xy.y)**2)
-    #
-    # def round(self, prec=2):
-    #     return PixelVector(round(self.x, prec), round(self.y, prec))
+    def distance_to(self, other):
+        screen_width = gui.SCREEN_PIXEL_WIDTH()
+        screen_height = gui.SCREEN_PIXEL_HEIGHT()
+        end_pts = [((self + a + b).wrap3(screen_width, screen_height),
+                    (other + a + b).wrap3(screen_width, screen_height))
+                   for a in [utils.PixelVector(0, 0), utils.PixelVector(screen_width/2, 0)]
+                   for b in [utils.PixelVector(0, 0), utils.PixelVector(0, screen_height/2)]
+                   ]
+        # noinspection PyArgumentList
+        dist = min(Vector2(start).distance_to(end) for (start, end) in end_pts)
+        return dist
 
     def wrap(self):
         screen_rect = gui.simple_gui.SCREEN.get_rect()
         wrapped = self.wrap3(screen_rect.w, screen_rect.h)
         return wrapped
-
-        # new_pixel_vector = PixelVector(self.x % screen_rect.w, self.y % screen_rect.h)
-        # return new_pixel_vector
 
 
 class RowCol(V2):
@@ -122,21 +91,8 @@ class RowCol(V2):
         # self.col = col
         self.wrap()
 
-    # def __add__(self, other_row_col: RowCol):
-    #     new_row_col = RowCol(self.row + other_row_col.row, self.col + other_row_col.col)
-    #     return new_row_col
-
-    # def __add__(self, other_row_col: RowCol):
-    #     # Returns a Vector2 because __add__ is done at that level
-    #     sum: Vector2 = super().__add__(other_row_col)
-    #     new_pixel_vector = self.PV(sum)
-    #     return new_pixel_vector
-
     def __str__(self):
         return f'RowCol{self.row, self.col}'
-
-    # def as_tuple(self):
-    #     return (self.row, self.col)
 
     @property
     def col(self):
@@ -149,9 +105,6 @@ class RowCol(V2):
     def wrap(self):
         wrapped = self.wrap3(gui.PATCH_ROWS, gui.PATCH_COLS)
         return wrapped
-        # self.x = self.row % gui.PATCH_ROWS
-        # self.y = self.col % gui.PATCH_COLS
-        # return self
 
 
 class Velocity(V2):
@@ -160,21 +113,10 @@ class Velocity(V2):
         # noinspection PyArgumentList
         super().__init__(dx, dy)
 
-    # def __add__(self, other_velocity: Velocity):
-    #     new_velocity = Velocity(self.dx + other_velocity.dx, self.dy + other_velocity.dy)
-    #     return new_velocity
-    #
-    # def __mul__(self, scalar):
-    #     new_velocity = Velocity(scalar * self.dx, scalar * self.dy)
-    #     return new_velocity
-
     def __str__(self):
         return f'Velocity{self.dx, self.dy}'
 
-    # def as_tuple(self):
-    #     return (self.dx, self.dy)
-
-    # This decorator allows you to call the function without parentheses: v = Velocity(3, 4); v.dx -> 3
+    # The @property decorator allows you to call the function without parentheses: v = Velocity(3, 4); v.dx -> 3
     # Inside the class must use self.dx, and self.dy.
     @property
     def dx(self):
@@ -184,8 +126,34 @@ class Velocity(V2):
     def dy(self):
         return self.y
 
-    # def rounded(self):
-    #     return Velocity(round(self.dx, 2), round(self.dy, 2))
+
+# ###################### Start trig functions in degrees ###################### #
+# import Python's trig functions, which are in radians. pi radians == 180 degrees
+import math
+
+
+# These functions expect their arguments in degrees.
+def atan2(y, x):
+    return radians_to_degrees(math.atan2(y, x))
+
+
+def cos(x):
+    return math.cos(degrees_to_radians(x))
+
+
+def sin(x):
+    return math.sin(degrees_to_radians(x))
+
+
+def degrees_to_radians(degrees):
+    return degrees*math.pi/180
+
+
+def radians_to_degrees(radians):
+    return radians*180/math.pi
+
+
+# ###################### End trig functions in degrees ###################### #
 
 
 def angle_to_heading(angle):
@@ -215,6 +183,19 @@ def color_random_variation(color: Color):
     return new_color
 
 
+def dx(heading):
+    angle = utils.heading_to_angle(heading)
+    delta_x = utils.cos(angle)
+    return delta_x
+
+
+def dy(heading):
+    angle = utils.heading_to_angle(heading)
+    delta_y = utils.sin(angle)
+    # make it negative to account for inverted y axis
+    return (-1)*delta_y
+
+
 def extract_class_name(full_class_name: type):
     """
     full_class_name will be something like: <class 'PyLogo.core.static_values'>
@@ -238,8 +219,7 @@ def heading_from_to(from_pixel: PixelVector, to_pixel: PixelVector):
     delta_x = to_pixel.x - from_pixel.x
     # Subtract in reverse to compensate for the reversal of the y axis.
     delta_y = from_pixel.y - to_pixel.y
-    atn2 = atan2(delta_y, delta_x)
-    angle = (atn2 / (2 * pi)) * 360
+    angle = atan2(delta_y, delta_x)
     new_heading = utils.angle_to_heading(angle)
     return new_heading
 
@@ -252,7 +232,7 @@ def heading_to_angle(heading):
 def heading_to_dxdy(heading) -> Velocity:
     """ Convert a heading to a (dx, dy) pair as a unit velocity """
     # angle = normalize_angle_360(heading - 90) * (-1) * pi/180
-    angle = heading_to_angle(heading) * pi/180  # Really 2*pi/360
+    angle = heading_to_angle(heading)
     dx = cos(angle)
     # The -1 accounts for the y-axis being inverted.
     dy = (-1) * sin(angle)
@@ -316,3 +296,12 @@ if __name__ == "__main__":
 
     rc = RowCol(3, 4)
     print(rc.as_tuple())
+
+    screen_width = gui.SCREEN_PIXEL_WIDTH()
+    screen_height = gui.SCREEN_PIXEL_HEIGHT()
+    v1 = utils.PixelVector(1, 1)
+    v2 = utils.PixelVector(2, 2)
+    print(v1.distance_to(v2))
+    v3 = (v1 - v2).wrap3(screen_width, screen_height)
+    print(v1.round(2), v2.round(2), v3.round(2))
+    print(v1.distance_to(v3))

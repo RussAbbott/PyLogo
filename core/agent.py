@@ -39,6 +39,7 @@ NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('b
                           Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
                           Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
 
+# noinspection PyArgumentList
 SHAPES = {'netlogo_figure': ((V2(1, 1), V2(0.5, 0), V2(0, 1), V2(0.5, 3/4)),
                              [])}
 
@@ -79,8 +80,7 @@ class Agent(Block):
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}-{self.id}@{(self.center_pixel.x, self.center_pixel.y)}: ' \
-               f'heading: {round(self.heading, 2)}'
+        return f'{class_name}-{self.id}@{(self.center_pixel.round(2))}: heading: {round(self.heading, 2)}'
 
     def bounce_off_screen_edge(self, dxdy):
         """
@@ -126,7 +126,14 @@ class Agent(Block):
         return patch
 
     def distance_to(self, other):
-        return self.center_pixel.distance_to(other.center_pixel)
+        screen_width_half = gui.SCREEN_PIXEL_WIDTH()/2
+        screen_height_half = gui.SCREEN_PIXEL_HEIGHT()/2
+        end_pts = [(self.center_pixel + a + b, other.center_pixel + a + b)
+                   for a in [utils.PixelVector(0, 0), utils.PixelVector(screen_width_half, 0)]
+                   for b in [utils.PixelVector(0, 0), utils.PixelVector(0, screen_height_half)]
+                   ]
+        dist = min(start.distance_to(end) for (start, end) in end_pts)
+        return dist
 
 
     def draw(self):
@@ -138,7 +145,7 @@ class Agent(Block):
 
         self.rect = self.image.get_rect(center=self.center_pixel.as_tuple())
         super().draw()
-
+        
     def face_xy(self, xy: utils.PixelVector):
         new_heading = utils.heading_from_to(self.center_pixel, xy)
         self.set_heading(new_heading)
@@ -149,7 +156,7 @@ class Agent(Block):
         dxdy = utils.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
 
-    def heading_to(self, target):
+    def heading_toward(self, target):
         """ The heading to face the target """
         from_pixel = self.center_pixel
         to_pixel = target.center_pixel
@@ -157,12 +164,17 @@ class Agent(Block):
 
     def map_point(self, pxl: utils.PixelVector) -> Vector2:
         abstract_center_pixel = utils.PixelVector(1/2, 1/2)
-        heading = utils.heading_from_to(abstract_center_pixel, pxl)
-        dxdy = utils.heading_to_dxdy(heading)
-        dist = abstract_center_pixel.distance_to(pxl)
-        scaled_dist = dist * self.scale * PATCH_SIZE
-        new_pxl = self.center_pixel + dxdy * scaled_dist
-        return new_pxl.as_V2()
+        homed_pxl = pxl - abstract_center_pixel
+        rot_home_p = homed_pxl.rotate(self.heading)
+        restored_pxl = rot_home_p + abstract_center_pixel
+        return restored_pxl
+
+        # heading = utils.heading_from_to(abstract_center_pixel, pxl)
+        # dxdy = utils.heading_to_dxdy(heading)
+        # dist = abstract_center_pixel.distance_to(pxl)
+        # scaled_dist = dist * self.scale * PATCH_SIZE
+        # new_pxl = self.center_pixel + dxdy * scaled_dist
+        # return new_pxl.as_V2()
 
     def move_by_dxdy(self, dxdy: utils.Velocity):
         """
@@ -230,6 +242,7 @@ class Agent(Block):
 class Turtle(Agent):
     pass
 
+
 def PyLogo(world_class=World, caption=None, gui_elements=None,
            agent_class=Agent, patch_class=Patch,
            patch_size=11, bounce=True):
@@ -239,3 +252,11 @@ def PyLogo(world_class=World, caption=None, gui_elements=None,
         caption = utils.extract_class_name(world_class)
     sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
     sim_engine.start(world_class, patch_class, agent_class)
+
+
+
+if __name__ == '__main__':
+    # noinspection PyArgumentList
+    v = Vector2(1, 1)
+    v1 = v.rotate(45)
+    print(v1)

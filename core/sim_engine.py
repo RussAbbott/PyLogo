@@ -7,8 +7,11 @@ from pygame.time import Clock
 
 class SimEngine:
 
+    sim_engine = None
+
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=True):
 
+        SimEngine.sim_engine = self
         # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
         self.CTRL_d = 'd:68'
