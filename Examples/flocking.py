@@ -160,7 +160,7 @@ class Flocking_Agent(Agent):
 
         # NetLogo allows one to specify the units in the Gui widget.
         vision_limit_in_pixels = self.get_gui_value('vision') * gui.BLOCK_SPACING()
-        flockmates = self.in_radius(vision_limit_in_pixels)
+        flockmates = self.agents_in_radius(vision_limit_in_pixels)
         if len(flockmates) > 0:
             nearest_neighbor = min(flockmates, key=lambda flockmate: self.distance_to(flockmate))
 
