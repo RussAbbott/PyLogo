@@ -22,22 +22,23 @@ from typing import Tuple
 
 def is_acceptable_color(rgb: Tuple[int, int, int]):
     """
-    Require reasonably bright colors for which r, g, and b are not too close to each other.
+    Require reasonably bright colors (sum_rgb >= 150) for which r, g, and b are not too close to each other,
+    i.e., not too close to gray.
     """
     sum_rgb = sum(rgb)
     avg_rgb = sum_rgb/3
-    return 150 <= sum_rgb and sum(abs(avg_rgb-x) for x in rgb) > 100
+    return sum_rgb >= 150 and sum(abs(avg_rgb-x) for x in rgb) > 100
 
 
-# These are colors defined by pygame that satisfy is_acceptable_color above.
+# These are colors defined by pygame that satisfy is_acceptable_color() above.
 PYGAME_COLORS = [rgba for rgba in THECOLORS.values() if is_acceptable_color(rgba[:3])]
 
-# These are NetLogo primary colors.
+# These are NetLogo primary colors -- more or less.
 NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('brown'), Color('yellow'),
                           Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
                           Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
 
-# Since it's use as a default value, can't be a list.
+# Since it's used as a default value, can't be a list. A tuple works just as well.
 SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4))}
 
 
@@ -115,12 +116,6 @@ class Agent(Block):
         blank_base_image.fill((0, 0, 0, 0))
         return blank_base_image
 
-    # def create_image_to_draw(self):
-    #     new_points = [self.map_point(utils.V_to_PV(pt)) for pt in self.shape]
-    #     base_image = self.create_blank_base_image()
-    #     pg.draw.polygon(base_image, self.color, new_points)
-    #     return base_image
-    #
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
         patch = self.the_world().patches[row_col.row, row_col.col]
@@ -138,12 +133,7 @@ class Agent(Block):
 
 
     def draw(self):
-
         self.image = pgt.rotate(self.base_image, -self.heading)
-
-        # Should probably rotate and scale the shape here as in the following, but it doesn't work properly.
-        # self.image = self.create_image_to_draw()
-
         self.rect = self.image.get_rect(center=self.center_pixel.as_tuple())
         super().draw()
         
@@ -157,30 +147,17 @@ class Agent(Block):
         dxdy = utils.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
 
-    # @staticmethod
-    # def heading_from_to(from_pixel, to_pixel):
-    #     """ The heading to face the point (x, y) """
-    #     delta_x = to_pixel.x - from_pixel.x
-    #     # Subtract in reverse to compensate for the reversal of the y axis.
-    #     delta_y = from_pixel.y - to_pixel.y
-    #     atn2 = atan2(delta_y, delta_x)
-    #     angle = (atn2 / (2 * pi) ) * 360
-    #     new_heading = utils.angle_to_heading(angle)
-    #     return new_heading
-    #
     def heading_toward(self, target):
         """ The heading to face the target """
         from_pixel = self.center_pixel
         to_pixel = target.center_pixel
         return utils.heading_from_to(from_pixel, to_pixel)
 
-    # def map_point(self, pxl: utils.PixelVector) -> Vector2:
-    #     abstract_center_pixel = utils.PixelVector(1/2, 1/2)
-    #     homed_pxl = pxl - abstract_center_pixel
-    #     rot_home_p = homed_pxl.rotate(self.heading)
-    #     restored_pxl = rot_home_p + abstract_center_pixel
-    #     return restored_pxl
-    #
+    def in_radius(self, distance):
+        qualifying_agents = [agent for agent in self.agents()
+                             if agent is not self and self.distance_to(agent) < distance]
+        return qualifying_agents
+
     def move_by_dxdy(self, dxdy: utils.Velocity):
         """
         Move to self.center_pixel + (dx, dy)

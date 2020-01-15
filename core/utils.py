@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pygame.color import Color
-# from pygame import Vector2
 
 import PyLogo.core.gui as gui
 # noinspection PyUnresolvedReferences
@@ -13,7 +12,7 @@ from math import copysign
 from random import randint
 
 
-class V2:     # (Vector2):
+class V2:
 
     def __init__(self, x, y):
         self.x = x
@@ -24,24 +23,12 @@ class V2:     # (Vector2):
         yy = self.y + v.y
         cls = type(self)
         return cls(xx, yy)
-        # # Returns a Vector2 because __add__ is done at that level
-        # sum: Vector2 = super().__add__(v)
-        # cls = type(self)
-        # new_inst = self.vector2_to_subclass(sum, cls)
-        # # new_pixel_vector: PixelVector = self.PV(sum)
-        # return new_inst
 
     def __mul__(self, scalar):
         xx = self.x * scalar
         yy = self.y * scalar
         cls = type(self)
         return cls(xx, yy)
-
-        # # Returns a Vector2 because __mul__ is done at that level
-        # product: Vector2 = super().__mul__(scalar)
-        # cls = type(self)
-        # new_inst = self.vector2_to_subclass(product, cls)
-        # return new_inst
 
     def __sub__(self, v: V2):
         return self + v*(-1)
@@ -56,21 +43,15 @@ class V2:     # (Vector2):
         clas = type(self)
         return clas(round(self.x, prec), round(self.y, prec))
 
-    # @staticmethod
-    # def vector2_to_subclass(v: Vector2, cls):
-    #     return cls(v.x, v.y)
-    #
     def wrap3(self, x_limit, y_limit):
         self.x = self.x % x_limit
         self.y = self.y % y_limit
         return self
 
 
-
 class PixelVector(V2):
 
     def __init__(self, x, y):
-        # noinspection PyArgumentList
         super().__init__(x, y)
 
     def __str__(self):
@@ -85,10 +66,7 @@ class PixelVector(V2):
                    for a in [utils.PixelVector(0, 0), utils.PixelVector(screen_width/2, 0)]
                    for b in [utils.PixelVector(0, 0), utils.PixelVector(0, screen_height/2)]
                    ]
-        # noinspection PyArgumentList
-        # dist = min(Vector2(start).distance_to(end) for (start, end) in end_pts)
         dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
-        # dist = min(Vector2(start).distance_to(end) for (start, end) in end_pts)
         return dist
 
     def wrap(self):
@@ -100,11 +78,8 @@ class PixelVector(V2):
 class RowCol(V2):
 
     def __init__(self, row, col):
-        # noinspection PyArgumentList
         super().__init__(row, col)
         # Wrap around the patch grid.
-        # self.row = row
-        # self.col = col
         self.wrap()
 
     def __str__(self):
@@ -126,7 +101,6 @@ class RowCol(V2):
 class Velocity(V2):
 
     def __init__(self, dx, dy):
-        # noinspection PyArgumentList
         super().__init__(dx, dy)
 
     def __str__(self):
@@ -173,7 +147,7 @@ def radians_to_degrees(radians):
 
 
 def angle_to_heading(angle):
-    """ Convert an angle to a heading """
+    """ Convert an angle to a heading. Same as heading to angle! """
     heading = heading_to_angle(angle)
     return heading
 
@@ -250,7 +224,6 @@ def heading_to_angle(heading):
 @lru_cache(maxsize=360)
 def heading_to_dxdy(heading) -> Velocity:
     """ Convert a heading to a (dx, dy) pair as a unit velocity """
-    # angle = normalize_angle_360(heading - 90) * (-1) * pi/180
     angle = heading_to_angle(heading)
     dx = cos(angle)
     # The -1 accounts for the y-axis being inverted.
@@ -264,6 +237,7 @@ def normalize_angle_360(angle):
 
 
 def normalize_angle_180(angle):
+    """ Convert angle to the range (-180 .. 180]. """
     normalized_angle = normalize_angle_360(angle)
     return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
 
@@ -280,33 +254,47 @@ def row_col_to_center_pixel(row_col: RowCol) -> PixelVector:
 
 def subtract_headings(a, b):
     """
-    subtract heading b from heading a
-    Since larger headings are to the right (clockwise), if (a-b) is negative, that means b is to the right of a.
-    To get from b to a we must turn to the left. Similarly for positive results.
+    subtract heading b from heading a.
+    To get from b to a we must turn b by a-b.
 
-    Normalize to values between -180 and +180 to ensure that larger numbers are to the right .
+      a
+     |
+    |_____ b
+
+    Since larger headings are to the right (clockwise), if (a-b) is negative, that means b is to the right of a,
+    as in the diagram. So we must turn negatively, i.e., counter-clockwise.
+    Similarly for positive results. a is to the right of b, i.e., clockwise.
+
+    Normalize to values between -180 and +180 to ensure that larger numbers are to the right, i.e., clockwise.
+    No jump from 360 to 0.
     """
     a_180 = utils.normalize_angle_180(a)
     b_180 = utils.normalize_angle_180(b)
     return a_180 - b_180
 
 
-def turn_amount(turn, max_turn):
-    # copysign returns the first argument but with the sign of the second.
-    # copysign(x, y) = abs(x) * (y/abs(y))
-    # turn_amount = min(abs(turn), max_turn) * (turn/abs(turn))
-    return copysign(min(abs(turn), max_turn), turn)
+def turn_away_amount(old_heading, new_heading, max_turn):
+    # If we reverse old_heading and new_heading, we are finding the direction new_heading
+    # should turn to face more toward old_heading. But if old_heading turned that way
+    # it would be turning away from new_heading.
+    return turn_toward_amount(new_heading, old_heading, max_turn)
 
 
-# def V_to_PV(v: Vector2) -> PixelVector:
-#     return PixelVector(v.x, v.y)
-#
-#
-# def V_to_Vel(v: Vector2) -> Velocity:
-#     return Velocity(v.x, v.y)
-#
-#
+def turn_toward_amount(old_heading, new_heading, max_turn):
+    # heading_delta will the amount old_heading should turn (positive or negative)
+    # to face more in the direction of new_heading.
+    heading_delta = utils.subtract_headings(new_heading, old_heading)
+    # Take max_turn (an abs value) into consideration.
+    # We want to turn the smaller (in absolute terms) of abs(heading_delta) and max_turn.
+    # We want to turn in the direction indicated by the sign of heading_delta
+
+    # copysign returns the first argument but with the sign of the second, i.e.,
+    amount_to_turn = copysign(min(abs(heading_delta), max_turn), heading_delta)
+    return (amount_to_turn)
+
+
 if __name__ == "__main__":
+    # Various tests and experiments
     pv = PixelVector(1.234, 5.678)
     print(pv.round(2))
 
