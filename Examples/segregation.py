@@ -188,6 +188,5 @@ gui_elements = [[sg.Text('density'),
                 ]
 
 if __name__ == "__main__":
-    # from PyLogo.Examples.main import PyLogo
     from PyLogo.core.agent import PyLogo
     PyLogo(SegregationWorld, "Schelling's segregation model", gui_elements, bounce=None)
