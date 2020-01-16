@@ -124,6 +124,18 @@ class SegregationWorld(World):
                 too_gray = too_gray or gray_measure < 75
             if too_gray:
                 continue
+            # Require at least one color to be somewhat subdued
+            if min(sum(color) for color in colors) > 300:
+                continue
+            too_pure = False
+            for color in colors:
+                too_pure = too_pure or set(color) == {255, 0}
+            if too_pure:
+                continue
+            # # Overall, not too bright and not too dim.
+            # sum_both = sum(sum(color) for color in colors)
+            # if not (500 < sum_both < 1000):
+            #     continue
             # Reject any pair of colors that are too close to each other.
             rgb_pairs = zip(colors[0], colors[1])
             colors_diff = sum(abs(c1 - c2) for (c1, c2) in rgb_pairs)
