@@ -87,7 +87,7 @@ class Pixel_xy(XY):
         new_heading = utils.angle_to_heading(angle)
         return new_heading
 
-    def pixel_to_row_col(self: Pixel_xy):
+    def pixel_to_patch(self: Pixel_xy):
         """
         Get the patch RowCol for this pixel
        """
@@ -119,7 +119,7 @@ class RowCol(XY):
     def row(self):
         return int(self.x)
 
-    def row_col_to_center_pixel(self) -> Pixel_xy:
+    def patch_to_center_pixel(self) -> Pixel_xy:
         """
         Get the center_pixel position for this RowCol.
         Leave a border of 1 pixel at the top and left of the patches

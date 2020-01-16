@@ -133,7 +133,7 @@ class Agent(Block):
         return blank_base_image
 
     def current_patch(self) -> Patch:
-        row_col: utils.RowCol = (self.center_pixel).pixel_to_row_col()
+        row_col: utils.RowCol = (self.center_pixel).pixel_to_patch()
         patch = self.the_world().patches[row_col.row, row_col.col]
         return patch
 

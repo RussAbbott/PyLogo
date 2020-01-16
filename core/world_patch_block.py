@@ -54,7 +54,7 @@ class Block(Sprite):
 
 class Patch(Block):
     def __init__(self, row_col: utils.RowCol, color=Color('black')):
-        super().__init__(row_col.row_col_to_center_pixel(), color)
+        super().__init__(row_col.patch_to_center_pixel(), color)
         self.row_col = row_col
         self.agents = set()
         self._neighbors_4 = None
