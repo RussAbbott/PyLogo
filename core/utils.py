@@ -67,14 +67,14 @@ class PixelVector(V2):
         dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
         return dist
 
-    def heading_toward(from_pixel, to_pixel: PixelVector):
+    def heading_toward(self, to_pixel: PixelVector):
         """ The heading to face from the from_pixel to the to_pixel """
         # Make the default heading 0 if from_pixel == to_pixel.
-        if from_pixel == to_pixel:
+        if self == to_pixel:
             return 0
-        delta_x = to_pixel.x - from_pixel.x
+        delta_x = to_pixel.x - self.x
         # Subtract in reverse to compensate for the reversal of the y axis.
-        delta_y = from_pixel.y - to_pixel.y
+        delta_y = self.y - to_pixel.y
         angle = atan2(delta_y, delta_x)
         new_heading = utils.angle_to_heading(angle)
         return new_heading
@@ -220,19 +220,6 @@ def get_class_name(obj) -> str:
     return extract_class_name(full_class_name)
 
 
-# def heading_from_to(from_pixel: PixelVector, to_pixel: PixelVector):
-#     """ The heading to face from the from_pixel to the to_pixel """
-#     # Make the default heading 0 if from_pixel == to_pixel.
-#     if from_pixel == to_pixel:
-#         return 0
-#     delta_x = to_pixel.x - from_pixel.x
-#     # Subtract in reverse to compensate for the reversal of the y axis.
-#     delta_y = from_pixel.y - to_pixel.y
-#     angle = atan2(delta_y, delta_x)
-#     new_heading = utils.angle_to_heading(angle)
-#     return new_heading
-#
-#
 def heading_to_angle(heading):
     """ Convert a heading to an angle """
     return normalize_angle_360(90 - heading)
@@ -249,10 +236,10 @@ def heading_to_dxdy(heading) -> Velocity:
     return vel
 
 
-def in_radius(px1=None, x2=None, dist=None):
-    return px1.distance_to <= dist
-
-
+# def in_radius(px1=None, x2=None, dist=None):
+#     return px1.distance_to <= dist
+#
+#
 def normalize_angle_360(angle):
     return angle % 360
 
@@ -278,7 +265,7 @@ def subtract_headings(a, b):
     subtract heading b from heading a.
     To get from b to a we must turn b by a-b.
 
-      a
+       a
      /
     /_____ b
 

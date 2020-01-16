@@ -162,25 +162,10 @@ class Agent(Block):
         dxdy = utils.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
 
-    def heading_from_to(agent1, agent2):
-        """ The heading to face from the from_pixel to the to_pixel """
-        from_pixel = agent1.center_pixel
-        to_pixel = agent2.center_pixel
-        # Make the default heading 0 if from_pixel == to_pixel.
-        if from_pixel == to_pixel:
-            return 0
-        delta_x = to_pixel.x - from_pixel.x
-        # Subtract in reverse to compensate for the reversal of the y axis.
-        delta_y = from_pixel.y - to_pixel.y
-        angle = atan2(delta_y, delta_x)
-        new_heading = utils.angle_to_heading(angle)
-        return new_heading
-
     def heading_toward(self, target):
         """ The heading to face the target """
         from_pixel = self.center_pixel
         to_pixel = target.center_pixel
-        # return utils.heading_from_to(from_pixel, to_pixel)
         return from_pixel.heading_toward(to_pixel)
 
     def move_by_dxdy(self, dxdy: utils.Velocity):
