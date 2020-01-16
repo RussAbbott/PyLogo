@@ -60,14 +60,24 @@ class PixelVector(V2):
     def distance_to(self, other):
         screen_width = gui.SCREEN_PIXEL_WIDTH()
         screen_height = gui.SCREEN_PIXEL_HEIGHT()
-        end_pts = [((self + a + b).wrap3(screen_width, screen_height),      #.as_tuple(),
-                    (other + a + b).wrap3(screen_width, screen_height)      #.as_tuple()
-                    )
+        end_pts = [((self+a+b).wrap3(screen_width, screen_height), (other+a+b).wrap3(screen_width, screen_height))
                    for a in [utils.PixelVector(0, 0), utils.PixelVector(screen_width/2, 0)]
                    for b in [utils.PixelVector(0, 0), utils.PixelVector(0, screen_height/2)]
                    ]
         dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
         return dist
+
+    def heading_toward(from_pixel, to_pixel: PixelVector):
+        """ The heading to face from the from_pixel to the to_pixel """
+        # Make the default heading 0 if from_pixel == to_pixel.
+        if from_pixel == to_pixel:
+            return 0
+        delta_x = to_pixel.x - from_pixel.x
+        # Subtract in reverse to compensate for the reversal of the y axis.
+        delta_y = from_pixel.y - to_pixel.y
+        angle = atan2(delta_y, delta_x)
+        new_heading = utils.angle_to_heading(angle)
+        return new_heading
 
     def wrap(self):
         screen_rect = gui.simple_gui.SCREEN.get_rect()
@@ -173,6 +183,13 @@ def color_random_variation(color: Color):
     return new_color
 
 
+def dxdy_to_heading(dx, dy, default_heading=None):
+    if dx == 0 == dy:
+        return default_heading
+    else:
+        return utils.angle_to_heading((-1) * utils.atan2(dy, dx))
+
+
 @lru_cache(maxsize=360)
 def dx(heading):
     angle = utils.heading_to_angle(heading)
@@ -203,19 +220,19 @@ def get_class_name(obj) -> str:
     return extract_class_name(full_class_name)
 
 
-def heading_from_to(from_pixel: PixelVector, to_pixel: PixelVector):
-    """ The heading to face from the from_pixel to the to_pixel """
-    # Make the default heading 0 if from_pixel == to_pixel.
-    if from_pixel == to_pixel:
-        return 0
-    delta_x = to_pixel.x - from_pixel.x
-    # Subtract in reverse to compensate for the reversal of the y axis.
-    delta_y = from_pixel.y - to_pixel.y
-    angle = atan2(delta_y, delta_x)
-    new_heading = utils.angle_to_heading(angle)
-    return new_heading
-
-
+# def heading_from_to(from_pixel: PixelVector, to_pixel: PixelVector):
+#     """ The heading to face from the from_pixel to the to_pixel """
+#     # Make the default heading 0 if from_pixel == to_pixel.
+#     if from_pixel == to_pixel:
+#         return 0
+#     delta_x = to_pixel.x - from_pixel.x
+#     # Subtract in reverse to compensate for the reversal of the y axis.
+#     delta_y = from_pixel.y - to_pixel.y
+#     angle = atan2(delta_y, delta_x)
+#     new_heading = utils.angle_to_heading(angle)
+#     return new_heading
+#
+#
 def heading_to_angle(heading):
     """ Convert a heading to an angle """
     return normalize_angle_360(90 - heading)
@@ -230,6 +247,10 @@ def heading_to_dxdy(heading) -> Velocity:
     dy = (-1) * sin(angle)
     vel = Velocity(dx, dy)
     return vel
+
+
+def in_radius(px1=None, x2=None, dist=None):
+    return px1.distance_to <= dist
 
 
 def normalize_angle_360(angle):

@@ -16,7 +16,7 @@ import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import Block, Patch, World
 
 from random import choice, randint
-
+from statistics import mean
 from typing import Tuple
 
 
@@ -88,6 +88,17 @@ class Agent(Block):
                              if agent is not self and self.distance_to(agent) < distance]
         return qualifying_agents
 
+    def average_of_headings(self, agent_set, fn):
+        """
+        fn extracts a heading from an agent. This function returns the average of those headings.
+        Cannot be static because fn may refer to self.
+        agent_set may not be all the agents. So it must be passed as an argument.
+        """
+        # dx and dy are the x and y components of traveling one unit in the heading direction.
+        dx = mean([utils.dx(fn(agent)) for agent in agent_set])
+        dy = mean([utils.dy(fn(agent)) for agent in agent_set])
+        return utils.dxdy_to_heading(dx, dy, default_heading=self.heading)
+
     def bounce_off_screen_edge(self, dxdy):
         """
        Bounce agent off the screen edges
@@ -136,14 +147,13 @@ class Agent(Block):
         dist = min(start.distance_to(end) for (start, end) in end_pts)
         return dist
 
-
     def draw(self):
         self.image = pgt.rotate(self.base_image, -self.heading)
         self.rect = self.image.get_rect(center=self.center_pixel.as_tuple())
         super().draw()
         
     def face_xy(self, xy: utils.PixelVector):
-        new_heading = utils.heading_from_to(self.center_pixel, xy)
+        new_heading = (self.center_pixel).heading_toward(xy)
         self.set_heading(new_heading)
 
     def forward(self, speed=None):
@@ -152,11 +162,26 @@ class Agent(Block):
         dxdy = utils.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
 
+    def heading_from_to(agent1, agent2):
+        """ The heading to face from the from_pixel to the to_pixel """
+        from_pixel = agent1.center_pixel
+        to_pixel = agent2.center_pixel
+        # Make the default heading 0 if from_pixel == to_pixel.
+        if from_pixel == to_pixel:
+            return 0
+        delta_x = to_pixel.x - from_pixel.x
+        # Subtract in reverse to compensate for the reversal of the y axis.
+        delta_y = from_pixel.y - to_pixel.y
+        angle = atan2(delta_y, delta_x)
+        new_heading = utils.angle_to_heading(angle)
+        return new_heading
+
     def heading_toward(self, target):
         """ The heading to face the target """
         from_pixel = self.center_pixel
         to_pixel = target.center_pixel
-        return utils.heading_from_to(from_pixel, to_pixel)
+        # return utils.heading_from_to(from_pixel, to_pixel)
+        return from_pixel.heading_toward(to_pixel)
 
     def move_by_dxdy(self, dxdy: utils.Velocity):
         """
