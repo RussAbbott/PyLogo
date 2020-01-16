@@ -20,16 +20,16 @@ from pygame.surface import Surface
 
 class Block(Sprite):
     """
-    A generic patch/agent. Has a PixelVector but not necessarily a RowCol. Has a Color.
+    A generic patch/agent. Has a Pixel_xy but not necessarily a RowCol. Has a Color.
     """
-    def __init__(self, center_pixel: utils.PixelVector, color=Color('black')):
+    def __init__(self, center_pixel: utils.Pixel_xy, color=Color('black')):
         super().__init__()
         self.center_pixel = center_pixel
         self.rect = Rect(center_pixel.as_tuple(), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = color
 
-    def distance_to_xy(self, xy: utils.PixelVector):
+    def distance_to_xy(self, xy: utils.Pixel_xy):
         x_dist = self.center_pixel.x - xy.x
         y_dist = self.center_pixel.y - xy.y
         dist = sqrt(x_dist * x_dist + y_dist*y_dist)
@@ -54,7 +54,7 @@ class Block(Sprite):
 
 class Patch(Block):
     def __init__(self, row_col: utils.RowCol, color=Color('black')):
-        super().__init__(utils.row_col_to_center_pixel(row_col), color)
+        super().__init__(row_col.row_col_to_center_pixel(), color)
         self.row_col = row_col
         self.agents = set()
         self._neighbors_4 = None
