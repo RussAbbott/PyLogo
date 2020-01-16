@@ -133,18 +133,13 @@ class Agent(Block):
         return blank_base_image
 
     def current_patch(self) -> Patch:
-        row_col: utils.RowCol = utils.center_pixel_to_row_col(self.center_pixel)
+        row_col: utils.RowCol = (self.center_pixel).pixel_to_row_col()
         patch = self.the_world().patches[row_col.row, row_col.col]
         return patch
 
     def distance_to(self, other):
-        screen_width_half = gui.SCREEN_PIXEL_WIDTH()/2
-        screen_height_half = gui.SCREEN_PIXEL_HEIGHT()/2
-        end_pts = [(self.center_pixel + a + b, other.center_pixel + a + b)
-                   for a in [utils.PixelVector(0, 0), utils.PixelVector(screen_width_half, 0)]
-                   for b in [utils.PixelVector(0, 0), utils.PixelVector(0, screen_height_half)]
-                   ]
-        dist = min(start.distance_to(end) for (start, end) in end_pts)
+        wrap = not self.get_gui_value('Bounce?')
+        dist = (self.center_pixel).distance_to(other.center_pixel, wrap)
         return dist
 
     def draw(self):
@@ -152,7 +147,7 @@ class Agent(Block):
         self.rect = self.image.get_rect(center=self.center_pixel.as_tuple())
         super().draw()
         
-    def face_xy(self, xy: utils.PixelVector):
+    def face_xy(self, xy: utils.Pixel_xy):
         new_heading = (self.center_pixel).heading_toward(xy)
         self.set_heading(new_heading)
 
@@ -185,7 +180,7 @@ class Agent(Block):
     def move_to_patch(self, patch):
         self.move_to_xy(patch.center_pixel)
 
-    def move_to_xy(self, xy: utils.PixelVector):
+    def move_to_xy(self, xy: utils.Pixel_xy):
         """
         Remove this agent from the list of agents at its current patch.
         Move this agent to its new xy center_pixel.
@@ -197,8 +192,8 @@ class Agent(Block):
         new_patch = self.current_patch( )
         new_patch.add_agent(self)
 
-    def set_center_pixel(self, xy: utils.PixelVector):
-        self.center_pixel: utils.PixelVector = xy.wrap()
+    def set_center_pixel(self, xy: utils.Pixel_xy):
+        self.center_pixel: utils.Pixel_xy = xy.wrap()
         r = self.rect
         (r.x, r.y) = (self.center_pixel.x - HALF_PATCH_SIZE(), self.center_pixel.y - HALF_PATCH_SIZE())
 

@@ -12,17 +12,20 @@ from math import copysign
 from random import randint
 
 
-class V2:
+class XY:
 
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
-    def __add__(self, v: V2):
-        xx = self.x + v.x
-        yy = self.y + v.y
+    def __add__(self, xy: XY):
+        xx = self.x + xy.x
+        yy = self.y + xy.y
         cls = type(self)
         return cls(xx, yy)
+
+    def __div__(self, scalar):
+        return self * (1/scalar)
 
     def __mul__(self, scalar):
         xx = self.x * scalar
@@ -30,8 +33,8 @@ class V2:
         cls = type(self)
         return cls(xx, yy)
 
-    def __sub__(self, v: V2):
-        return self + v*(-1)
+    def __sub__(self, xy: XY):
+        return self + xy*(-1)
 
     def as_tuple(self):
         return (self.x, self.y)
@@ -49,25 +52,30 @@ class V2:
         return self
 
 
-class PixelVector(V2):
+class Pixel_xy(XY):
 
     def __init__(self, x, y):
         super().__init__(x, y)
 
     def __str__(self):
-        return f'PixelVector{self.x, self.y}'
+        return f'Pixel_xy{self.x, self.y}'
 
-    def distance_to(self, other):
-        screen_width = gui.SCREEN_PIXEL_WIDTH()
-        screen_height = gui.SCREEN_PIXEL_HEIGHT()
-        end_pts = [((self+a+b).wrap3(screen_width, screen_height), (other+a+b).wrap3(screen_width, screen_height))
-                   for a in [utils.PixelVector(0, 0), utils.PixelVector(screen_width/2, 0)]
-                   for b in [utils.PixelVector(0, 0), utils.PixelVector(0, screen_height/2)]
-                   ]
+    def distance_to(self, other, wrap):
+        # Try all ways to get there including wrapping around.
+        # wrap = not World.THE_WORLD.get_gui_value('bounce')
+        if wrap:
+            screen_width = gui.SCREEN_PIXEL_WIDTH()
+            screen_height = gui.SCREEN_PIXEL_HEIGHT()
+            end_pts = [((self+a+b).wrap3(screen_width, screen_height), (other+a+b).wrap3(screen_width, screen_height))
+                       for a in [utils.Pixel_xy(0, 0), utils.Pixel_xy(screen_width/2, 0)]
+                       for b in [utils.Pixel_xy(0, 0), utils.Pixel_xy(0, screen_height/2)]
+                       ]
+        else:
+            end_pts = [(self, other)]
         dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
         return dist
 
-    def heading_toward(self, to_pixel: PixelVector):
+    def heading_toward(self, to_pixel: Pixel_xy):
         """ The heading to face from the from_pixel to the to_pixel """
         # Make the default heading 0 if from_pixel == to_pixel.
         if self == to_pixel:
@@ -79,13 +87,21 @@ class PixelVector(V2):
         new_heading = utils.angle_to_heading(angle)
         return new_heading
 
+    def pixel_to_row_col(self: Pixel_xy):
+        """
+        Get the patch RowCol for this pixel
+       """
+        row = self.y // gui.BLOCK_SPACING()
+        col = self.x // gui.BLOCK_SPACING()
+        return RowCol(int(row), int(col))
+
     def wrap(self):
         screen_rect = gui.simple_gui.SCREEN.get_rect()
         wrapped = self.wrap3(screen_rect.w, screen_rect.h)
         return wrapped
 
 
-class RowCol(V2):
+class RowCol(XY):
 
     def __init__(self, row, col):
         super().__init__(row, col)
@@ -103,12 +119,21 @@ class RowCol(V2):
     def row(self):
         return int(self.x)
 
+    def row_col_to_center_pixel(self) -> Pixel_xy:
+        """
+        Get the center_pixel position for this RowCol.
+        Leave a border of 1 pixel at the top and left of the patches
+        """
+        pv = Pixel_xy(1 + gui.BLOCK_SPACING() * self.col + gui.HALF_PATCH_SIZE(),
+                      1 + gui.BLOCK_SPACING() * self.row + gui.HALF_PATCH_SIZE())
+        return pv
+
     def wrap(self):
         wrapped = self.wrap3(gui.PATCH_ROWS, gui.PATCH_COLS)
         return wrapped
 
 
-class Velocity(V2):
+class Velocity(XY):
 
     def __init__(self, dx, dy):
         super().__init__(dx, dy)
@@ -164,17 +189,8 @@ def angle_to_heading(angle):
 
 def CENTER_PIXEL():
     rect = gui.simple_gui.SCREEN.get_rect()
-    cp = PixelVector(rect.centerx, rect.centery)
+    cp = Pixel_xy(rect.centerx, rect.centery)
     return cp
-
-
-def center_pixel_to_row_col(center_pixel: PixelVector):
-    """
-    Get the patch RowCol for this pixel
-   """
-    row = center_pixel.y // gui.BLOCK_SPACING()
-    col = center_pixel.x // gui.BLOCK_SPACING()
-    return RowCol(int(row), int(col))
 
 
 def color_random_variation(color: Color):
@@ -246,16 +262,6 @@ def normalize_angle_180(angle):
     return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
 
 
-def row_col_to_center_pixel(row_col: RowCol) -> PixelVector:
-    """
-    Get the center_pixel position for this RowCol.
-    Leave a border of 1 pixel at the top and left of the patches
-    """
-    pv = PixelVector(1 + gui.BLOCK_SPACING() * row_col.col + gui.HALF_PATCH_SIZE(),
-                     1 + gui.BLOCK_SPACING() * row_col.row + gui.HALF_PATCH_SIZE())
-    return pv
-
-
 def subtract_headings(a, b):
     """
     subtract heading b from heading a.
@@ -299,7 +305,7 @@ def turn_toward_amount(old_heading, new_heading, max_turn):
 
 if __name__ == "__main__":
     # Various tests and experiments
-    pv = PixelVector(1.234, 5.678)
+    pv = Pixel_xy(1.234, 5.678)
     print(pv.round(2))
 
     vel = Velocity(1.234, 5.678)
@@ -310,9 +316,13 @@ if __name__ == "__main__":
 
     screen_width = gui.SCREEN_PIXEL_WIDTH()
     screen_height = gui.SCREEN_PIXEL_HEIGHT()
-    v1 = utils.PixelVector(1, 1)
-    v2 = utils.PixelVector(2, 2)
-    print(v1.distance_to(v2))
+    v1 = utils.Pixel_xy(1, 1)
+    v2 = utils.Pixel_xy(2, 2)
+    print(v1.distance_to(v2, True))
+    print(v1.distance_to(v2, False))
     v3 = (v1 - v2).wrap3(screen_width, screen_height)
     print(v1.round(2), v2.round(2), v3.round(2))
-    print(v1.distance_to(v3))
+    print(v1.distance_to(v3, True))
+    print(v1.distance_to(v3, False))
+    print(v3.distance_to(v1, True))
+    print(v3.distance_to(v1, False))
