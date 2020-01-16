@@ -82,6 +82,7 @@ class SegregationWorld(World):
         # This is an experimental number.
         self.max_agents_per_step = 60
         self.patch_color = Color('white')
+        self.colors = None
 
     def done(self):
         return all(tur.is_happy for tur in self.agents)
@@ -95,7 +96,14 @@ class SegregationWorld(World):
             current_patch.set_color(agent.color)
             current_patch.draw()
             current_patch.set_color(self.patch_color)
-            # agent.draw()
+
+    def final_thoughts(self):
+        print(f'\n\t Again, the colors: {self.parse_color(self.colors[0])} and {self.parse_color(self.colors[1])}.')
+
+    @staticmethod
+    def parse_color(color):
+        (r, g, b) = color
+        return f'(red: {r}, green: {g}, blue: {b})'
 
     @staticmethod
     def select_the_colors():
@@ -126,8 +134,8 @@ class SegregationWorld(World):
         density = self.get_gui_value('density')
         pct_similar_wanted = self.get_gui_value('% similar wanted')
 
-        (color_a, color_b) = self.select_the_colors()
-
+        (color_a, color_b) = self.colors = self.select_the_colors()
+        print(f'\n\t The colors: {self.parse_color(self.colors[0])} and {self.parse_color(self.colors[1])}.')
         self.empty_patches = set()
         for patch in self.patches.flat:
             patch.set_color(self.patch_color)

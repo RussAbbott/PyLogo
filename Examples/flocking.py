@@ -113,15 +113,12 @@ import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import World
 
 from random import uniform
-from statistics import mean
 
 
 class Flocking_Agent(Agent):
 
     def __init__(self):
-        screen_height = gui.SCREEN_PIXEL_HEIGHT()
-        screen_width = gui.SCREEN_PIXEL_WIDTH()
-        center_pixel = utils.PixelVector(uniform(0, screen_width), uniform(0, screen_height))
+        center_pixel = utils.PixelVector(uniform(0, gui.SCREEN_PIXEL_WIDTH()), uniform(0, gui.SCREEN_PIXEL_HEIGHT()))
         color = utils.color_random_variation(Color('yellow'))
         super().__init__(center_pixel=center_pixel, color=color, scale=1)
         self.speed = 2
@@ -133,21 +130,10 @@ class Flocking_Agent(Agent):
         self.turn_right(amount_to_turn)
 
     def average_flockmate_heading(self, flockmates):
-        # dx and dy are the x and y components of traveling one unit in the heading direction.
-        x = mean([utils.dx(flockmate.heading) for flockmate in flockmates])
-        y = mean([utils.dy(flockmate.heading) for flockmate in flockmates])
-        if x == 0 == y:
-            return self.heading
-        else:
-            return utils.angle_to_heading((-1)*utils.atan2(y, x))
+        return self.average_of_headings(flockmates, lambda fm: fm.heading)
 
     def average_heading_toward_flockmates(self, flockmates):
-        x = mean([utils.dx(self.heading_toward(flockmate)) for flockmate in flockmates])
-        y = mean([utils.dy(self.heading_toward(flockmate)) for flockmate in flockmates])
-        if x == 0 == y:
-            return self.heading
-        else:
-            return utils.angle_to_heading((-1)*utils.atan2(y, x))
+        return self.average_of_headings(flockmates, lambda fm: self.heading_toward(fm))
 
     def cohere(self, flockmates):
         max_cohere_turn = self.get_gui_value('max-cohere-turn')
@@ -158,13 +144,12 @@ class Flocking_Agent(Agent):
     def flock(self):
         self.speed = self.get_gui_value('speed')
 
-        # NetLogo allows one to specify the units in the Gui widget.
+        # NetLogo allows one to specify the units within the Gui widget.
         vision_limit_in_pixels = self.get_gui_value('vision') * gui.BLOCK_SPACING()
         flockmates = self.agents_in_radius(vision_limit_in_pixels)
         if len(flockmates) > 0:
             nearest_neighbor = min(flockmates, key=lambda flockmate: self.distance_to(flockmate))
 
-            # NetLogo allows one to specify the units in the Gui widget.
             min_separation = self.get_gui_value('minimum separation') * gui.BLOCK_SPACING()
             if self.distance_to(nearest_neighbor) < min_separation:
                 self.separate(nearest_neighbor)
@@ -204,7 +189,7 @@ gui_elements = [
 
                 [sg.Text('speed', pad=((0, 5), (20, 0)),
                          tooltip='The speed of the agents'),
-                 sg.Slider(key='speed', range=(0, 5), resolution=0.5, default_value=3, orientation='horizontal',
+                 sg.Slider(key='speed', range=(0, 10), resolution=0.5, default_value=5, orientation='horizontal',
                            size=(10, 20), tooltip='The speed of the agents')],
 
                 gui.HOR_SEP(30),
