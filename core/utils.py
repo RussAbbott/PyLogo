@@ -236,10 +236,6 @@ def heading_to_dxdy(heading) -> Velocity:
     return vel
 
 
-# def in_radius(px1=None, x2=None, dist=None):
-#     return px1.distance_to <= dist
-#
-#
 def normalize_angle_360(angle):
     return angle % 360
 
