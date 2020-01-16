@@ -118,7 +118,7 @@ from random import uniform
 class Flocking_Agent(Agent):
 
     def __init__(self):
-        center_pixel = utils.PixelVector(uniform(0, gui.SCREEN_PIXEL_WIDTH()), uniform(0, gui.SCREEN_PIXEL_HEIGHT()))
+        center_pixel = utils.Pixel_xy(uniform(0, gui.SCREEN_PIXEL_WIDTH()), uniform(0, gui.SCREEN_PIXEL_HEIGHT()))
         color = utils.color_random_variation(Color('yellow'))
         super().__init__(center_pixel=center_pixel, color=color, scale=1)
         self.speed = 2
@@ -142,9 +142,8 @@ class Flocking_Agent(Agent):
         self.turn_right(amount_to_turn)
 
     def flock(self):
-        self.speed = self.get_gui_value('speed')
-
         # NetLogo allows one to specify the units within the Gui widget.
+        # Here we do it explicitly by multiplying by gui.BLOCK_SPACING().
         vision_limit_in_pixels = self.get_gui_value('vision') * gui.BLOCK_SPACING()
         flockmates = self.agents_in_radius(vision_limit_in_pixels)
         if len(flockmates) > 0:
@@ -170,9 +169,13 @@ class Flocking_World(World):
         self.create_agents(nbr_agents)
 
     def step(self):
-        for boid in self.agents:
-            boid.flock()
-            boid.forward()
+        # self.agents is the set of agents kept by the world
+        for agent in self.agents:
+            # agent.flock() resets agent's heading. Agent hasn't moved yet.
+            agent.flock()
+            # Here's where agent actually moves. The actual move depends on the speed and the heading.
+            speed = self.get_gui_value('speed')
+            agent.forward(speed)
 
 
 # ############################################## Define GUI ############################################## #
