@@ -15,7 +15,7 @@ class SegregationAgent(Agent):
         self.pct_similar = None
         self.pct_similar_wanted = None
 
-    def find_new_spot_if_unhappy(self, empty_patches):
+    def find_new_spot(self, empty_patches):
         """
         If this agent is happy, do nothing.
         If it's unhappy move it to an empty patch where it is happy if one can be found.
@@ -25,17 +25,16 @@ class SegregationAgent(Agent):
         The original NetLogo code doesn't check to see if the agent would be happy in its new spot.
         (Doing so doesn't guarantee that the formerly happy new neighbors in the new spot remain happy!)
         """
-        if not self.is_happy:
-            # Keep track of current patch. Will add to empty patches after this Agent moves.
-            current_patch = self.current_patch()
-            # Find one of the best available patches. The sample size of 25 is arbitrary.
-            # It seems like a reasonable compromize between speed and number of steps.
-            nbr_of_patches_to_sample = min(25, len(empty_patches))
-            best_patch = max(sample(empty_patches, nbr_of_patches_to_sample),
-                             key=lambda patch: self.pct_similarity_satisfied_here(patch))
-            empty_patches.remove(best_patch)
-            empty_patches.add(current_patch)
-            self.move_to_patch(best_patch)
+        # Keep track of current patch. Will add to empty patches after this Agent moves.
+        current_patch = self.current_patch()
+        # Find one of the best available patches. The sample size of 25 is arbitrary.
+        # It seems like a reasonable compromize between speed and number of steps.
+        nbr_of_patches_to_sample = min(25, len(empty_patches))
+        best_patch = max(sample(empty_patches, nbr_of_patches_to_sample),
+                         key=lambda patch: self.pct_similarity_satisfied_here(patch))
+        empty_patches.remove(best_patch)
+        empty_patches.add(current_patch)
+        self.move_to_patch(best_patch)
 
     def pct_similar_here(self, patch) -> int:
         """
@@ -164,7 +163,7 @@ class SegregationWorld(World):
         sample_size = max(1, round(nbr_unhappy_agents/2)) if nbr_unhappy_agents <= 4 else \
                       min(self.max_agents_per_step, nbr_unhappy_agents)
         for agent in sample(self.unhappy_agents, sample_size):
-            agent.find_new_spot_if_unhappy(self.empty_patches)
+            agent.find_new_spot(self.empty_patches)
         self.update_all()
 
     def update_all(self):
