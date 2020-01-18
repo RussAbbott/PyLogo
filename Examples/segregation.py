@@ -9,7 +9,7 @@ from random import choice, randint, sample
 
 class SegregationAgent(Agent):
 
-    def __init__(self, color=None):
+    def __init__(self, color):
         super().__init__(color=color)
         self.is_happy = None
         self.pct_similar = None
