@@ -176,7 +176,7 @@ def cos(x):
     return _cos_int(normalize_360(x))
 
 
-@lru_cache(maxsize=360)
+@lru_cache(maxsize=512)
 def _cos_int(x):
     return math.cos(degrees_to_radians(x))
 
@@ -185,7 +185,7 @@ def sin(x):
     return _sin_int(normalize_360(x))
 
 
-@lru_cache(maxsize=360)
+@lru_cache(maxsize=512)
 def _sin_int(x):
     return math.sin(degrees_to_radians(x))
 
@@ -233,7 +233,7 @@ def dx(heading):
     return _dx_int(heading)
 
 
-@lru_cache(maxsize=360)
+@lru_cache(maxsize=512)
 def _dx_int(heading):
     angle = utils.heading_to_angle(heading)
     delta_x = utils.cos(angle)
@@ -244,7 +244,7 @@ def dy(heading):
     return _dy_int(heading)
 
 
-@lru_cache(maxsize=360)
+@lru_cache(maxsize=512)
 def _dy_int(heading):
     angle = utils.heading_to_angle(heading)
     delta_y = utils.sin(angle)
@@ -276,7 +276,7 @@ def heading_to_dxdy(heading) -> Velocity:
     return _heading_to_dxdy_int(heading)
 
 
-@lru_cache(maxsize=360)
+@lru_cache(maxsize=512)
 def _heading_to_dxdy_int(heading) -> Velocity:
     """ Convert a heading to a (dx, dy) pair as a unit velocity """
     angle = heading_to_angle(heading)
