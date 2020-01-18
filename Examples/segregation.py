@@ -131,7 +131,7 @@ class SegregationWorld(World):
             colors_diff = sum(abs(c1 - c2) for (c1, c2) in rgb_pairs)
             if colors_diff < 500:
                 continue
-            return colors
+            return colors if sums[0] < sums[1] else list(reversed(colors))
 
     def setup(self):
         density = self.get_gui_value('density')
