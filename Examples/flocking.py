@@ -181,7 +181,7 @@ class Flocking_World(World):
 import PySimpleGUI as sg
 gui_elements = [
                 [sg.Text('population', pad=((0, 5), (20, 0))),
-                 sg.Slider(key='population', range=(0, 250), resolution=1, default_value=20,
+                 sg.Slider(key='population', range=(0, 50), resolution=1, default_value=15,
                            orientation='horizontal', size=(10, 20))],
 
                 [sg.Text('vision', pad=((0, 5), (20, 0)),
