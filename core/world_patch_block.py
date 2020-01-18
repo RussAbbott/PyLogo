@@ -15,9 +15,6 @@ from pygame.sprite import Sprite
 from pygame.surface import Surface
 
 
-# THE_WORLD = None  # The world
-
-
 class Block(Sprite):
     """
     A generic patch/agent. Has a Pixel_xy but not necessarily a RowCol. Has a Color.
@@ -25,7 +22,8 @@ class Block(Sprite):
     def __init__(self, center_pixel: utils.Pixel_xy, color=Color('black')):
         super().__init__()
         self.center_pixel = center_pixel
-        self.rect = Rect(center_pixel.as_tuple(), (gui.PATCH_SIZE, gui.PATCH_SIZE))
+        self.rect = Rect((0,0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
+        self.rect.center=(center_pixel + utils.Pixel_xy(1, 1)).as_tuple()
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = color
 
@@ -37,7 +35,6 @@ class Block(Sprite):
         
     def draw(self):
         gui.simple_gui.SCREEN.blit(self.image, self.rect)
-
 
     @staticmethod
     def get_gui_value(key):
@@ -144,6 +141,7 @@ class World:
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """
         pass
+        # Uncomment this code to see how well the caches work.
         # print()
         # for fn in [utils._heading_to_dxdy_int, utils._dx_int, utils._dy_int,
         #            utils.atan2_normalized, utils._cos_int, utils._sin_int]:
