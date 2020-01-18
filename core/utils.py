@@ -83,15 +83,8 @@ class Pixel_xy(XY):
         if self == to_pixel:
             return 0
         delta_x = to_pixel.x - self.x
-        # Subtract in reverse to compensate for the reversal of the y axis.
-        # delta_y = self.y - to_pixel.y
         delta_y = to_pixel.y - self.y
-
-        # angle = atan2_normalized((-1)*delta_y, delta_x)
-        # new_heading = utils.angle_to_heading(angle)
-
-        new_heading = utils.dxdy_to_heading(delta_x, delta_y)
-
+        new_heading = utils.dxdy_to_heading(delta_x, delta_y, default_heading=0)
         return new_heading
 
     def pixel_to_patch(self: Pixel_xy):

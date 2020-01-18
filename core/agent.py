@@ -202,7 +202,7 @@ class Agent(Block):
 
     def set_heading(self, heading):
         # Keep heading an int in range(360)
-        self.heading = 0 if heading is None else int(round(heading))
+        self.heading = int(round(heading))
 
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
