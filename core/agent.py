@@ -17,10 +17,9 @@ from PyLogo.core.world_patch_block import Block, Patch, World
 
 from random import choice, randint
 from statistics import mean
-from typing import Tuple
 
 
-def is_acceptable_color(rgb: Tuple[int, int, int]):
+def is_acceptable_color(rgb):
     """
     Require reasonably bright colors (sum_rgb >= 150) for which r, g, and b are not too close to each other,
     i.e., not too close to gray.
@@ -31,12 +30,12 @@ def is_acceptable_color(rgb: Tuple[int, int, int]):
 
 
 # These are colors defined by pygame that satisfy is_acceptable_color() above.
-PYGAME_COLORS = [rgba for rgba in THECOLORS.values() if is_acceptable_color(rgba[:3])]
+PYGAME_COLORS = [(name, rgba[:3]) for (name, rgba) in THECOLORS.items() if is_acceptable_color(rgba[:3])]
 
 # These are NetLogo primary colors -- more or less.
-NETLOGO_PRIMARY_COLORS = [Color('gray'), Color('red'), Color('orange'), Color('brown'), Color('yellow'),
-                          Color('green'), Color('limegreen'), Color('turquoise'), Color('cyan'),
-                          Color('skyblue3'), Color('blue'), Color('violet'), Color('magenta'), Color('pink')]
+NETLOGO_PRIMARY_COLORS = {color_name: Color(color_name)
+                          for color_name in ['gray', 'red', 'orange', 'brown', 'yellow', 'green', 'limegreen',
+                                             'turquoise', 'cyan', 'skyblue3', 'blue', 'violet', 'magenta', 'pink']}
 
 # Since it's used as a default value, can't be a list. A tuple works just as well.
 SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4))}
@@ -54,12 +53,12 @@ class Agent(Block):
         # Can't make this a default value because utils.CENTER_PIXEL() isn't defined
         # when the default values are compiled
         if center_pixel is None:
-            center_pixel = utils.CENTER_PIXEL()
+            center_pixel = utils.center_pixel()
 
         if color is None:
             # Select a color at random from the color_palette
             # Agent.color_palette is set during World.setup().
-            color = choice(Agent.color_palette)
+            color = choice(Agent.color_palette.values())
 
         super().__init__(center_pixel, color)
 
@@ -202,13 +201,14 @@ class Agent(Block):
         self.base_image = self.create_base_image()
 
     def set_heading(self, heading):
-        self.heading = heading
+        # Keep heading an int in range(360)
+        self.heading = int(round(heading))
 
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
 
     def turn_right(self, delta_angles):
-        self.set_heading(utils.normalize_angle_360(self.heading + delta_angles))
+        self.set_heading(utils.normalize_360(self.heading + delta_angles))
 
     def set_velocity(self, velocity):
         self.velocity = velocity

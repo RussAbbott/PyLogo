@@ -103,7 +103,7 @@ class World:
         self.event = None
         self.values = None
 
-        self.TICKS = 0
+        self.ticks = 0
 
         self.patch_class = patch_class
         self.patches: np.ndarray = self.create_patches( )
@@ -144,6 +144,13 @@ class World:
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """
         pass
+        # print()
+        # for fn in [utils._heading_to_dxdy_int, utils._dx_int, utils._dy_int,
+        #            utils.atan2_normalized, utils._cos_int, utils._sin_int]:
+        #     if fn == utils.atan2:
+        #         print()
+        #     print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
+
 
     @staticmethod
     def get_gui_value(key):
@@ -151,7 +158,7 @@ class World:
         return int(value) if isinstance(value, float) and value == int(value) else value
 
     def increment_ticks(self):
-        self.TICKS += 1
+        self.ticks += 1
 
     def reset_all(self):
         self.clear_all()
@@ -159,7 +166,7 @@ class World:
         self.patches = self.create_patches( )
 
     def reset_ticks(self):
-        self.TICKS = 0
+        self.ticks = 0
 
     def save_values_and_setup(self, event, values):
         self.event = event

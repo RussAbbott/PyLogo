@@ -61,7 +61,7 @@ class SimEngine:
             # The next line limits how fast the simulation runs. It is not a counter.
             self.clock.tick(self.fps)
 
-        self.world.final_thoughts()
+        # self.world.final_thoughts()
         return self.NORMAL
 
     def start(self, world_class, patch_class, turtle_class):
@@ -99,6 +99,7 @@ class SimEngine:
                 returned_value = self.run_model()
                 self.window['GoStop'].update(text='go', button_color=('white', 'green'))
                 self.window[self.simple_gui.SETUP].update(disabled=False)
+                self.world.final_thoughts()
                 if returned_value == self.simple_gui.EXIT:
                     self.window.close()
                     break

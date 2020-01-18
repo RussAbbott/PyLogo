@@ -63,15 +63,17 @@ class Pixel_xy(XY):
     def distance_to(self, other, wrap):
         # Try all ways to get there including wrapping around.
         # wrap = not World.THE_WORLD.get_gui_value('bounce')
+        # Can't do this directly since importing World would be circular
+        end_pts = [(self, other)]
         if wrap:
             screen_width = gui.SCREEN_PIXEL_WIDTH()
             screen_height = gui.SCREEN_PIXEL_HEIGHT()
-            end_pts = [((self+a+b).wrap3(screen_width, screen_height), (other+a+b).wrap3(screen_width, screen_height))
-                       for a in [utils.Pixel_xy(0, 0), utils.Pixel_xy(screen_width/2, 0)]
-                       for b in [utils.Pixel_xy(0, 0), utils.Pixel_xy(0, screen_height/2)]
-                       ]
-        else:
-            end_pts = [(self, other)]
+            wrapped_end_pts = [((self+a+b).wrap3(screen_width, screen_height),
+                                (other+a+b).wrap3(screen_width, screen_height))
+                               for a in [utils.Pixel_xy_00, utils.Pixel_xy(screen_width/2, 0)]
+                               for b in [utils.Pixel_xy_00, utils.Pixel_xy(0, screen_height/2)]
+                               ]
+            end_pts += wrapped_end_pts
         dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
         return dist
 
@@ -82,9 +84,14 @@ class Pixel_xy(XY):
             return 0
         delta_x = to_pixel.x - self.x
         # Subtract in reverse to compensate for the reversal of the y axis.
-        delta_y = self.y - to_pixel.y
-        angle = atan2(delta_y, delta_x)
-        new_heading = utils.angle_to_heading(angle)
+        # delta_y = self.y - to_pixel.y
+        delta_y = to_pixel.y - self.y
+
+        # angle = atan2_normalized((-1)*delta_y, delta_x)
+        # new_heading = utils.angle_to_heading(angle)
+
+        new_heading = utils.dxdy_to_heading(delta_x, delta_y)
+
         return new_heading
 
     def pixel_to_patch(self: Pixel_xy):
@@ -99,6 +106,9 @@ class Pixel_xy(XY):
         screen_rect = gui.simple_gui.SCREEN.get_rect()
         wrapped = self.wrap3(screen_rect.w, screen_rect.h)
         return wrapped
+
+
+utils.Pixel_xy_00 = utils.Pixel_xy(0, 0)
 
 
 class RowCol(XY):
@@ -154,19 +164,36 @@ class Velocity(XY):
 
 # ###################### Start trig functions in degrees ###################### #
 # import Python's trig functions, which are in radians. pi radians == 180 degrees
+# These functions expect their arguments in degrees.
 import math
 
 
-# These functions expect their arguments in degrees.
 def atan2(y, x):
+    xy_max = max(abs(x), abs(y))
+    (y_n, x_n) = (int(round(100*y/xy_max)), int(round(100*x/xy_max)))
+    return atan2_normalized(y_n, x_n)
+
+
+@lru_cache(maxsize=1024)
+def atan2_normalized(y, x):
     return radians_to_degrees(math.atan2(y, x))
 
 
 def cos(x):
+    return _cos_int(normalize_360(x))
+
+
+@lru_cache(maxsize=360)
+def _cos_int(x):
     return math.cos(degrees_to_radians(x))
 
 
 def sin(x):
+    return _sin_int(normalize_360(x))
+
+
+@lru_cache(maxsize=360)
+def _sin_int(x):
     return math.sin(degrees_to_radians(x))
 
 
@@ -187,7 +214,7 @@ def angle_to_heading(angle):
     return heading
 
 
-def CENTER_PIXEL():
+def center_pixel():
     rect = gui.simple_gui.SCREEN.get_rect()
     cp = Pixel_xy(rect.centerx, rect.centery)
     return cp
@@ -203,18 +230,29 @@ def dxdy_to_heading(dx, dy, default_heading=None):
     if dx == 0 == dy:
         return default_heading
     else:
-        return utils.angle_to_heading((-1) * utils.atan2(dy, dx))
+        # (-1) to compensate for inverted y-axis.
+        angle = utils.atan2((-1) * dy, dx)
+        new_heading = utils.angle_to_heading(angle)
+        return new_heading
+
+
+def dx(heading):
+    return _dx_int(heading)
 
 
 @lru_cache(maxsize=360)
-def dx(heading):
+def _dx_int(heading):
     angle = utils.heading_to_angle(heading)
     delta_x = utils.cos(angle)
     return delta_x
 
 
-@lru_cache(maxsize=360)
 def dy(heading):
+    return _dy_int(heading)
+
+
+@lru_cache(maxsize=360)
+def _dy_int(heading):
     angle = utils.heading_to_angle(heading)
     delta_y = utils.sin(angle)
     # make it negative to account for inverted y axis
@@ -238,11 +276,15 @@ def get_class_name(obj) -> str:
 
 def heading_to_angle(heading):
     """ Convert a heading to an angle """
-    return normalize_angle_360(90 - heading)
+    return normalize_360(90 - heading)
+
+
+def heading_to_dxdy(heading) -> Velocity:
+    return _heading_to_dxdy_int(heading)
 
 
 @lru_cache(maxsize=360)
-def heading_to_dxdy(heading) -> Velocity:
+def _heading_to_dxdy_int(heading) -> Velocity:
     """ Convert a heading to a (dx, dy) pair as a unit velocity """
     angle = heading_to_angle(heading)
     dx = cos(angle)
@@ -252,13 +294,13 @@ def heading_to_dxdy(heading) -> Velocity:
     return vel
 
 
-def normalize_angle_360(angle):
-    return angle % 360
+def normalize_360(angle):
+    return int(round(angle)) % 360
 
 
-def normalize_angle_180(angle):
+def normalize_180(angle):
     """ Convert angle to the range (-180 .. 180]. """
-    normalized_angle = normalize_angle_360(angle)
+    normalized_angle = normalize_360(angle)
     return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
 
 
@@ -278,9 +320,7 @@ def subtract_headings(a, b):
     Normalize to values between -180 and +180 to ensure that larger numbers are to the right, i.e., clockwise.
     No jump from 360 to 0.
     """
-    a_180 = utils.normalize_angle_180(a)
-    b_180 = utils.normalize_angle_180(b)
-    return a_180 - b_180
+    return utils.normalize_180(a - b)
 
 
 def turn_away_amount(old_heading, new_heading, max_turn):
@@ -326,3 +366,13 @@ if __name__ == "__main__":
     print(v1.distance_to(v3, False))
     print(v3.distance_to(v1, True))
     print(v3.distance_to(v1, False))
+    print('-----------------------------')
+    v1 = utils.Pixel_xy(1, 1)
+    v02 = utils.Pixel_xy(0, 2)
+    v20 = utils.Pixel_xy(2, 0)
+    v03 = (v1 - v02).wrap3(screen_width, screen_height)
+    print(v1.distance_to(v03, True))
+    print(v1.distance_to(v03, False))
+    v30 = (v1 - v20).wrap3(screen_width, screen_height)
+    print(v1.distance_to(v30, True))
+    print(v1.distance_to(v30, False))
