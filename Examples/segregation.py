@@ -1,5 +1,5 @@
 
-from PyLogo.core.agent import Agent
+from PyLogo.core.agent import Agent, PYGAME_COLORS
 from PyLogo.core.world_patch_block import Patch, World
 
 from pygame import Color
@@ -9,8 +9,8 @@ from random import choice, randint, sample
 
 class SegregationAgent(Agent):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, color=None):
+        super().__init__(color=color)
         self.is_happy = None
         self.pct_similar = None
         self.pct_similar_wanted = None
@@ -82,7 +82,10 @@ class SegregationWorld(World):
         # This is an experimental number.
         self.max_agents_per_step = 60
         self.patch_color = Color('white')
-        self.colors = None
+        self.color_items = None
+
+    def colors_string(self):
+        return f'{self.parse_color(self.color_items[0])} and {self.parse_color(self.color_items[1])}.'
 
     def done(self):
         return all(tur.is_happy for tur in self.agents)
@@ -98,56 +101,46 @@ class SegregationWorld(World):
             current_patch.set_color(self.patch_color)
 
     def final_thoughts(self):
-        print(f'\n\t Again, the colors: {self.parse_color(self.colors[0])} and {self.parse_color(self.colors[1])}.')
+        print(f'\n\t Again, the colors: {self.colors_string()}')
+        super().final_thoughts()
 
     @staticmethod
     def parse_color(color):
-        (r, g, b) = color
-        return f'(red: {r}, green: {g}, blue: {b})'
+        (color_name, (r, g, b)) = color
+        return f'"{color_name}"-(red: {r}, green: {g}, blue: {b})'
 
     @staticmethod
     def select_the_colors():
         """
         Require reasonably intense colors for which r, g, and b are not too close to each other
-        and which are reasonably different.
+        and which are reasonably different. Use PYGAME_COLORS for more options.
         """
+        # Don't use the NetLogo pallette. It's too limited.
+        Agent.color_palette = PYGAME_COLORS
         while True:
-            # Each color_4 element is (r, g, b, a)
-            colors_4 = sample(Agent.color_palette, 2)
-            # Discard the 'a' value
-            colors = [color[:3] for color in colors_4]
-            # Reject any color that's too close to gray (gray_measure).
-            too_gray = False
-            for color in colors:
-                rgb_avg = sum(color)/3
-                gray_measure = sum(abs(rgb_avg-ci) for ci in color)
-                too_gray = too_gray or gray_measure < 75
-            if too_gray:
+            colors = sample(Agent.color_palette, 2)
+
+            # Ensure that overall the colors are different enough.
+            sums = [sum(color[1]) for color in colors]
+
+            # Require at least one color to be somewhat subdued and one to be somewhat bright
+            if not (min(sums) < 300 and 550 < max(sums)):
                 continue
-            # Require at least one color to be somewhat subdued
-            if min(sum(color) for color in colors) > 300:
-                continue
-            too_pure = False
-            for color in colors:
-                too_pure = too_pure or set(color) == {255, 0}
-            if too_pure:
-                continue
-            # # Overall, not too bright and not too dim.
-            # sum_both = sum(sum(color) for color in colors)
-            # if not (500 < sum_both < 1000):
-            #     continue
+
             # Reject any pair of colors that are too close to each other.
-            rgb_pairs = zip(colors[0], colors[1])
+            rgb_pairs = zip(list(colors)[0][1], list(colors)[1][1])
             colors_diff = sum(abs(c1 - c2) for (c1, c2) in rgb_pairs)
-            if colors_diff > 400:
-                return colors
+            if colors_diff < 500:
+                continue
+            return colors
 
     def setup(self):
         density = self.get_gui_value('density')
         pct_similar_wanted = self.get_gui_value('% similar wanted')
 
-        (color_a, color_b) = self.colors = self.select_the_colors()
-        print(f'\n\t The colors: {self.parse_color(self.colors[0])} and {self.parse_color(self.colors[1])}.')
+        self.color_items = self.select_the_colors()
+        (color_a, color_b) = [color_item[1] for color_item in self.color_items]
+        print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
         for patch in self.patches.flat:
             patch.set_color(self.patch_color)
@@ -155,9 +148,9 @@ class SegregationWorld(World):
 
             # Create the Agents. The density is approximate.
             if randint(0, 100) <= density:
-                agent = SegregationAgent()
+                agent = SegregationAgent(color=choice([color_a, color_b]))
                 agent.pct_similar_wanted = pct_similar_wanted
-                agent.set_color(choice([color_a, color_b]))
+                # agent.set_color(choice([color_a, color_b]))
                 agent.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
@@ -181,9 +174,9 @@ class SegregationWorld(World):
 
         # Update Globals
         percent_similar = round(sum(agent.pct_similar for agent in self.agents)/len(self.agents))
-        if self.the_world().TICKS == 0:
+        if self.the_world().ticks == 0:
             print()
-        print(f'\t{self.the_world().TICKS:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{self.the_world().ticks:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
 
         self.unhappy_agents = [agent for agent in self.agents if not agent.is_happy]
         unhappy_count = len(self.unhappy_agents)

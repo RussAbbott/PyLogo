@@ -37,7 +37,7 @@ class Starburst_World(World):
         self.patches[25, 25].set_color(self.patches[0, 0].color)
         for agent in self.agents:
             agent.move_by_velocity()
-            if self.the_world().TICKS > 150 and random() < 0.01:
+            if self.the_world().ticks > 150 and random() < 0.01:
                 agent.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
 
 
