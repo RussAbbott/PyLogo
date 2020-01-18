@@ -15,6 +15,12 @@ class Synchronized_Agent_World(World):
         self.current_figure = None
         self.breathing_phase = 'inhale'
 
+    def breathe(self):
+        for agent in self.agents:
+            if self.breathing_phase == 'inhale':
+                agent.turn_left(180)
+            agent.forward()
+
     def do_a_step(self):
         if self.current_figure in ['clockwise', 'counter-clockwise']:
             r = self.reference_agent.distance_to_xy(utils.center_pixel())
@@ -26,12 +32,6 @@ class Synchronized_Agent_World(World):
         else:
             print(f'Error. No current figure: ({self.current_figure})')
 
-    def breathe(self):
-        for agent in self.agents:
-            if self.breathing_phase == 'inhale':
-                agent.turn_left(180)
-            agent.forward()
-
     def go_in_circle(self, r):
         """ Recall that at the start of each step the agent is set to point to the center. """
         for agent in self.agents:
@@ -39,7 +39,7 @@ class Synchronized_Agent_World(World):
             agent.forward(2 * pi * r / 360)
 
     def go_randomly(self):
-        random_delta = randint(-15, 15) if random() < 0.1 else 0
+        random_delta = randint(-5, 5) if random() < 0.25 else 0
         for agent in self.agents:
             agent.set_heading(agent.cached_heading)
             agent.turn_right(random_delta)
@@ -47,7 +47,7 @@ class Synchronized_Agent_World(World):
             agent.cached_heading = agent.heading
 
     def grow_shrink(self, grow_or_shrink):
-        offset = choice([-60, 60])
+        offset = choice([-30, 30])
         for agent in self.agents:
             if grow_or_shrink == 'grow':
                 agent.turn_right(180)

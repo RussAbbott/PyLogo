@@ -123,7 +123,7 @@ class SegregationWorld(World):
             sums = [sum(color[1]) for color in colors]
 
             # Require at least one color to be somewhat subdued and one to be somewhat bright
-            if not (min(sums) < 300 and 550 < max(sums)):
+            if not (min(sums) < 500 < max(sums)):
                 continue
 
             # Reject any pair of colors that are too close to each other.
