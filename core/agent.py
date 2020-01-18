@@ -33,9 +33,9 @@ def is_acceptable_color(rgb):
 PYGAME_COLORS = [(name, rgba[:3]) for (name, rgba) in THECOLORS.items() if is_acceptable_color(rgba[:3])]
 
 # These are NetLogo primary colors -- more or less.
-NETLOGO_PRIMARY_COLORS = {color_name: Color(color_name)
+NETLOGO_PRIMARY_COLORS = [(color_name, Color(color_name))
                           for color_name in ['gray', 'red', 'orange', 'brown', 'yellow', 'green', 'limegreen',
-                                             'turquoise', 'cyan', 'skyblue3', 'blue', 'violet', 'magenta', 'pink']}
+                                             'turquoise', 'cyan', 'skyblue3', 'blue', 'violet', 'magenta', 'pink']]
 
 # Since it's used as a default value, can't be a list. A tuple works just as well.
 SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4))}
@@ -58,7 +58,7 @@ class Agent(Block):
         if color is None:
             # Select a color at random from the color_palette
             # Agent.color_palette is set during World.setup().
-            color = choice(Agent.color_palette.values())
+            color = choice(Agent.color_palette)[1]
 
         super().__init__(center_pixel, color)
 
@@ -202,7 +202,7 @@ class Agent(Block):
 
     def set_heading(self, heading):
         # Keep heading an int in range(360)
-        self.heading = int(round(heading))
+        self.heading = 0 if heading is None else int(round(heading))
 
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)
