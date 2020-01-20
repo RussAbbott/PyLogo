@@ -112,7 +112,7 @@ class World:
         self.ticks = 0
 
         self.patch_class = patch_class
-        self.patches: np.ndarray = self.create_patches()
+        self.patches: np.ndarray = None  # self.create_patches()
 
         self.agent_class = agent_class
         self.agents = set()
