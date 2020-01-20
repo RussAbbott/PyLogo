@@ -2,8 +2,6 @@
 import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import World
 
-from pygame.color import Color
-
 from itertools import cycle
 
 from random import random, uniform
@@ -26,9 +24,6 @@ class Starburst_World(World):
                                     utils.Velocity(1, -1), utils.Velocity(1, 1)])
         for (agent, vel) in zip(self.agents, initial_velocities):
             agent.set_velocity(vel)
-
-        # So we can see where the agents are initially put. (Currently not accurate. Should be center of patch.)
-        # self.patches[25, 25].set_color(Color('white'))
 
     def step(self):
         """
