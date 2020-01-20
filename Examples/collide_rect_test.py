@@ -17,8 +17,8 @@ class CollisionTest_Patch(Patch):
 
     def update_collision_color(self, agents):
         collides = any([collide_rect(self, agent) for agent in agents])
-        fill_color = self.hit_color if collides else self.color
-        self.image.fill(fill_color)
+        fill_color = self.hit_color if collides else self.base_color
+        self.set_color(fill_color)
 
 
 class CollisionTest_World(World):

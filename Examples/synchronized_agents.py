@@ -64,7 +64,10 @@ class Synchronized_Agent_World(World):
             agent.cached_heading = agent.heading
             agent.speed = 1
             agent.forward(100)
-            agent.turn_right(90)
+            self.current_figure = self.get_gui_value('figure')
+            self.breathing_phase = 'inhale'
+            if self.current_figure in ['clockwise', 'counter-clockwise']:
+                agent.turn_right(90 if self.current_figure == 'clockwise' else -90)
 
     def step(self):
         # For simplicity, start each step by facing the center.
