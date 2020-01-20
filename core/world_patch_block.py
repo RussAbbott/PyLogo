@@ -26,7 +26,7 @@ class Block(Sprite):
         self.rect = Rect((0, 0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         self.rect.center = (center_pixel + utils.Pixel_xy(1, 1)).as_tuple()
         self.image = Surface((self.rect.w, self.rect.h))
-        self.color = color
+        self.color = self.base_color = color
         self.label = None
         self.font = Font(None, int(1.5*gui.BLOCK_SPACING()))
         self.agent_text_offset = int(1.5*gui.PATCH_SIZE)
@@ -62,7 +62,7 @@ class Patch(Block):
     def __init__(self, row_col: utils.RowCol, color=Color('black')):
         super().__init__(row_col.patch_to_center_pixel(), color)
         self.row_col = row_col
-        self.agents = set()
+        self.agents = None
         self._neighbors_4 = None
         self._neighbors_8 = None
 
@@ -72,6 +72,11 @@ class Patch(Block):
 
     def add_agent(self, tur):
         self.agents.add(tur)
+
+    def clear(self):
+        self.agents = set()
+        self.label = None
+        self.set_color(self.base_color)
 
     def neighbors_4(self):
         if self._neighbors_4 is None:
@@ -112,7 +117,7 @@ class World:
         self.ticks = 0
 
         self.patch_class = patch_class
-        self.patches = None
+        self.patches: np.ndarray = self.create_patches()
 
         self.agent_class = agent_class
         self.agents = set()
@@ -172,7 +177,9 @@ class World:
     def reset_all(self):
         self.clear_all()
         self.reset_ticks()
-        self.patches: np.ndarray = self.create_patches()
+        for patch in self.patches.flat:
+            patch.clear()
+        # self.patches: np.ndarray = self.create_patches()
 
     def reset_ticks(self):
         self.ticks = 0
