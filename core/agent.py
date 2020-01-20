@@ -68,6 +68,7 @@ class Agent(Block):
 
         Agent.id += 1
         self.id = Agent.id
+        self.label = None   # f'{self.id}'
         self.the_world().agents.add(self)
         self.current_patch().add_agent(self)
         self.heading = randint(0, 360)
@@ -227,4 +228,4 @@ def PyLogo(world_class=World, caption=None, gui_elements=None,
     if caption is None:
         caption = utils.extract_class_name(world_class)
     sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
-    sim_engine.start(world_class, patch_class, agent_class)
+    sim_engine.top_loop(world_class, patch_class, agent_class)

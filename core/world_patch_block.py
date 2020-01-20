@@ -10,6 +10,7 @@ import PyLogo.core.utils as utils
 import PyLogo.core.world_patch_block as wpb
 
 from pygame.color import Color
+from pygame.font import Font
 from pygame.rect import Rect
 from pygame.sprite import Sprite
 from pygame.surface import Surface
@@ -22,10 +23,14 @@ class Block(Sprite):
     def __init__(self, center_pixel: utils.Pixel_xy, color=Color('black')):
         super().__init__()
         self.center_pixel = center_pixel
-        self.rect = Rect((0,0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
-        self.rect.center=(center_pixel + utils.Pixel_xy(1, 1)).as_tuple()
+        self.rect = Rect((0, 0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
+        self.rect.center = (center_pixel + utils.Pixel_xy(1, 1)).as_tuple()
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = color
+        self.label = None
+        self.font = Font(None, int(1.5*gui.BLOCK_SPACING()))
+        self.agent_text_offset = int(1.5*gui.PATCH_SIZE)
+        self.patch_text_offset = -int(1.0*gui.PATCH_SIZE)
 
     def distance_to_xy(self, xy: utils.Pixel_xy):
         x_dist = self.center_pixel.x - xy.x
@@ -34,6 +39,10 @@ class Block(Sprite):
         return dist
         
     def draw(self):
+        if self.label:
+            text = self.font.render(self.label, True, (0, 0, 0), (255, 255, 255))
+            offset = self.patch_text_offset if isinstance(self, Patch) else self.agent_text_offset
+            gui.simple_gui.SCREEN.blit(text, (self.rect.x+offset, self.rect.y+offset))
         gui.simple_gui.SCREEN.blit(self.image, self.rect)
 
     @staticmethod
@@ -103,16 +112,10 @@ class World:
         self.ticks = 0
 
         self.patch_class = patch_class
-        self.patches: np.ndarray = self.create_patches( )
-
+        self.patches: np.ndarray = self.create_patches()
 
         self.agent_class = agent_class
         self.agents = set()
-
-    def create_patches(self):
-        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
-                              for r in range(gui.PATCH_ROWS)]
-        return np.array(patch_pseudo_array)
 
     def clear_all(self):
         self.agents = set()
@@ -127,6 +130,14 @@ class World:
             agent = self.agent_class()
             heading = i*360/n
             agent.set_heading(heading)
+
+    def create_patches(self):
+        print('About to create_patches')
+        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
+                              for r in range(gui.PATCH_ROWS)]
+        print('Finished create_patches')
+        patches_array = np.array(patch_pseudo_array)
+        return patches_array
 
     def done(self):
         return False
@@ -161,7 +172,7 @@ class World:
     def reset_all(self):
         self.clear_all()
         self.reset_ticks()
-        self.patches = self.create_patches( )
+        self.patches: np.ndarray = self.create_patches()
 
     def reset_ticks(self):
         self.ticks = 0

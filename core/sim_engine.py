@@ -10,7 +10,6 @@ class SimEngine:
     sim_engine = None
 
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=True):
-
         SimEngine.sim_engine = self
         # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
@@ -29,8 +28,8 @@ class SimEngine:
 
         self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
         self.window = self.simple_gui.window
+        # pg.init()
 
-        pg.init()
 
     def draw_world(self):
         # Fill the screen with the background color, draw the world, and update the display.
@@ -38,7 +37,7 @@ class SimEngine:
         self.world.draw()
         pg.display.update()
 
-    def run_model(self):
+    def model_loop(self):
         while True:
             (event, values) = self.window.read(timeout=10)
 
@@ -64,7 +63,7 @@ class SimEngine:
         # self.world.final_thoughts()
         return self.NORMAL
 
-    def start(self, world_class, patch_class, turtle_class):
+    def top_loop(self, world_class, patch_class, turtle_class):
         self.world = world_class(patch_class, turtle_class)
 
         # Let events come through pygame to this level.
@@ -96,7 +95,7 @@ class SimEngine:
                 self.window[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
                 self.window[self.simple_gui.GO_ONCE].update(disabled=True)
                 self.window[self.simple_gui.SETUP].update(disabled=True)
-                returned_value = self.run_model()
+                returned_value = self.model_loop()
                 self.window['GoStop'].update(text='go', button_color=('white', 'green'))
                 self.window[self.simple_gui.SETUP].update(disabled=False)
                 self.world.final_thoughts()
