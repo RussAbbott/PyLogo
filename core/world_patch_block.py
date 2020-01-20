@@ -112,7 +112,7 @@ class World:
         self.ticks = 0
 
         self.patch_class = patch_class
-        self.patches: np.ndarray = None  # self.create_patches()
+        self.patches = None
 
         self.agent_class = agent_class
         self.agents = set()
@@ -132,10 +132,10 @@ class World:
             agent.set_heading(heading)
 
     def create_patches(self):
-        print('About to create_patches')
+        # print('About to create_patches')
         patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
-        print('Finished create_patches')
+        # print('Finished create_patches')
         patches_array = np.array(patch_pseudo_array)
         return patches_array
 
