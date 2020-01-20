@@ -28,7 +28,7 @@ class Starburst_World(World):
             agent.set_velocity(vel)
 
         # So we can see where the agents are initially put. (Currently not accurate. Should be center of patch.)
-        self.patches[25, 25].set_color(Color('white'))
+        # self.patches[25, 25].set_color(Color('white'))
 
     def step(self):
         """

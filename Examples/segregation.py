@@ -9,7 +9,7 @@ from random import choice, randint, sample
 
 class SegregationAgent(Agent):
 
-    def __init__(self, color):
+    def __init__(self, color=None):
         super().__init__(color=color)
         self.is_happy = None
         self.pct_similar = None
@@ -45,7 +45,8 @@ class SegregationAgent(Agent):
         agents_nearby_list = [tur for patch in self.current_patch().neighbors_8() for tur in patch.agents]
         total_nearby_count = len(agents_nearby_list)
         similar_nearby_count = len([tur for tur in agents_nearby_list if tur.color == self.color])
-        # Isolated agents, i.e., with no nearby neighbors, are considered to have 0% similar neighbors.
+        # Isolated agents, i.e., with no nearby neighbors, are considered
+        # to have 0% similar neighbors, and are counted as unhappy.
         similarity = 0 if total_nearby_count == 0 else round(100 * similar_nearby_count / total_nearby_count)
         return similarity
 
@@ -123,7 +124,7 @@ class SegregationWorld(World):
             sums = [sum(color[1]) for color in colors]
 
             # Require at least one color to be somewhat subdued and one to be somewhat bright
-            if not (min(sums) < 500 < max(sums)):
+            if not (250 < min(sums) < 500 < max(sums) < 750):
                 continue
 
             # Reject any pair of colors that are too close to each other.
@@ -136,11 +137,11 @@ class SegregationWorld(World):
     def setup(self):
         density = self.get_gui_value('density')
         pct_similar_wanted = self.get_gui_value('% similar wanted')
-
         self.color_items = self.select_the_colors()
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
+        print('About to create agents')
         for patch in self.patches.flat:
             patch.set_color(self.patch_color)
             patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
@@ -149,11 +150,10 @@ class SegregationWorld(World):
             if randint(0, 100) <= density:
                 agent = SegregationAgent(color=choice([color_a, color_b]))
                 agent.pct_similar_wanted = pct_similar_wanted
-                # agent.set_color(choice([color_a, color_b]))
                 agent.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
-
+        print('Finished creating agents')
         self.update_all()
 
     def step(self):
