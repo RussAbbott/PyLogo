@@ -124,6 +124,9 @@ class World:
 
     def clear_all(self):
         self.agents = set()
+        for patch in self.patches.flat:
+            patch.clear()
+        # self.patches: np.ndarray = self.create_patches()
 
     def create_agents(self, nbr_agents):
         for _ in range(nbr_agents):
@@ -177,9 +180,6 @@ class World:
     def reset_all(self):
         self.clear_all()
         self.reset_ticks()
-        for patch in self.patches.flat:
-            patch.clear()
-        # self.patches: np.ndarray = self.create_patches()
 
     def reset_ticks(self):
         self.ticks = 0
