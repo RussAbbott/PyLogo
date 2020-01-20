@@ -126,7 +126,6 @@ class World:
         self.agents = set()
         for patch in self.patches.flat:
             patch.clear()
-        # self.patches: np.ndarray = self.create_patches()
 
     def create_agents(self, nbr_agents):
         for _ in range(nbr_agents):
