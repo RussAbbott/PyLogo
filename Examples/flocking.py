@@ -170,7 +170,7 @@ class Flocking_World(World):
     def step(self):
         # self.agents is the set of agents kept by the world
         for agent in self.agents:
-            # agent.flock() resets agent's heading. Agent hasn't moved yet.
+            # agent.flock() resets agent's heading. Agent doesn't move.
             agent.flock()
             # Here's where agent actually moves. The actual move depends on the speed and the heading.
             speed = self.get_gui_value('speed')

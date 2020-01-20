@@ -141,7 +141,7 @@ class SegregationWorld(World):
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
-        print('About to create agents')
+        # print('About to create agents')
         for patch in self.patches.flat:
             patch.set_color(self.patch_color)
             patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
@@ -153,7 +153,7 @@ class SegregationWorld(World):
                 agent.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
-        print('Finished creating agents')
+        # print('Finished creating agents')
         self.update_all()
 
     def step(self):
