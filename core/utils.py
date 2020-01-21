@@ -287,6 +287,11 @@ def _heading_to_dxdy_int(heading) -> Velocity:
     return vel
 
 
+def int_round(x, ndigits=None):
+    """ Always returns a result of type int. """
+    return int(round(x, ndigits))
+
+
 def normalize_360(angle):
     return int(round(angle)) % 360
 
@@ -300,7 +305,7 @@ def normalize_180(angle):
 def subtract_headings(a, b):
     """
     subtract heading b from heading a.
-    To get from b to a we must turn b by a-b.
+    To get from heading b to heading a we must turn by a-b.
 
        a
      /
@@ -316,22 +321,31 @@ def subtract_headings(a, b):
     return utils.normalize_180(a - b)
 
 
-def turn_away_amount(old_heading, new_heading, max_turn):
-    # If we reverse old_heading and new_heading, we are finding the direction new_heading
-    # should turn to face more toward old_heading. But if old_heading turned that way
-    # it would be turning away from new_heading.
-    return turn_toward_amount(new_heading, old_heading, max_turn)
+def turn_away_amount(new_heading, old_heading, max_turn):
+    """
+    turn_toward_amount(new_heading, old_heading, max_turn) finds the direction to turn
+    starting at new_heading to get to old-heading -- limited by max_turn. If we reverse
+    new_heading and old_heading, turn_toward_amount(old_heading, new_heading, max_turn),
+    we are finding how much to turn to get from new_heading to old heading. But since
+    we are starting at old_heading, turning in that direction turns us (farther) away
+    from new_heading.
+    """
+    return turn_toward_amount(old_heading, new_heading, max_turn)
 
 
 def turn_toward_amount(old_heading, new_heading, max_turn):
-    # heading_delta will the amount old_heading should turn (positive or negative)
-    # to face more in the direction of new_heading.
+    """
+    heading_delta will the amount old_heading should turn (positive or negative)
+    to face more in the direction of new_heading.
+    """
     heading_delta = utils.subtract_headings(new_heading, old_heading)
-    # Take max_turn (an abs value) into consideration.
-    # We want to turn the smaller (in absolute terms) of abs(heading_delta) and max_turn.
-    # We want to turn in the direction indicated by the sign of heading_delta
+    # To take max_turn (an abs value) into consideration, we want to turn the
+    # smaller (in absolute terms) of abs(heading_delta) and max_turn. But no
+    # matter how much we turn, we want to turn in the direction indicated by
+    # the sign of heading_delta
 
-    # copysign returns the first argument but with the sign of the second, i.e.,
+    # copysign returns the magnitude of the first argument but with the sign of the second.
+    # copysign(mag, sign) = mag * (sign/abs(sign))
     amount_to_turn = copysign(min(abs(heading_delta), max_turn), heading_delta)
     return (amount_to_turn)
 
