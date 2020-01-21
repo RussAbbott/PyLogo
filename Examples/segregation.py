@@ -45,10 +45,10 @@ class SegregationAgent(Agent):
         agents_nearby_list = [tur for patch in self.current_patch().neighbors_8() for tur in patch.agents]
         total_nearby_count = len(agents_nearby_list)
         similar_nearby_count = len([tur for tur in agents_nearby_list if tur.color == self.color])
-        # Isolated agents, i.e., with no nearby neighbors, are considered
-        # to have 0% similar neighbors, and are counted as unhappy.
-        similarity = 0 if total_nearby_count == 0 else round(100 * similar_nearby_count / total_nearby_count)
-        return similarity
+        # Isolated agents, i.e., with no neighbors, are considered
+        # to have 100% similar neighbors, and are counted as happy.
+        similar_here_pct = 100 if total_nearby_count == 0 else round(100 * similar_nearby_count / total_nearby_count)
+        return similar_here_pct
 
     def pct_similarity_satisfied_here(self, patch) -> float:
         """
