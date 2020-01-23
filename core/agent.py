@@ -134,7 +134,7 @@ class Agent(Block):
 
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = (self.center_pixel).pixel_to_row_col()
-        patch = self.the_world()._patches[row_col.row, row_col.col]
+        patch = self.the_world().patches_array[row_col.row, row_col.col]
         return patch
 
     def distance_to(self, other):

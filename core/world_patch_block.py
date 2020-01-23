@@ -98,7 +98,8 @@ class Patch(Block):
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        neighbors = [self.the_world()._patches[(self.row_col + utils.RowCol(r, c)).as_int_tuple()] for (r, c) in deltas]
+        neighbors = [self.the_world().patches_array[(self.row_col + utils.RowCol(r, c)).as_int_tuple()]
+                     for (r, c) in deltas]
         return neighbors
 
     def remove_agent(self, agent):
@@ -119,9 +120,9 @@ class World:
         self.ticks = 0
 
         self.patch_class = patch_class
-        self._patches: np.ndarray = self.create_patches()
+        self.patches_array: np.ndarray = self.createpatches_array()
         # .flat is an iterator. Can't use it more than once.
-        self.patches = list(self._patches.flat)
+        self.patches = list(self.patches_array.flat)
 
         self.agent_class = agent_class
         self.agents = set()
@@ -142,11 +143,11 @@ class World:
             heading = i*360/n
             agent.set_heading(heading)
 
-    def create_patches(self):
-        # print('About to create_patches')
+    def createpatches_array(self):
+        # print('About to createpatches_array')
         patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
-        # print('Finished create_patches')
+        # print('Finished createpatches_array')
         patches_array = np.array(patch_pseudo_array)
         return patches_array
 
@@ -192,7 +193,7 @@ class World:
        """
         (x, y) = xy
         row_col: utils.RowCol = utils.Pixel_xy(x, y).pixel_to_row_col()
-        patch = self._patches[row_col.row, row_col.col]
+        patch = self.patches_array[row_col.row, row_col.col]
         return patch
 
     def pixel_xy_to_patch(self, pixel_xy: utils.Pixel_xy) -> Patch:
@@ -200,7 +201,7 @@ class World:
         Get the patch RowCol for this pixel
        """
         row_col: utils.RowCol = pixel_xy.pixel_to_row_col()
-        patch = self._patches[row_col.row, row_col.col]
+        patch = self.patches_array[row_col.row, row_col.col]
         return patch
 
     def reset_all(self):
