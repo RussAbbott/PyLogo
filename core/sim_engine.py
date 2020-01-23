@@ -28,7 +28,7 @@ class SimEngine:
 
         self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
         self.window = self.simple_gui.window
-        # pg.init()
+        self.graph_point = None
 
 
     def draw_world(self):
@@ -78,6 +78,10 @@ class SimEngine:
             if event in (None, self.simple_gui.EXIT):
                 self.window.close()
                 break
+
+            if event == self.simple_gui.GRAPH:
+                self.world.mouse_click(values['-GRAPH-'])
+                self.draw_world()
 
             if event == self.simple_gui.SETUP:
                 self.window[self.simple_gui.GOSTOP].update(disabled=False)

@@ -65,6 +65,7 @@ class SimpleGUI:
         self.GO = 'go'
         self.GO_ONCE = 'go once'
         self.GOSTOP = 'GoStop'
+        self.GRAPH = '-GRAPH-'
         self.SETUP = 'setup'
         self.STOP = 'Stop'
 
@@ -120,7 +121,7 @@ class SimpleGUI:
         lower_left_pixel_xy = (0, screen_shape_width_height[1]-1)
         upper_right_pixel_xy = (screen_shape_width_height[0]-1, 0)
         col2 = [[sg.Graph(screen_shape_width_height, lower_left_pixel_xy, upper_right_pixel_xy,
-                          background_color='black', key='-GRAPH-')]]
+                          background_color='black', key='-GRAPH-', enable_events=True)]]
 
         layout = [[sg.Column(col1), sg.Column(col2)]]
         window: sg.PySimpleGUI.Window = sg.Window(caption, layout, margins=(5, 20),

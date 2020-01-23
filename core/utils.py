@@ -54,6 +54,9 @@ class XY:
 
 class Pixel_xy(XY):
 
+    # Will be set to Pixel_xy(0, 0) after the Pixel_xy class is defined.
+    pixel_xy_00 = None
+
     def __init__(self, x, y):
         super().__init__(x, y)
 
@@ -70,8 +73,8 @@ class Pixel_xy(XY):
             screen_height = gui.SCREEN_PIXEL_HEIGHT()
             wrapped_end_pts = [((self+a+b).wrap3(screen_width, screen_height),
                                 (other+a+b).wrap3(screen_width, screen_height))
-                               for a in [utils.Pixel_xy_00, utils.Pixel_xy(screen_width/2, 0)]
-                               for b in [utils.Pixel_xy_00, utils.Pixel_xy(0, screen_height/2)]
+                               for a in [Pixel_xy.pixel_xy_00, utils.Pixel_xy(screen_width/2, 0)]
+                               for b in [Pixel_xy.pixel_xy_00, utils.Pixel_xy(0, screen_height/2)]
                                ]
             end_pts += wrapped_end_pts
         dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
@@ -87,7 +90,7 @@ class Pixel_xy(XY):
         new_heading = utils.dxdy_to_heading(delta_x, delta_y, default_heading=0)
         return new_heading
 
-    def pixel_to_patch(self: Pixel_xy):
+    def pixel_to_row_col(self: Pixel_xy):
         """
         Get the patch RowCol for this pixel
        """
@@ -101,7 +104,7 @@ class Pixel_xy(XY):
         return wrapped
 
 
-utils.Pixel_xy_00 = utils.Pixel_xy(0, 0)
+Pixel_xy.pixel_xy_00 = Pixel_xy(0, 0)
 
 
 class RowCol(XY):
@@ -138,6 +141,8 @@ class RowCol(XY):
 
 class Velocity(XY):
 
+    velocity_00 = None
+
     def __init__(self, dx, dy):
         super().__init__(dx, dy)
 
@@ -153,6 +158,10 @@ class Velocity(XY):
     @property
     def dy(self):
         return self.y
+
+
+Velocity.velocity_00 = Velocity(0, 0)
+
 
 
 # ###################### Start trig functions in degrees ###################### #
@@ -285,6 +294,12 @@ def _heading_to_dxdy_int(heading) -> Velocity:
     dy = (-1) * sin(angle)
     vel = Velocity(dx, dy)
     return vel
+
+
+def hex_string_to_rgb(hex_string):
+    hex_string = hex_string.lstrip('#')
+    rgb = tuple(int(hex_string[i:i + 2], 16) for i in (0, 2, 4))
+    return rgb
 
 
 def int_round(x, ndigits=None):

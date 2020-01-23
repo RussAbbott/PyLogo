@@ -15,6 +15,8 @@ from pygame.rect import Rect
 from pygame.sprite import Sprite
 from pygame.surface import Surface
 
+from typing import Tuple
+
 
 class Block(Sprite):
     """
@@ -96,7 +98,7 @@ class Patch(Block):
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        neighbors = [self.the_world().patches[(self.row_col + utils.RowCol(r, c)).as_int_tuple()] for (r, c) in deltas]
+        neighbors = [self.the_world()._patches[(self.row_col + utils.RowCol(r, c)).as_int_tuple()] for (r, c) in deltas]
         return neighbors
 
     def remove_agent(self, agent):
@@ -117,14 +119,16 @@ class World:
         self.ticks = 0
 
         self.patch_class = patch_class
-        self.patches: np.ndarray = self.create_patches()
+        self._patches: np.ndarray = self.create_patches()
+        # .flat is an iterator. Can't use it more than once.
+        self.patches = list(self._patches.flat)
 
         self.agent_class = agent_class
         self.agents = set()
 
     def clear_all(self):
         self.agents = set()
-        for patch in self.patches.flat:
+        for patch in self.patches:   # .flat:
             patch.clear()
 
     def create_agents(self, nbr_agents):
@@ -150,7 +154,7 @@ class World:
         return False
 
     def draw(self):
-        for patch in self.patches.flat:
+        for patch in self.patches:   # .flat:.flat:
             patch.draw()
 
         for agent in self.agents:
@@ -168,13 +172,36 @@ class World:
         #     print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
 
 
-    @staticmethod
-    def get_gui_value(key):
-        value = World.THE_WORLD.values.get(key, None)
+    # @staticmethod
+    def get_gui_event_values(self):
+        return (self.event, self.values)
+
+    def get_gui_value(self, key):
+        value = self.values.get(key, None)
         return int(value) if isinstance(value, float) and value == int(value) else value
 
     def increment_ticks(self):
         self.ticks += 1
+
+    def mouse_click(self, xy):
+        pass
+
+    def pixel_to_patch(self, xy: Tuple[int, int]):
+        """
+        Get the patch RowCol for this pixel
+       """
+        (x, y) = xy
+        row_col: utils.RowCol = utils.Pixel_xy(x, y).pixel_to_row_col()
+        patch = self._patches[row_col.row, row_col.col]
+        return patch
+
+    def pixel_xy_to_patch(self, pixel_xy: utils.Pixel_xy) -> Patch:
+        """
+        Get the patch RowCol for this pixel
+       """
+        row_col: utils.RowCol = pixel_xy.pixel_to_row_col()
+        patch = self._patches[row_col.row, row_col.col]
+        return patch
 
     def reset_all(self):
         self.clear_all()

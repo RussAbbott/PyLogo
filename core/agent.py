@@ -74,7 +74,7 @@ class Agent(Block):
         self.heading = randint(0, 360)
         self.speed = 1
         # To keep PyCharm happy.
-        self.velocity = None
+        self.velocity = utils.Velocity.velocity_00
 
     def __str__(self):
         class_name = utils.get_class_name(self)
@@ -133,8 +133,8 @@ class Agent(Block):
         return blank_base_image
 
     def current_patch(self) -> Patch:
-        row_col: utils.RowCol = (self.center_pixel).pixel_to_patch()
-        patch = self.the_world().patches[row_col.row, row_col.col]
+        row_col: utils.RowCol = (self.center_pixel).pixel_to_row_col()
+        patch = self.the_world()._patches[row_col.row, row_col.col]
         return patch
 
     def distance_to(self, other):
