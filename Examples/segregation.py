@@ -91,7 +91,7 @@ class SegregationWorld(World):
         return all(tur.is_happy for tur in self.agents)
 
     def draw(self):
-        for patch in self.patches.flat:
+        for patch in self.patches:   # .flat:.flat:
             if not patch.agents:
                 patch.draw()
         for agent in self.agents:
@@ -142,7 +142,7 @@ class SegregationWorld(World):
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
         # print('About to create agents')
-        for patch in self.patches.flat:
+        for patch in self.patches:   # .flat:.flat:
             patch.set_color(self.patch_color)
             patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
 

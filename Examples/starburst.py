@@ -1,4 +1,5 @@
 
+from PyLogo.core.agent import Agent
 import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import World
 
@@ -17,7 +18,8 @@ class Starburst_World(World):
         nbr_agents = self.get_gui_value('nbr_agents')
         for _ in range(nbr_agents):
             # When created, a agent adds itself to self.agents and to its patch's list of Agents.
-            self.agent_class(scale=1)
+            # self.agent_class(scale=1)
+            Agent(scale=1)
 
         initial_velocities = cycle([utils.Velocity(-1, -1), utils.Velocity(-1, 1),
                                     utils.Velocity(0, 0),
@@ -29,7 +31,6 @@ class Starburst_World(World):
         """
         Update the world by moving the agents.
         """
-        self.patches[25, 25].set_color(self.patches[0, 0].color)
         for agent in self.agents:
             agent.move_by_velocity()
             if self.the_world().ticks > 150 and random() < 0.01:

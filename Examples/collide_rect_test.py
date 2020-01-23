@@ -34,7 +34,7 @@ class CollisionTest_World(World):
             agent = self.agent_class(color=Color('red'))
             agent.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
 
-        for patch in self.patches.flat:
+        for patch in self.patches:
             patch.update_collision_color(self.agents)
 
     def step(self):
@@ -46,7 +46,7 @@ class CollisionTest_World(World):
             if random() < 0.01:
                 agent.set_velocity(utils.Velocity(randint(-2, 2), randint(-2, 2)))
 
-        for patch in self.patches.flat:
+        for patch in self.patches:   # .flat:.flat:
             patch.update_collision_color(self.agents)
 
 
