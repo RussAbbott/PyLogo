@@ -49,6 +49,7 @@ class Synchronized_Agent_World(World):
     def grow_shrink(self, grow_or_shrink):
         offset = choice([-30, 30])
         for agent in self.agents:
+            # At each step, the agents start pointing to the center.
             if grow_or_shrink == 'grow':
                 agent.turn_right(180)
             agent.forward()
@@ -91,7 +92,7 @@ class Synchronized_Agent_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 gui_elements = [[sg.Text('nbr of agents'),
-                 sg.Slider(key='nbr_agents', range=(1, 100), default_value=16, size=(8, 20),
+                 sg.Slider(key='nbr_agents', range=(1, 100), default_value=18, size=(8, 20),
                            orientation='horizontal', pad=((0, 0), (0, 20)))],
 
                 [sg.Text('Figure to trace'),
