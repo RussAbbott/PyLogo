@@ -1,7 +1,8 @@
 from pygame.color import Color
 
-from PyLogo.core.world_patch_block import Patch, World
+from PyLogo.core.gui import HOR_SEP
 from PyLogo.core.utils import hex_string_to_rgb
+from PyLogo.core.world_patch_block import Patch, World
 
 from random import randint
 
@@ -29,6 +30,7 @@ class Life_World(World):
         patch.set_alive_or_dead(not patch.is_alive)
 
     def setup(self):
+        density = self.get_gui_value('density')
         bg_color_string = self.get_gui_value('background')
         bg_color = (0, 0, 0) if bg_color_string == '' else hex_string_to_rgb(bg_color_string)
         fg_color_string = self.get_gui_value('foreground')
@@ -37,7 +39,7 @@ class Life_World(World):
             patch.set_color(bg_color)
             patch.base_color = bg_color
             patch.fg_color = fg_color
-            patch.set_alive_or_dead(randint(0, 100) < 5)
+            patch.set_alive_or_dead(randint(0, 100) < density)
 
 
     def step(self):
@@ -54,8 +56,8 @@ class Life_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 gui_elements = [[sg.Text('Initial density'),
-                sg.Slider(key='density', range=(0, 50), resolution=5, size=(10, 20),
-                          default_value=10, orientation='horizontal', pad=((0, 0), (0, 20)),
+                sg.Slider(key='density', range=(0, 80), resolution=5, size=(10, 20),
+                          default_value=35, orientation='horizontal', pad=((0, 0), (0, 20)),
                           tooltip='The ratio of households to housing units')],
 
                 [sg.Text('Select a foreground color'),
@@ -64,10 +66,14 @@ gui_elements = [[sg.Text('Initial density'),
 
                 [sg.Text('Select a background color'),
                  sg.ColorChooserButton('background')
-                 ]
+                 ],
+
+                HOR_SEP(),
+
+                [sg.Text('Cells can be toggled when the system\nis stopped')],
                 ]
 
 
 if __name__ == "__main__":
     from PyLogo.core.agent import PyLogo
-    PyLogo(Life_World, 'Game of Life', gui_elements, patch_class=Life_Patch, bounce=None)
+    PyLogo(Life_World, 'Game of Life', gui_elements, patch_class=Life_Patch, bounce=None, fps=10)

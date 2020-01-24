@@ -1,5 +1,5 @@
 
-import PyLogo.core.utils as utils
+from PyLogo.core.utils import center_pixel
 from PyLogo.core.world_patch_block import World
 
 from math import pi
@@ -23,7 +23,7 @@ class Synchronized_Agent_World(World):
 
     def do_a_step(self):
         if self.current_figure in ['clockwise', 'counter-clockwise']:
-            r = self.reference_agent.distance_to_xy(utils.center_pixel())
+            r = self.reference_agent.distance_to_xy(center_pixel())
             self.go_in_circle(r)
         elif self.current_figure == 'breathe':
             self.breathe()
@@ -72,17 +72,17 @@ class Synchronized_Agent_World(World):
     def step(self):
         # For simplicity, start each step by facing the center.
         for agent in self.agents:
-            agent.face_xy(utils.center_pixel())
+            agent.face_xy(center_pixel())
         if self.take_emergency_action():
             return
         self.current_figure = self.get_gui_value('figure')
         self.do_a_step()
         
     def take_emergency_action(self):
-        if self.reference_agent.distance_to_xy(utils.center_pixel()) >= 250:
+        if self.reference_agent.distance_to_xy(center_pixel()) >= 250:
             self.grow_shrink('shrink')
             return True
-        elif self.reference_agent.distance_to_xy(utils.center_pixel()) <= 50:
+        elif self.reference_agent.distance_to_xy(center_pixel()) <= 50:
             self.grow_shrink('grow')
             return True
         return False

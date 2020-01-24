@@ -1,5 +1,5 @@
 
-import PyLogo.core.utils as utils
+from PyLogo.core.utils import RowCol, Velocity
 from PyLogo.core.world_patch_block import Patch, World
 
 from pygame.color import Color
@@ -10,7 +10,7 @@ from random import randint, random, uniform
 
 class CollisionTest_Patch(Patch):
 
-    def __init__(self, row_col: utils.RowCol):
+    def __init__(self, row_col: RowCol):
         super().__init__(row_col)
         # Each patch gets a hit_color
         self.hit_color = Color('white')
@@ -32,7 +32,7 @@ class CollisionTest_World(World):
         for i in range(nbr_agents):
             # Adds itself to self.agents and to its patch's list of Agents.
             agent = self.agent_class(color=Color('red'))
-            agent.set_velocity(utils.Velocity(uniform(-2, 2), uniform(-2, 2)))
+            agent.set_velocity(Velocity(uniform(-2, 2), uniform(-2, 2)))
 
         for patch in self.patches:
             patch.update_collision_color(self.agents)
@@ -44,9 +44,9 @@ class CollisionTest_World(World):
         for agent in self.agents:
             agent.move_by_velocity()
             if random() < 0.01:
-                agent.set_velocity(utils.Velocity(randint(-2, 2), randint(-2, 2)))
+                agent.set_velocity(Velocity(randint(-2, 2), randint(-2, 2)))
 
-        for patch in self.patches:   # .flat:.flat:
+        for patch in self.patches:
             patch.update_collision_color(self.agents)
 
 

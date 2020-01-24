@@ -108,7 +108,7 @@ end
 from pygame import Color
 
 from PyLogo.core.agent import Agent
-import PyLogo.core.gui as gui
+from PyLogo.core.gui import BLOCK_SPACING, HOR_SEP, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import World
 
@@ -118,7 +118,7 @@ from random import uniform
 class Flocking_Agent(Agent):
 
     def __init__(self):
-        center_pixel = utils.Pixel_xy(uniform(0, gui.SCREEN_PIXEL_WIDTH()), uniform(0, gui.SCREEN_PIXEL_HEIGHT()))
+        center_pixel = utils.Pixel_xy(uniform(0, SCREEN_PIXEL_WIDTH()), uniform(0, SCREEN_PIXEL_HEIGHT()))
         color = utils.color_random_variation(Color('yellow'))
         super().__init__(center_pixel=center_pixel, color=color, scale=1)
 
@@ -142,13 +142,13 @@ class Flocking_Agent(Agent):
 
     def flock(self):
         # NetLogo allows one to specify the units within the Gui widget.
-        # Here we do it explicitly by multiplying by gui.BLOCK_SPACING().
-        vision_limit_in_pixels = self.get_gui_value('vision') * gui.BLOCK_SPACING()
+        # Here we do it explicitly by multiplying by BLOCK_SPACING().
+        vision_limit_in_pixels = self.get_gui_value('vision') * BLOCK_SPACING()
         flockmates = self.agents_in_radius(vision_limit_in_pixels)
         if len(flockmates) > 0:
             nearest_neighbor = min(flockmates, key=lambda flockmate: self.distance_to(flockmate))
 
-            min_separation = self.get_gui_value('minimum separation') * gui.BLOCK_SPACING()
+            min_separation = self.get_gui_value('minimum separation') * BLOCK_SPACING()
             if self.distance_to(nearest_neighbor) < min_separation:
                 self.separate(nearest_neighbor)
             else:
@@ -194,7 +194,7 @@ gui_elements = [
                  sg.Slider(key='speed', range=(0, 10), resolution=0.5, default_value=2, orientation='horizontal',
                            size=(10, 20), tooltip='The speed of the agents')],
 
-                gui.HOR_SEP(30),
+                HOR_SEP(30),
 
                 [sg.Text('min separation', pad=((0, 5), (20, 0)),
                          tooltip='The minimum acceptable patch-lengths to nearest neighbor'),
@@ -210,7 +210,7 @@ gui_elements = [
                            tooltip='The most degrees (in angles) an agent can turn '
                                    'to move away from its nearest neighbor')],
 
-                gui.HOR_SEP(30),
+                HOR_SEP(30),
 
                 [sg.Text('max-cohere-turn', pad=((0, 5), (20, 0)),
                          tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates'),
