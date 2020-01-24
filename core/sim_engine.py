@@ -9,7 +9,7 @@ class SimEngine:
 
     sim_engine = None
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=True):
+    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=True, fps=None):
         SimEngine.sim_engine = self
         # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
@@ -26,7 +26,7 @@ class SimEngine:
 
         self.world = None
 
-        self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
+        self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce, fps=fps)
         self.window = self.simple_gui.window
         self.graph_point = None
 
@@ -43,6 +43,10 @@ class SimEngine:
 
             if event in (None, self.simple_gui.EXIT):
                 return self.simple_gui.EXIT
+
+            fps = values.get('fps', None)
+            if fps:
+                self.fps = int(fps)
 
             if event == 'GoStop':
                 # Disable the GO_ONCE button
@@ -84,6 +88,9 @@ class SimEngine:
                 self.draw_world()
 
             if event == self.simple_gui.SETUP:
+                # fps = values.get('fps', None)
+                # if fps:
+                #     self.fps = fps
                 self.window[self.simple_gui.GOSTOP].update(disabled=False)
                 self.window[self.simple_gui.GO_ONCE].update(disabled=False)
                 self.world.reset_all()

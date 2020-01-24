@@ -56,7 +56,7 @@ simple_gui = None
 
 class SimpleGUI:
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15, bounce=True):
+    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15, bounce=True, fps=None):
         gui.simple_gui = self
 
         gui.PATCH_SIZE = patch_size
@@ -80,7 +80,8 @@ class SimpleGUI:
 
         screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
         self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements,
-                                                              screen_shape_width_height, bounce=bounce)
+                                                              screen_shape_width_height,
+                                                              bounce=bounce, fps=fps)
 
         pg.init()
         # Everything is drawn to self.SCREEN
@@ -89,7 +90,7 @@ class SimpleGUI:
     def fill_screen(self):
         self.SCREEN.fill(self.screen_color)
 
-    def make_window(self, caption, model_gui_elements, screen_shape_width_height, bounce=True):
+    def make_window(self, caption, model_gui_elements, screen_shape_width_height, bounce=True, fps=None):
         """
         Create the window, including sg.Graph, the drawing surface.
         """
@@ -100,6 +101,13 @@ class SimpleGUI:
         if bounce is not None:
             bounce_checkbox_line = [sg.Checkbox('Bounce?', key='Bounce?', default=bounce,
                                     tooltip='Bounce back from the edges of the screen?')]
+
+        fps_combo_line = ''
+        if fps:
+            fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', pad=((0, 10), (10, 0))),
+                              sg.Combo(key='fps', values=[1, 3, 6, 10, 20, 40, 60],
+                                 background_color='limegreen', default_value=fps,
+                                 tooltip='The maximum frames/second.', pad=((0, 0), (10, 0)))]
 
         setup_go_line = [
             sg.Button(self.SETUP, pad=((0, 10), (10, 0))),
@@ -114,6 +122,7 @@ class SimpleGUI:
                  gui.HOR_SEP(),
                  setup_go_line,
                  bounce_checkbox_line,
+                 fps_combo_line,
                  gui.HOR_SEP(),
                  exit_button_line
                  ]

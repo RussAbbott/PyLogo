@@ -222,10 +222,10 @@ class Turtle(Agent):
 
 def PyLogo(world_class=World, caption=None, gui_elements=None,
            agent_class=Agent, patch_class=Patch,
-           patch_size=11, bounce=True):
+           patch_size=11, bounce=True, fps=None):
     if gui_elements is None:
         gui_elements = []
     if caption is None:
         caption = utils.extract_class_name(world_class)
-    sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce)
+    sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce, fps=fps)
     sim_engine.top_loop(world_class, patch_class, agent_class)
