@@ -1,4 +1,6 @@
 
+# This file contains (a) the Agent class and (b) the PyLogo function, which starts a model run.
+
 from math import sqrt
 
 import pygame as pg
@@ -8,10 +10,9 @@ from pygame import Surface
 import pygame.transform as pgt
 
 # noinspection PyUnresolvedReferences
-import PyLogo.core.agent as agent
+# import PyLogo.core.agent as agent  # Importing Agent avoids the use of globals.
 import PyLogo.core.gui as gui
 from PyLogo.core.gui import HALF_PATCH_SIZE, PATCH_SIZE
-from PyLogo.core.sim_engine import SimEngine
 import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import Block, Patch, World
 
@@ -49,7 +50,7 @@ class Agent(Block):
 
     SQRT_2 = sqrt(2)
 
-    def __init__(self, center_pixel=None, color=None, scale=1.4, shape=agent.SHAPES['netlogo_figure']):
+    def __init__(self, center_pixel=None, color=None, scale=1.4, shape=SHAPES['netlogo_figure']):
         # Can't make this a default value because utils.CENTER_PIXEL() isn't defined
         # when the default values are compiled
         if center_pixel is None:
@@ -103,7 +104,7 @@ class Agent(Block):
         """
        Bounce agent off the screen edges
        """
-        sc_rect = gui.simple_gui.SCREEN.get_rect()
+        sc_rect = gui.SCREEN.get_rect()
         center_pixel = self.center_pixel
         next_center_pixel = center_pixel + dxdy
         if next_center_pixel.x <= sc_rect.left <= center_pixel.x or \
@@ -218,6 +219,10 @@ class Agent(Block):
 
 class Turtle(Agent):
     pass
+
+
+# The Pylogo fuction that starts the simulation
+from PyLogo.core.sim_engine import SimEngine
 
 
 def PyLogo(world_class=World, caption=None, gui_elements=None,

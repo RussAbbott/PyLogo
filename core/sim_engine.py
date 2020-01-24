@@ -1,4 +1,8 @@
 
+# This file is the simulation engine. The engine consists of two loops. The top loop runs when the model is not
+# running. It's in that loop where the user clicks, setup, go, exit, etc.
+# The model loop runs the model. Once around that loop for each model tick.
+
 from PyLogo.core.gui import SimpleGUI
 
 import pygame as pg
@@ -7,10 +11,8 @@ from pygame.time import Clock
 
 class SimEngine:
 
-    sim_engine = None
-
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=True, fps=None):
-        SimEngine.sim_engine = self
+
         # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
         self.CTRL_d = 'd:68'
@@ -64,7 +66,6 @@ class SimEngine:
             # The next line limits how fast the simulation runs. It is not a counter.
             self.clock.tick(self.fps)
 
-        # self.world.final_thoughts()
         return self.NORMAL
 
     def top_loop(self, world_class, patch_class, turtle_class):

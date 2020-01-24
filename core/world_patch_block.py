@@ -44,8 +44,8 @@ class Block(Sprite):
         if self.label:
             text = self.font.render(self.label, True, (0, 0, 0), (255, 255, 255))
             offset = self.patch_text_offset if isinstance(self, Patch) else self.agent_text_offset
-            gui.simple_gui.SCREEN.blit(text, (self.rect.x+offset, self.rect.y+offset))
-        gui.simple_gui.SCREEN.blit(self.image, self.rect)
+            gui.SCREEN.blit(text, (self.rect.x + offset, self.rect.y + offset))
+        gui.SCREEN.blit(self.image, self.rect)
 
     @staticmethod
     def get_gui_value(key):

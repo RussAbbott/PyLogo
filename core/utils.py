@@ -99,7 +99,7 @@ class Pixel_xy(XY):
         return RowCol(int(row), int(col))
 
     def wrap(self):
-        screen_rect = gui.simple_gui.SCREEN.get_rect()
+        screen_rect = gui.SCREEN.get_rect()
         wrapped = self.wrap3(screen_rect.w, screen_rect.h)
         return wrapped
 
@@ -217,7 +217,7 @@ def angle_to_heading(angle):
 
 
 def center_pixel():
-    rect = gui.simple_gui.SCREEN.get_rect()
+    rect = gui.SCREEN.get_rect()
     cp = Pixel_xy(rect.centerx, rect.centery)
     return cp
 

@@ -1,4 +1,6 @@
 
+# This file contains code that implements the GUI.
+
 import os
 
 import pygame as pg
@@ -51,13 +53,14 @@ def SCREEN_PIXEL_HEIGHT():
     return PATCH_ROWS * BLOCK_SPACING() + 1
 
 
-simple_gui = None
+# This variable will be available to refer to the SCREEN object from elsewhere in the code.
+# Note that it can't be imported directly because imports occur before the SCREEN is created.
+SCREEN = None
 
 
 class SimpleGUI:
 
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15, bounce=True, fps=None):
-        gui.simple_gui = self
 
         gui.PATCH_SIZE = patch_size
 
@@ -84,11 +87,12 @@ class SimpleGUI:
                                                               bounce=bounce, fps=fps)
 
         pg.init()
-        # Everything is drawn to self.SCREEN
-        self.SCREEN = pg.display.set_mode(screen_shape_width_height)
+
+        # Everything is drawn to gui.SCREEN, which is a global variable.
+        gui.SCREEN = pg.display.set_mode(screen_shape_width_height)
 
     def fill_screen(self):
-        self.SCREEN.fill(self.screen_color)
+        SCREEN.fill(self.screen_color)
 
     def make_window(self, caption, model_gui_elements, screen_shape_width_height, bounce=True, fps=None):
         """
@@ -106,8 +110,8 @@ class SimpleGUI:
         if fps:
             fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', pad=((0, 10), (10, 0))),
                               sg.Combo(key='fps', values=[1, 3, 6, 10, 20, 40, 60],
-                                 background_color='limegreen', default_value=fps,
-                                 tooltip='The maximum frames/second.', pad=((0, 0), (10, 0)))]
+                                       background_color='limegreen', default_value=fps,
+                                       tooltip='The maximum frames/second.', pad=((0, 0), (10, 0)))]
 
         setup_go_line = [
             sg.Button(self.SETUP, pad=((0, 10), (10, 0))),
@@ -132,7 +136,12 @@ class SimpleGUI:
         col2 = [[sg.Graph(screen_shape_width_height, lower_left_pixel_xy, upper_right_pixel_xy,
                           background_color='black', key='-GRAPH-', enable_events=True)]]
 
+        # layout is the actual layout of the window. The stuff above organizes it into component parts.
+        # col1 is the control buttons, sliders, etc.
+        # col2 is the screen on which the model is portrayed, i.e., the patches and the agents.
+        # layout is a single "GUI line" with these two components in sequence.
         layout = [[sg.Column(col1), sg.Column(col2)]]
+
         window: sg.PySimpleGUI.Window = sg.Window(caption, layout, margins=(5, 20),
                                                   return_keyboard_events=True, finalize=True)
         graph: sg.PySimpleGUI.Graph = window['-GRAPH-']
