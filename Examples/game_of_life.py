@@ -33,10 +33,10 @@ class Life_World(World):
     WHITE = '#ffffff'
     BLACK = '#000000'
 
-    fg_color_chooser = sg.ColorChooserButton('foreground', button_color=(WHITE, WHITE))
-    bg_color_chooser = sg.ColorChooserButton('background', button_color=(BLACK, BLACK))
+    fg_color_chooser = sg.ColorChooserButton('foreground', button_color=(WHITE, WHITE), size=(10, 1))
+    bg_color_chooser = sg.ColorChooserButton('background', button_color=(BLACK, BLACK), size=(10, 1))
 
-    SELECT_FOREGROUND_TEXT = 'Select foreground color'
+    SELECT_FOREGROUND_TEXT = 'Select foreground color  '
     SELECT_BACKGROUND_TEXT = 'Select background color'
 
     def get_color_and_update_button(self, button, default_color_string, values=None):
@@ -66,25 +66,23 @@ class Life_World(World):
         the color-chooser button. The user selects a color, which we retrieve by reading
         the window. We then color the color-chooser button with that color.
         """
+        foreground = self.event == Life_World.SELECT_FOREGROUND_TEXT
         # There are two color-choosers: foreground and background. Determine and select the
         # desired color chooser based on the label on the button the user clicked.
-        color_chooser_button = Life_World.fg_color_chooser if self.event == Life_World.SELECT_FOREGROUND_TEXT else \
-                               Life_World.bg_color_chooser
+        color_chooser_button = Life_World.fg_color_chooser if foreground else Life_World.bg_color_chooser
         # Run it
         color_chooser_button.click()
 
         # Create a default color_string in case the user had cancelled color selection.
         # The default color string is the string of the current color.
-        default_color_string = rgb_to_hex(Life_Patch.fg_color
-                                                 if self.event == Life_World.SELECT_FOREGROUND_TEXT
-                                                 else Life_Patch.bg_color)
+        default_color_string = rgb_to_hex(Life_Patch.fg_color if foreground else Life_Patch.bg_color)
         # Retrieve the color choice by reading the window.
         (_event, values) = gui.WINDOW.read(timeout=10)
 
         color = self.get_color_and_update_button(color_chooser_button, default_color_string, values)
 
         # Set the color to the new choice
-        if self.event == Life_World.SELECT_FOREGROUND_TEXT:
+        if foreground:
             Life_Patch.fg_color = color
         else:
             Life_Patch.bg_color = color
@@ -122,9 +120,9 @@ gui_elements = [[sg.Text('Initial density'),
                           default_value=35, orientation='horizontal', pad=((0, 0), (0, 20)),
                           tooltip='The ratio of alive cells to all cells')],
 
-                [sg.Button('Select foreground color'), Life_World.fg_color_chooser],
+                [sg.Button(Life_World.SELECT_FOREGROUND_TEXT), Life_World.fg_color_chooser],
 
-                [sg.Button('Select background color'), Life_World.bg_color_chooser],
+                [sg.Button(Life_World.SELECT_BACKGROUND_TEXT), Life_World.bg_color_chooser],
 
                 HOR_SEP(),
 
