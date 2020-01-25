@@ -2,7 +2,7 @@ from pygame.color import Color
 
 import PyLogo.core.gui as gui
 from PyLogo.core.gui import HOR_SEP
-from PyLogo.core.utils import hex_string_to_rgb, rgb_to_hex_string
+from PyLogo.core.utils import rgb_to_hex
 from PyLogo.core.world_patch_block import Patch, World
 
 import PySimpleGUI as sg
@@ -47,35 +47,41 @@ class Life_World(World):
         if color_string in {'None', '', None}:
             color_string = default_color_string
         button.update(button_color=(color_string, color_string))
-        color = hex_string_to_rgb(color_string)
+        color = Color(color_string)
         return color
 
     def get_colors(self):
         Life_Patch.bg_color = self.get_color_and_update_button(
                                             self.bg_color_chooser,
-                                            default_color_string=rgb_to_hex_string(Life_Patch.bg_color))
+                                            default_color_string=rgb_to_hex(Life_Patch.bg_color))
         Life_Patch.fg_color = self.get_color_and_update_button(
                                             self.fg_color_chooser,
-                                            default_color_string=rgb_to_hex_string(Life_Patch.fg_color))
+                                            default_color_string=rgb_to_hex(Life_Patch.fg_color))
 
     def handle_event_and_values(self):
         """
-        This handles the color chooser, although in a round-about way because the color chooser
-        can't generate events.
+        This method handles the color chooser. It does it in a round-about way because
+        the color chooser can't generate events. Consequently, the user is asked to click
+        a button next to the color-chooser. In processing that button-click, we ".click()"
+        the color-chooser button. The user selects a color, which we retrieve by reading
+        the window. We then color the color-chooser button with that color.
         """
-        # Determine and select the desired color chooser.
-        button = Life_World.fg_color_chooser if self.event == Life_World.SELECT_FOREGROUND_TEXT else \
-                 Life_World.bg_color_chooser
+        # There are two color-choosers: foreground and background. Determine and select the
+        # desired color chooser based on the label on the button the user clicked.
+        color_chooser_button = Life_World.fg_color_chooser if self.event == Life_World.SELECT_FOREGROUND_TEXT else \
+                               Life_World.bg_color_chooser
         # Run it
-        button.click()
-        # Get the color choice by reading the window.
-        (_event, values) = gui.WINDOW.read(timeout=10)
+        color_chooser_button.click()
 
-        # The default color_string is the string of the current color.
-        default_color_string = rgb_to_hex_string(Life_Patch.fg_color
+        # Create a default color_string in case the user had cancelled color selection.
+        # The default color string is the string of the current color.
+        default_color_string = rgb_to_hex(Life_Patch.fg_color
                                                  if self.event == Life_World.SELECT_FOREGROUND_TEXT
                                                  else Life_Patch.bg_color)
-        color = self.get_color_and_update_button(button, default_color_string, values)
+        # Retrieve the color choice by reading the window.
+        (_event, values) = gui.WINDOW.read(timeout=10)
+
+        color = self.get_color_and_update_button(color_chooser_button, default_color_string, values)
 
         # Set the color to the new choice
         if self.event == Life_World.SELECT_FOREGROUND_TEXT:
