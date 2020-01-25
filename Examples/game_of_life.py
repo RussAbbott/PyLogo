@@ -2,7 +2,7 @@ from pygame.color import Color
 
 import PyLogo.core.gui as gui
 from PyLogo.core.gui import HOR_SEP
-from PyLogo.core.utils import hex_string_to_rgb
+from PyLogo.core.utils import hex_string_to_rgb, rgb_to_hex_string
 from PyLogo.core.world_patch_block import Patch, World
 
 import PySimpleGUI as sg
@@ -39,17 +39,24 @@ class Life_World(World):
     SELECT_FOREGROUND_TEXT = 'Select foreground color'
     SELECT_BACKGROUND_TEXT = 'Select background color'
 
-    def get_color(self, button, default):
-        # Don't know how to get the button itself to change color until setup or go is clicked.
+    def get_color_and_update_button(self, button, default_color_string, values=None):
+        if not values:
+            values = self.values
         key = button.get_text()
-        string = self.get_gui_value(key) or default
-        button.update(button_color=(string, string))
-        color = hex_string_to_rgb(string)
+        color_string = values.get(key, '')
+        if color_string in {'None', '', None}:
+            color_string = default_color_string
+        button.update(button_color=(color_string, color_string))
+        color = hex_string_to_rgb(color_string)
         return color
 
     def get_colors(self):
-        Life_Patch.bg_color = self.get_color(self.bg_color_chooser, default=Life_World.BLACK)
-        Life_Patch.fg_color = self.get_color(self.fg_color_chooser, default=Life_World.WHITE)
+        Life_Patch.bg_color = self.get_color_and_update_button(
+                                            self.bg_color_chooser,
+                                            default_color_string=rgb_to_hex_string(Life_Patch.bg_color))
+        Life_Patch.fg_color = self.get_color_and_update_button(
+                                            self.fg_color_chooser,
+                                            default_color_string=rgb_to_hex_string(Life_Patch.fg_color))
 
     def handle_event_and_values(self):
         """
@@ -61,27 +68,20 @@ class Life_World(World):
                  Life_World.bg_color_chooser
         # Run it
         button.click()
-        # Get the results by reading the window. This also updates the color of the color chooser.
+        # Get the results by reading the window.
         (_event, values) = gui.WINDOW.read(timeout=10)
-        key = button.get_text()
-        default = Life_World.WHITE if self.event == Life_World.SELECT_FOREGROUND_TEXT else Life_World.BLACK
-        # Use the button text as the key to retrieve the selected color, as a hex string.
-        color_string = values.get(key, '') or default
-        # Update the color chooser button itself to be the selected color.
-        # Note that the color chooser is a blank button. The user clicked the button next to it.
-        button.update(button_color=(color_string, color_string))
-        # Get the rgb version of the color
-        color = hex_string_to_rgb(color_string)
-        # Store it as the value of Life_Patch.fg_color or Life_Patch.bg_color
+
+        default_color_string = rgb_to_hex_string(Life_Patch.fg_color
+                                                 if self.event == Life_World.SELECT_FOREGROUND_TEXT
+                                                 else Life_Patch.bg_color)
+        color = self.get_color_and_update_button(button, default_color_string, values)
         if self.event == Life_World.SELECT_FOREGROUND_TEXT:
             Life_Patch.fg_color = color
         else:
             Life_Patch.bg_color = color
-        # If both colors have been selected, update the patches to reflect their aliveness and refresh the Graph.
-        if Life_Patch.fg_color and Life_Patch.bg_color:
-            # Update all the patch colors using the patch's current is_alive value.
-            for patch in self.patches:
-                patch.set_alive_or_dead(patch.is_alive)
+
+        for patch in self.patches:
+            patch.set_alive_or_dead(patch.is_alive)
 
     def mouse_click(self, xy):
         patch = self.pixel_to_patch(xy)
