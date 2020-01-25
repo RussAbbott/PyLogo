@@ -181,6 +181,9 @@ class World:
         value = self.values.get(key, None)
         return int(value) if isinstance(value, float) and value == int(value) else value
 
+    def handle_event_and_values(self):
+        pass
+
     def increment_ticks(self):
         self.ticks += 1
 
@@ -211,18 +214,24 @@ class World:
     def reset_ticks(self):
         self.ticks = 0
 
-    def save_values_and_setup(self, event, values):
+    def save_event_and_values(self, event, values):
         self.event = event
         self.values = values
-        self.setup()
+
+    # def save_event_and_values_and_handle_them(self, event, values):
+    #     self.save_event_and_values(event, values)
+    #     self.handle_events()
+
+    # def save_values_and_setup(self, event, values):
+    #     self.save_event_and_values(event, values)
+    #     self.setup()
 
     def setup(self):
         pass
 
-    def save_values_and_step(self, event, values):
-        self.event = event
-        self.values = values
-        self.step()
+    # def save_values_and_step(self, event, values):
+    #     self.save_event_and_values(event, values)
+    #     self.step()
 
     def step(self):
         """

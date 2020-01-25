@@ -56,6 +56,7 @@ def SCREEN_PIXEL_HEIGHT():
 # This variable will be available to refer to the SCREEN object from elsewhere in the code.
 # Note that it can't be imported directly because imports occur before the SCREEN is created.
 SCREEN = None
+WINDOW = None
 
 
 class SimpleGUI:
@@ -85,7 +86,8 @@ class SimpleGUI:
         self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements,
                                                               screen_shape_width_height,
                                                               bounce=bounce, fps=fps)
-
+        # Create a pointer at the top level for easy access
+        gui.WINDOW = self.window
         pg.init()
 
         # Everything is drawn to gui.SCREEN, which is a global variable.
@@ -99,8 +101,6 @@ class SimpleGUI:
         Create the window, including sg.Graph, the drawing surface.
         """
         # --------------------- PySimpleGUI window layout and creation --------------------
-        # hor_separator_line = [sg.Text('_' * 25, text_color='black')]
-
         bounce_checkbox_line = ''
         if bounce is not None:
             bounce_checkbox_line = [sg.Checkbox('Bounce?', key='Bounce?', default=bounce,
@@ -109,9 +109,10 @@ class SimpleGUI:
         fps_combo_line = ''
         if fps:
             fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', pad=((0, 10), (10, 0))),
-                              sg.Combo(key='fps', values=[1, 3, 6, 10, 20, 40, 60],
+                              sg.Combo(key='fps', values=[1, 3, 6, 10, 15, 25, 40, 60],
                                        background_color='limegreen', default_value=fps,
-                                       tooltip='The maximum frames/second.', pad=((0, 0), (10, 0)))]
+                                       tooltip='The maximum frames/second.', pad=((0, 0), (10, 0)))
+                              ]
 
         setup_go_line = [
             sg.Button(self.SETUP, pad=((0, 10), (10, 0))),
@@ -143,6 +144,7 @@ class SimpleGUI:
         layout = [[sg.Column(col1), sg.Column(col2)]]
 
         window: sg.PySimpleGUI.Window = sg.Window(caption, layout, margins=(5, 20),
+                                                  use_default_focus=False,
                                                   return_keyboard_events=True, finalize=True)
         graph: sg.PySimpleGUI.Graph = window['-GRAPH-']
 

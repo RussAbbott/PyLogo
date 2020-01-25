@@ -40,6 +40,7 @@ class SimEngine:
         pg.display.update()
 
     def model_loop(self):
+        # Run this loop until the model signals it is finished or until the user stops it by pressing the Stop button.
         while True:
             (event, values) = self.window.read(timeout=10)
 
@@ -50,21 +51,28 @@ class SimEngine:
             if fps:
                 self.fps = int(fps)
 
-            if event == 'GoStop':
-                # Disable the GO_ONCE button
+            if event == self.simple_gui.GOSTOP:
+                # Enable the GO_ONCE button
                 self.window[self.simple_gui.GO_ONCE].update(disabled=False)
                 break
 
-            if self.world.done():
+            elif self.world.done():
                 self.window['GoStop'].update(disabled=True)
                 break
 
-            # TICKS are our local counter for the number of times we have gone around this loop.
-            self.world.increment_ticks()
-            self.world.save_values_and_step(event, values)
+            elif event == '__TIMEOUT__':
+                # Take a step in the simulation.
+                # TICKS are our local counter for the number of times we have gone around this loop.
+                self.world.increment_ticks()
+                self.world.save_event_and_values(event, values)
+                self.world.step()
+                # The next line limits how fast the simulation runs. It is not a counter.
+                self.clock.tick(self.fps)
+            else:
+                self.world.save_event_and_values(event, values)
+                self.world.handle_event_and_values()
+
             self.draw_world()
-            # The next line limits how fast the simulation runs. It is not a counter.
-            self.clock.tick(self.fps)
 
         return self.NORMAL
 
@@ -84,26 +92,25 @@ class SimEngine:
                 self.window.close()
                 break
 
+            if event == '__TIMEOUT__':
+                continue
+
+            self.world.save_event_and_values(event, values)
+
             if event == self.simple_gui.GRAPH:
                 self.world.mouse_click(values['-GRAPH-'])
-                self.draw_world()
 
-            if event == self.simple_gui.SETUP:
-                # fps = values.get('fps', None)
-                # if fps:
-                #     self.fps = fps
+            elif event == self.simple_gui.SETUP:
                 self.window[self.simple_gui.GOSTOP].update(disabled=False)
                 self.window[self.simple_gui.GO_ONCE].update(disabled=False)
                 self.world.reset_all()
-                self.world.save_values_and_setup(event, values)
-                self.draw_world()
+                self.world.setup()
 
-            if event == self.simple_gui.GO_ONCE:
+            elif event == self.simple_gui.GO_ONCE:
                 self.world.increment_ticks()
-                self.world.save_values_and_step(event, values)
-                self.draw_world()
+                self.world.step()
 
-            if event == self.simple_gui.GOSTOP:
+            elif event == self.simple_gui.GOSTOP:
                 self.window[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
                 self.window[self.simple_gui.GO_ONCE].update(disabled=True)
                 self.window[self.simple_gui.SETUP].update(disabled=True)
@@ -114,5 +121,9 @@ class SimEngine:
                 if returned_value == self.simple_gui.EXIT:
                     self.window.close()
                     break
+            else:
+                self.world.handle_event_and_values()
+
+            self.draw_world()
 
             self.clock.tick(self.idle_fps)
