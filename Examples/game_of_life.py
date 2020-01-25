@@ -1,46 +1,98 @@
 from pygame.color import Color
 
+import PyLogo.core.gui as gui
 from PyLogo.core.gui import HOR_SEP
 from PyLogo.core.utils import hex_string_to_rgb
 from PyLogo.core.world_patch_block import Patch, World
+
+import PySimpleGUI as sg
 
 from random import randint
 
 
 class Life_Patch(Patch):
 
+    bg_color = Color('black')
+    fg_color = Color('white')
+
     def __init__(self, *args, **kw_args):
-        super().__init__(*args, color=Color('blue'), **kw_args)
+        super().__init__(*args, **kw_args)
         self.live_neighbors = 0
         self.is_alive = False
-        self.fg_color = None
-        
+
     def count_live_neighbors(self):
         self.live_neighbors = sum([1 for p in self.neighbors_8() if p.is_alive])
         
     def set_alive_or_dead(self, alive_or_dead: bool):
         self.is_alive = alive_or_dead
-        self.set_color(self.fg_color if self.is_alive else self.base_color)
+        self.set_color(Life_Patch.fg_color if self.is_alive else Life_Patch.bg_color)
 
 
 class Life_World(World):
+
+    WHITE = '#ffffff'
+    BLACK = '#000000'
+
+    fg_color_chooser = sg.ColorChooserButton('foreground', button_color=(WHITE, WHITE))
+    bg_color_chooser = sg.ColorChooserButton('background', button_color=(BLACK, BLACK))
+
+    SELECT_FOREGROUND_TEXT = 'Select foreground color'
+    SELECT_BACKGROUND_TEXT = 'Select background color'
+
+    def get_color(self, button, default):
+        # Don't know how to get the button itself to change color until setup or go is clicked.
+        key = button.get_text()
+        string = self.get_gui_value(key) or default
+        button.update(button_color=(string, string))
+        color = hex_string_to_rgb(string)
+        return color
+
+    def get_colors(self):
+        Life_Patch.bg_color = self.get_color(self.bg_color_chooser, default=Life_World.BLACK)
+        Life_Patch.fg_color = self.get_color(self.fg_color_chooser, default=Life_World.WHITE)
+
+    def handle_event_and_values(self):
+        """
+        This handles the color chooser, although in a round-about way because the color chooser
+        can't generate events.
+        """
+        # Determine and select the desired color chooser.
+        button = Life_World.fg_color_chooser if self.event == Life_World.SELECT_FOREGROUND_TEXT else \
+                 Life_World.bg_color_chooser
+        # Run it
+        button.click()
+        # Get the results by reading the window. This also updates the color of the color chooser.
+        (_event, values) = gui.WINDOW.read(timeout=10)
+        key = button.get_text()
+        default = Life_World.WHITE if self.event == Life_World.SELECT_FOREGROUND_TEXT else Life_World.BLACK
+        # Use the button text as the key to retrieve the selected color, as a hex string.
+        color_string = values.get(key, '') or default
+        # Update the color chooser button itself to be the selected color.
+        # Note that the color chooser is a blank button. The user clicked the button next to it.
+        button.update(button_color=(color_string, color_string))
+        # Get the rgb version of the color
+        color = hex_string_to_rgb(color_string)
+        # Store it as the value of Life_Patch.fg_color or Life_Patch.bg_color
+        if self.event == Life_World.SELECT_FOREGROUND_TEXT:
+            Life_Patch.fg_color = color
+        else:
+            Life_Patch.bg_color = color
+        # If both colors have been selected, update the patches to reflect their aliveness and refresh the Graph.
+        if Life_Patch.fg_color and Life_Patch.bg_color:
+            # Update all the patch colors using the patch's current is_alive value.
+            for patch in self.patches:
+                patch.set_alive_or_dead(patch.is_alive)
 
     def mouse_click(self, xy):
         patch = self.pixel_to_patch(xy)
         patch.set_alive_or_dead(not patch.is_alive)
 
     def setup(self):
+        self.get_colors()
         density = self.get_gui_value('density')
-        bg_color_string = self.get_gui_value('background')
-        bg_color = (0, 0, 0) if bg_color_string == '' else hex_string_to_rgb(bg_color_string)
-        fg_color_string = self.get_gui_value('foreground')
-        fg_color = (255, 255, 255) if fg_color_string == '' else hex_string_to_rgb(fg_color_string)
         for patch in self.patches:
-            patch.set_color(bg_color)
-            patch.base_color = bg_color
-            patch.fg_color = fg_color
-            patch.set_alive_or_dead(randint(0, 100) < density)
-
+            is_alive = randint(0, 100) < density
+            patch.set_alive_or_dead(is_alive)
 
     def step(self):
         # Count the live neighbors in the current state.
@@ -48,29 +100,25 @@ class Life_World(World):
             patch.count_live_neighbors()
 
         # Determine and set whether each patch is_alive in the next state.
+        self.get_colors()
         for patch in self.patches:
             is_alive = patch.live_neighbors == 3 or patch.is_alive and patch.live_neighbors == 2
             patch.set_alive_or_dead(is_alive)
 
 
 # ############################################## Define GUI ############################################## #
-import PySimpleGUI as sg
 gui_elements = [[sg.Text('Initial density'),
                 sg.Slider(key='density', range=(0, 80), resolution=5, size=(10, 20),
                           default_value=35, orientation='horizontal', pad=((0, 0), (0, 20)),
-                          tooltip='The ratio of households to housing units')],
+                          tooltip='The ratio of alive cells to all cells')],
 
-                [sg.Text('Select a foreground color'),
-                 sg.ColorChooserButton('foreground')
-                 ],
+                [sg.Button('Select foreground color'), Life_World.fg_color_chooser],
 
-                [sg.Text('Select a background color'),
-                 sg.ColorChooserButton('background')
-                 ],
+                [sg.Button('Select background color'), Life_World.bg_color_chooser],
 
                 HOR_SEP(),
 
-                [sg.Text('Cells can be toggled when the system\nis stopped')],
+                [sg.Text('Cells can be toggled when\nthe system is stopped.')],
                 ]
 
 
