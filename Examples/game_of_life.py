@@ -68,18 +68,22 @@ class Life_World(World):
                  Life_World.bg_color_chooser
         # Run it
         button.click()
-        # Get the results by reading the window.
+        # Get the color choice by reading the window.
         (_event, values) = gui.WINDOW.read(timeout=10)
 
+        # The default color_string is the string of the current color.
         default_color_string = rgb_to_hex_string(Life_Patch.fg_color
                                                  if self.event == Life_World.SELECT_FOREGROUND_TEXT
                                                  else Life_Patch.bg_color)
         color = self.get_color_and_update_button(button, default_color_string, values)
+
+        # Set the color to the new choice
         if self.event == Life_World.SELECT_FOREGROUND_TEXT:
             Life_Patch.fg_color = color
         else:
             Life_Patch.bg_color = color
 
+        # Update the patches.
         for patch in self.patches:
             patch.set_alive_or_dead(patch.is_alive)
 
