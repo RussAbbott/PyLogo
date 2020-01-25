@@ -317,6 +317,12 @@ def normalize_180(angle):
     return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
 
 
+def rgb_to_hex_string(rgb):
+    (r, g, b) = rgb[:3]
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+
 def subtract_headings(a, b):
     """
     subtract heading b from heading a.
