@@ -13,6 +13,7 @@ import pygame.transform as pgt
 # import PyLogo.core.agent as agent  # Importing Agent avoids the use of globals.
 import PyLogo.core.gui as gui
 from PyLogo.core.gui import HALF_PATCH_SIZE, PATCH_SIZE
+import PyLogo.core.super_tuple as super_tuple
 import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import Block, Patch, World
 
@@ -51,10 +52,10 @@ class Agent(Block):
     SQRT_2 = sqrt(2)
 
     def __init__(self, center_pixel=None, color=None, scale=1.4, shape=SHAPES['netlogo_figure']):
-        # Can't make this a default value because utils.CENTER_PIXEL() isn't defined
+        # Can't make this a default value because super_tuple.CENTER_PIXEL() isn't defined
         # when the default values are compiled
         if center_pixel is None:
-            center_pixel = utils.center_pixel()
+            center_pixel = super_tuple.center_pixel()
 
         if color is None:
             # Select a color at random from the color_palette
@@ -75,7 +76,7 @@ class Agent(Block):
         self.heading = randint(0, 360)
         self.speed = 1
         # To keep PyCharm happy.
-        self.velocity = utils.Velocity.velocity_00
+        self.velocity = super_tuple.Velocity.velocity_00
 
     def __str__(self):
         class_name = utils.get_class_name(self)
@@ -109,19 +110,19 @@ class Agent(Block):
         next_center_pixel = current_center_pixel + dxdy
         next_row_col = next_center_pixel.pixel_to_row_col()
         if next_row_col.row < 0 or gui.PATCH_ROWS <= next_row_col.row:
-            dxdy = utils.Velocity((dxdy.dx, dxdy.dy*(-1)))
+            dxdy = super_tuple.Velocity((dxdy.dx, dxdy.dy*(-1)))
         if next_row_col.col < 0 or gui.PATCH_COLS <= next_row_col.col:
-            dxdy = utils.Velocity((dxdy.dx*(-1), dxdy.dy))
+            dxdy = super_tuple.Velocity((dxdy.dx*(-1), dxdy.dy))
 
 
         # sc_rect = gui.SCREEN.get_rect()
         # if next_center_pixel.x <= sc_rect.left <= current_center_pixel.x or \
         #     current_center_pixel.x <= sc_rect.right-1 <= next_center_pixel.x:
-        #     dxdy = utils.Velocity((dxdy.dx*(-1), dxdy.dy))
+        #     dxdy = super_tuple.Velocity((dxdy.dx*(-1), dxdy.dy))
         #
         # if next_center_pixel.y <= sc_rect.top <= current_center_pixel.y or \
         #     current_center_pixel.y <= sc_rect.bottom-1 <= next_center_pixel.y:
-        #     dxdy = utils.Velocity((dxdy.dx, dxdy.dy*(-1)))
+        #     dxdy = super_tuple.Velocity((dxdy.dx, dxdy.dy*(-1)))
 
         return dxdy
 
@@ -142,9 +143,7 @@ class Agent(Block):
         return blank_base_image
 
     def current_patch(self) -> Patch:
-        row_col: utils.RowCol = (self.center_pixel).pixel_to_row_col()
-        # if row_col.row > 50 or row_col.col > 50:
-        #     print('out of bounds')
+        row_col: super_tuple.RowCol = (self.center_pixel).pixel_to_row_col()
         patch = self.the_world().patches_array[row_col.row, row_col.col]
         return patch
 
@@ -158,14 +157,14 @@ class Agent(Block):
         self.rect = self.image.get_rect(center=self.center_pixel)  #.as_tuple())
         super().draw()
         
-    def face_xy(self, xy: utils.Pixel_xy):
+    def face_xy(self, xy: super_tuple.Pixel_xy):
         new_heading = (self.center_pixel).heading_toward(xy)
         self.set_heading(new_heading)
 
     def forward(self, speed=None):
         if speed is None:
             speed = self.speed
-        dxdy = utils.heading_to_dxdy(self.heading) * speed
+        dxdy = super_tuple.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
 
     def heading_toward(self, target):
@@ -174,7 +173,7 @@ class Agent(Block):
         to_pixel = target.center_pixel
         return from_pixel.heading_toward(to_pixel)
 
-    def move_by_dxdy(self, dxdy: utils.Velocity):
+    def move_by_dxdy(self, dxdy: super_tuple.Velocity):
         """
         Move to self.center_pixel + (dx, dy)
         """
@@ -185,8 +184,6 @@ class Agent(Block):
             dxdy = new_dxdy
         new_center_pixel_unwrapped = self.center_pixel + dxdy
         new_center_pixel = new_center_pixel_unwrapped.wrap()
-        # if new_center_pixel.x >= 612 or new_center_pixel.y >= 612:
-        #     print('out of bounds')
         self.move_to_xy(new_center_pixel)
 
     def move_by_velocity(self):
@@ -195,7 +192,7 @@ class Agent(Block):
     def move_to_patch(self, patch):
         self.move_to_xy(patch.center_pixel)
 
-    def move_to_xy(self, xy: utils.Pixel_xy):
+    def move_to_xy(self, xy: super_tuple.Pixel_xy):
         """
         Remove this agent from the list of agents at its current patch.
         Move this agent to its new xy center_pixel.
@@ -205,12 +202,10 @@ class Agent(Block):
         current_patch.remove_agent(self)
         self.set_center_pixel(xy)
         new_patch = self.current_patch()
-        # if 0 > new_patch.row_col.row > 50 or 0 > new_patch.row_col.col > 50:
-        #     print('out of bounds')
         new_patch.add_agent(self)
 
-    def set_center_pixel(self, xy: utils.Pixel_xy):
-        self.center_pixel: utils.Pixel_xy = xy.wrap()
+    def set_center_pixel(self, xy: super_tuple.Pixel_xy):
+        self.center_pixel: super_tuple.Pixel_xy = xy.wrap()
         r = self.rect
         (r.x, r.y) = (self.center_pixel.x - HALF_PATCH_SIZE(), self.center_pixel.y - HALF_PATCH_SIZE())
 
