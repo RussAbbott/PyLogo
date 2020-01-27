@@ -120,7 +120,7 @@ def get_class_name(obj) -> str:
 
 
 def heading_to_angle(heading):
-    """ Convert a heading to an angle. Sane as angle-to-heading. """
+    """ Convert a heading to an angle. Same as angle-to-heading. """
     return normalize_360(90 - heading)
 
 

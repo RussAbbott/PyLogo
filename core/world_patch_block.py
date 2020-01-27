@@ -4,7 +4,7 @@ from math import sqrt
 import numpy as np
 
 import PyLogo.core.gui as gui
-import PyLogo.core.super_tuple as super_tuple
+from PyLogo.core.super_tuple import RowCol, Pixel_xy
 import PyLogo.core.utils as utils
 # Importing this file eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
@@ -23,13 +23,13 @@ class Block(Sprite):
     """
     A generic patch/agent. Has a Pixel_xy but not necessarily a RowCol. Has a Color.
     """
-    def __init__(self, center_pixel: super_tuple.Pixel_xy, color=Color('black')):
+    def __init__(self, center_pixel: Pixel_xy, color=Color('black')):
         super().__init__()
         self.center_pixel = center_pixel
         self.rect = Rect((0, 0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         # noinspection PyTypeChecker
-        sum_pixel: super_tuple.Pixel_xy = center_pixel + super_tuple.Pixel_xy((1, 1))
-        assert isinstance(sum_pixel, super_tuple.Pixel_xy)
+        sum_pixel: Pixel_xy = center_pixel + Pixel_xy((1, 1))
+        assert isinstance(sum_pixel, Pixel_xy)
         self.rect.center = sum_pixel    # .as_tuple()
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = self.base_color = color
@@ -38,7 +38,7 @@ class Block(Sprite):
         self.agent_text_offset = int(1.5*gui.PATCH_SIZE)
         self.patch_text_offset = -int(1.0*gui.PATCH_SIZE)
 
-    def distance_to_xy(self, xy: super_tuple.Pixel_xy):
+    def distance_to_xy(self, xy: Pixel_xy):
         x_dist = self.center_pixel.x - xy.x
         y_dist = self.center_pixel.y - xy.y
         dist = sqrt(x_dist * x_dist + y_dist*y_dist)
@@ -65,7 +65,7 @@ class Block(Sprite):
 
 
 class Patch(Block):
-    def __init__(self, row_col: super_tuple.RowCol, color=Color('black')):
+    def __init__(self, row_col: RowCol, color=Color('black')):
         super().__init__(row_col.patch_to_center_pixel(), color)
         self.row_col = row_col
         self.agents = None
@@ -103,7 +103,7 @@ class Patch(Block):
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
         # noinspection PyUnresolvedReferences
-        neighbors = [self.the_world().patches_array[(self.row_col + super_tuple.RowCol((r, c))).wrap().as_int()]
+        neighbors = [self.the_world().patches_array[(self.row_col + RowCol((r, c))).wrap().as_int()]
                      for (r, c) in deltas]
         return neighbors
 
@@ -150,7 +150,7 @@ class World:
 
     def createpatches_array(self):
         # print('About to createpatches_array')
-        patch_pseudo_array = [[self.patch_class(super_tuple.RowCol((r, c))) for c in range(gui.PATCH_COLS)]
+        patch_pseudo_array = [[self.patch_class(RowCol((r, c))) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
         # print('Finished createpatches_array')
         patches_array = np.array(patch_pseudo_array)
@@ -200,15 +200,15 @@ class World:
         Get the patch RowCol for this pixel
        """
         (x, y) = xy
-        row_col: super_tuple.RowCol = super_tuple.Pixel_xy((x, y)).pixel_to_row_col()
+        row_col: RowCol = Pixel_xy((x, y)).pixel_to_row_col()
         patch = self.patches_array[row_col.row, row_col.col]
         return patch
 
-    def pixel_xy_to_patch(self, pixel_xy: super_tuple.Pixel_xy) -> Patch:
+    def pixel_xy_to_patch(self, pixel_xy: Pixel_xy) -> Patch:
         """
         Get the patch RowCol for this pixel
        """
-        row_col: super_tuple.RowCol = pixel_xy.pixel_to_row_col()
+        row_col: RowCol = pixel_xy.pixel_to_row_col()
         patch = self.patches_array[row_col.row, row_col.col]
         return patch
 

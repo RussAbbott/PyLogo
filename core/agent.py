@@ -14,6 +14,7 @@ import pygame.transform as pgt
 import PyLogo.core.gui as gui
 from PyLogo.core.gui import HALF_PATCH_SIZE, PATCH_SIZE
 import PyLogo.core.super_tuple as super_tuple
+from PyLogo.core.super_tuple import Pixel_xy, RowCol, Velocity
 import PyLogo.core.utils as utils
 from PyLogo.core.world_patch_block import Block, Patch, World
 
@@ -76,7 +77,7 @@ class Agent(Block):
         self.heading = randint(0, 360)
         self.speed = 1
         # To keep PyCharm happy.
-        self.velocity = super_tuple.Velocity.velocity_00
+        self.velocity = Velocity.velocity_00
 
     def __str__(self):
         class_name = utils.get_class_name(self)
@@ -110,19 +111,19 @@ class Agent(Block):
         next_center_pixel = current_center_pixel + dxdy
         next_row_col = next_center_pixel.pixel_to_row_col()
         if next_row_col.row < 0 or gui.PATCH_ROWS <= next_row_col.row:
-            dxdy = super_tuple.Velocity((dxdy.dx, dxdy.dy*(-1)))
+            dxdy = Velocity((dxdy.dx, dxdy.dy*(-1)))
         if next_row_col.col < 0 or gui.PATCH_COLS <= next_row_col.col:
-            dxdy = super_tuple.Velocity((dxdy.dx*(-1), dxdy.dy))
+            dxdy = Velocity((dxdy.dx*(-1), dxdy.dy))
 
 
         # sc_rect = gui.SCREEN.get_rect()
         # if next_center_pixel.x <= sc_rect.left <= current_center_pixel.x or \
         #     current_center_pixel.x <= sc_rect.right-1 <= next_center_pixel.x:
-        #     dxdy = super_tuple.Velocity((dxdy.dx*(-1), dxdy.dy))
+        #     dxdy = Velocity((dxdy.dx*(-1), dxdy.dy))
         #
         # if next_center_pixel.y <= sc_rect.top <= current_center_pixel.y or \
         #     current_center_pixel.y <= sc_rect.bottom-1 <= next_center_pixel.y:
-        #     dxdy = super_tuple.Velocity((dxdy.dx, dxdy.dy*(-1)))
+        #     dxdy = Velocity((dxdy.dx, dxdy.dy*(-1)))
 
         return dxdy
 
@@ -143,7 +144,7 @@ class Agent(Block):
         return blank_base_image
 
     def current_patch(self) -> Patch:
-        row_col: super_tuple.RowCol = (self.center_pixel).pixel_to_row_col()
+        row_col: RowCol = (self.center_pixel).pixel_to_row_col()
         patch = self.the_world().patches_array[row_col.row, row_col.col]
         return patch
 
@@ -157,7 +158,7 @@ class Agent(Block):
         self.rect = self.image.get_rect(center=self.center_pixel)  #.as_tuple())
         super().draw()
         
-    def face_xy(self, xy: super_tuple.Pixel_xy):
+    def face_xy(self, xy: Pixel_xy):
         new_heading = (self.center_pixel).heading_toward(xy)
         self.set_heading(new_heading)
 
@@ -173,7 +174,7 @@ class Agent(Block):
         to_pixel = target.center_pixel
         return from_pixel.heading_toward(to_pixel)
 
-    def move_by_dxdy(self, dxdy: super_tuple.Velocity):
+    def move_by_dxdy(self, dxdy: Velocity):
         """
         Move to self.center_pixel + (dx, dy)
         """
@@ -192,7 +193,7 @@ class Agent(Block):
     def move_to_patch(self, patch):
         self.move_to_xy(patch.center_pixel)
 
-    def move_to_xy(self, xy: super_tuple.Pixel_xy):
+    def move_to_xy(self, xy: Pixel_xy):
         """
         Remove this agent from the list of agents at its current patch.
         Move this agent to its new xy center_pixel.
@@ -204,8 +205,8 @@ class Agent(Block):
         new_patch = self.current_patch()
         new_patch.add_agent(self)
 
-    def set_center_pixel(self, xy: super_tuple.Pixel_xy):
-        self.center_pixel: super_tuple.Pixel_xy = xy.wrap()
+    def set_center_pixel(self, xy: Pixel_xy):
+        self.center_pixel: Pixel_xy = xy.wrap()
         r = self.rect
         (r.x, r.y) = (self.center_pixel.x - HALF_PATCH_SIZE(), self.center_pixel.y - HALF_PATCH_SIZE())
 
