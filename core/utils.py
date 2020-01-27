@@ -41,11 +41,11 @@ class XY(tuple):
         yy = self[1] - xy[1]
         return self.restore_type(xx, yy)
 
-    def as_tuple(self):
-        return self
-
-    def as_int_tuple(self):
-        return (int(self.x), int(self.y))
+    # def as_tuple(self):
+    #     return self
+    #
+    def as_int(self):
+        return self.restore_type(int(self.x), int(self.y))
 
     def restore_type(self, xx, yy):
         cls = type(self)

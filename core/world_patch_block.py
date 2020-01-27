@@ -102,7 +102,7 @@ class Patch(Block):
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
         # noinspection PyUnresolvedReferences
-        neighbors = [self.the_world().patches_array[(self.row_col + utils.RowCol((r, c))).wrap().as_int_tuple()]
+        neighbors = [self.the_world().patches_array[(self.row_col + utils.RowCol((r, c))).wrap().as_int()]
                      for (r, c) in deltas]
         return neighbors
 
