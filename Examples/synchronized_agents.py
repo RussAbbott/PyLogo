@@ -1,5 +1,5 @@
 
-from PyLogo.core.utils import center_pixel
+from PyLogo.core.super_tuple import center_pixel
 from PyLogo.core.world_patch_block import World
 
 from math import pi

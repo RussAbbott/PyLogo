@@ -1,6 +1,6 @@
 
 from PyLogo.core.agent import Agent
-from PyLogo.core.utils import Velocity
+from PyLogo.core.super_tuple import Velocity
 from PyLogo.core.world_patch_block import World
 
 from itertools import cycle

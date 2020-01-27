@@ -1,5 +1,5 @@
 
-from PyLogo.core.utils import RowCol, Velocity
+from PyLogo.core.super_tuple import RowCol, Velocity
 from PyLogo.core.world_patch_block import Patch, World
 
 from pygame.color import Color
