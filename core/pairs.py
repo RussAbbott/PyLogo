@@ -7,8 +7,8 @@ from math import sqrt
 
 from functools import lru_cache
 
-import PyLogo.core.gui as gui
-import PyLogo.core.utils as utils
+import core.gui as gui
+import core.utils as utils
 # noinspection PyUnresolvedReferences
 # import PyLogo.core.super_tuple as super_tuple
 

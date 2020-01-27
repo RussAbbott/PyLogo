@@ -11,12 +11,12 @@ import pygame.transform as pgt
 
 # noinspection PyUnresolvedReferences
 # import PyLogo.core.agent as agent  # Importing Agent avoids the use of globals.
-import PyLogo.core.gui as gui
-from PyLogo.core.gui import HALF_PATCH_SIZE, PATCH_SIZE
-import PyLogo.core.super_tuple as super_tuple
-from PyLogo.core.super_tuple import Pixel_xy, RowCol, Velocity
-import PyLogo.core.utils as utils
-from PyLogo.core.world_patch_block import Block, Patch, World
+import core.gui as gui
+from core.gui import HALF_PATCH_SIZE, PATCH_SIZE
+import core.pairs as super_tuple
+from core.pairs import Pixel_xy, RowCol, Velocity
+import core.utils as utils
+from core.world_patch_block import Block, Patch, World
 
 from random import choice, randint
 from statistics import mean
@@ -234,7 +234,7 @@ class Turtle(Agent):
 
 
 # The Pylogo fuction that starts the simulation
-from PyLogo.core.sim_engine import SimEngine
+from core.sim_engine import SimEngine
 
 
 def PyLogo(world_class=World, caption=None, gui_elements=None,

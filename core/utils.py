@@ -4,7 +4,7 @@ from __future__ import annotations
 from pygame.color import Color
 
 # noinspection PyUnresolvedReferences
-import PyLogo.core.utils as utils
+import core.utils as utils
 
 from functools import lru_cache
 from math import copysign

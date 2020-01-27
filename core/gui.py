@@ -8,7 +8,7 @@ from pygame.time import Clock
 
 # By importing this file itself, can avoid the use of globals
 # noinspection PyUnresolvedReferences
-import PyLogo.core.gui as gui
+import core.gui as gui
 
 import PySimpleGUI as sg
 

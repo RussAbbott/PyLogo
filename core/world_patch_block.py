@@ -3,12 +3,12 @@ from math import sqrt
 
 import numpy as np
 
-import PyLogo.core.gui as gui
-from PyLogo.core.super_tuple import RowCol, Pixel_xy
-import PyLogo.core.utils as utils
+import core.gui as gui
+from core.pairs import RowCol, Pixel_xy
+import core.utils as utils
 # Importing this file eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
-import PyLogo.core.world_patch_block as wpb
+# import core.world_patch_block as wpb
 
 from pygame.color import Color
 from pygame.font import Font
