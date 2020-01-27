@@ -26,7 +26,10 @@ class Block(Sprite):
         super().__init__()
         self.center_pixel = center_pixel
         self.rect = Rect((0, 0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
-        self.rect.center = (center_pixel + utils.Pixel_xy(1, 1)).as_tuple()
+        # noinspection PyTypeChecker
+        sum_pixel: utils.Pixel_xy = center_pixel + utils.Pixel_xy((1, 1))
+        assert isinstance(sum_pixel, utils.Pixel_xy)
+        self.rect.center = sum_pixel    # .as_tuple()
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = self.base_color = color
         self.label = None
@@ -98,7 +101,8 @@ class Patch(Block):
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
         Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
         """
-        neighbors = [self.the_world().patches_array[(self.row_col + utils.RowCol(r, c)).as_int_tuple()]
+        # noinspection PyUnresolvedReferences
+        neighbors = [self.the_world().patches_array[(self.row_col + utils.RowCol((r, c))).wrap().as_int_tuple()]
                      for (r, c) in deltas]
         return neighbors
 
@@ -145,7 +149,7 @@ class World:
 
     def createpatches_array(self):
         # print('About to createpatches_array')
-        patch_pseudo_array = [[self.patch_class(utils.RowCol(r, c)) for c in range(gui.PATCH_COLS)]
+        patch_pseudo_array = [[self.patch_class(utils.RowCol((r, c))) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
         # print('Finished createpatches_array')
         patches_array = np.array(patch_pseudo_array)
@@ -195,7 +199,7 @@ class World:
         Get the patch RowCol for this pixel
        """
         (x, y) = xy
-        row_col: utils.RowCol = utils.Pixel_xy(x, y).pixel_to_row_col()
+        row_col: utils.RowCol = utils.Pixel_xy((x, y)).pixel_to_row_col()
         patch = self.patches_array[row_col.row, row_col.col]
         return patch
 

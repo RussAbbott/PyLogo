@@ -12,17 +12,17 @@ from math import copysign
 from random import randint
 
 
-class XY:
+class XY(tuple):
 
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    # def __init__(self, _):
+    #     super().__init__()
+    #     # self.x = x
+    #     # self.y = y
 
     def __add__(self, xy: XY):
-        xx = self.x + xy.x
-        yy = self.y + xy.y
-        cls = type(self)
-        return cls(xx, yy)
+        xx = self[0] + xy[0]
+        yy = self[1] + xy[1]
+        return self.restore_type(xx, yy)
 
     def __div__(self, scalar):
         return self * (1/scalar)
@@ -30,26 +30,45 @@ class XY:
     def __mul__(self, scalar):
         xx = self.x * scalar
         yy = self.y * scalar
-        cls = type(self)
-        return cls(xx, yy)
+        return self.restore_type(xx, yy)
+
+    def __str__(self):
+        clas_string = extract_class_name(self.__class__)
+        return f'{clas_string}{(self.x, self.y)}'
 
     def __sub__(self, xy: XY):
-        return self + xy*(-1)
+        xx = self[0] - xy[0]
+        yy = self[1] - xy[1]
+        return self.restore_type(xx, yy)
 
     def as_tuple(self):
-        return (self.x, self.y)
+        return self
 
     def as_int_tuple(self):
         return (int(self.x), int(self.y))
 
+    def restore_type(self, xx, yy):
+        cls = type(self)
+        return cls((xx, yy))
+
     def round(self, prec=2):
         clas = type(self)
-        return clas(round(self.x, prec), round(self.y, prec))
+        return clas((round(self.x, prec), round(self.y, prec)))
 
     def wrap3(self, x_limit, y_limit):
-        self.x = self.x % x_limit
-        self.y = self.y % y_limit
-        return self
+        xx = self.x % x_limit
+        yy = self.y % y_limit
+        # if xx > 612 or yy > 612:
+        #     print('out of bounds')
+        return self.restore_type(xx, yy)
+
+    @property
+    def x(self):
+        return self[0]
+
+    @property
+    def y(self):
+        return self[1]
 
 
 class Pixel_xy(XY):
@@ -57,8 +76,8 @@ class Pixel_xy(XY):
     # Will be set to Pixel_xy(0, 0) after the Pixel_xy class is defined.
     pixel_xy_00 = None
 
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    # def __init__(self, x, y):
+    #     super().__init__(x, y)
 
     def __str__(self):
         return f'Pixel_xy{self.x, self.y}'
@@ -73,8 +92,8 @@ class Pixel_xy(XY):
             screen_height = gui.SCREEN_PIXEL_HEIGHT()
             wrapped_end_pts = [((self+a+b).wrap3(screen_width, screen_height),
                                 (other+a+b).wrap3(screen_width, screen_height))
-                               for a in [Pixel_xy.pixel_xy_00, utils.Pixel_xy(screen_width/2, 0)]
-                               for b in [Pixel_xy.pixel_xy_00, utils.Pixel_xy(0, screen_height/2)]
+                               for a in [Pixel_xy.pixel_xy_00, Pixel_xy((screen_width/2, 0))]
+                               for b in [Pixel_xy.pixel_xy_00, Pixel_xy((0, screen_height/2))]
                                ]
             end_pts += wrapped_end_pts
         dist = min(math.sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
@@ -87,7 +106,7 @@ class Pixel_xy(XY):
             return 0
         delta_x = to_pixel.x - self.x
         delta_y = to_pixel.y - self.y
-        new_heading = utils.dxdy_to_heading(delta_x, delta_y, default_heading=0)
+        new_heading = dxdy_to_heading(delta_x, delta_y, default_heading=0)
         return new_heading
 
     def pixel_to_row_col(self: Pixel_xy):
@@ -96,23 +115,29 @@ class Pixel_xy(XY):
        """
         row = self.y // gui.BLOCK_SPACING()
         col = self.x // gui.BLOCK_SPACING()
-        return RowCol(int(row), int(col))
+        # if row > 50 or col > 50:
+        #     print('out of bounds')
+        return RowCol((int(row), int(col)))
 
     def wrap(self):
         screen_rect = gui.SCREEN.get_rect()
-        wrapped = self.wrap3(screen_rect.w, screen_rect.h)
+        # Must wrap at screen_rect.w-1 and screen_rect.h-1 because the screen
+        # is one pixel larger than the grid of patches.
+        wrapped = self.wrap3(screen_rect.w-1, screen_rect.h-1)
+        # if wrapped.x > 612 or wrapped.y > 612:
+        #     print('out of bounds')
         return wrapped
 
 
-Pixel_xy.pixel_xy_00 = Pixel_xy(0, 0)
+Pixel_xy.pixel_xy_00 = Pixel_xy((0, 0))
 
 
 class RowCol(XY):
 
-    def __init__(self, row, col):
-        super().__init__(row, col)
-        # Wrap around the patch grid.
-        self.wrap()
+    # def __init__(self, row, col):
+    #     super().__init__(row, col)
+    #     # Wrap around the patch grid.
+    #     self.wrap()
 
     def __str__(self):
         return f'RowCol{self.row, self.col}'
@@ -130,8 +155,8 @@ class RowCol(XY):
         Get the center_pixel position for this RowCol.
         Leave a border of 1 pixel at the top and left of the patches
         """
-        pv = Pixel_xy(1 + gui.BLOCK_SPACING() * self.col + gui.HALF_PATCH_SIZE(),
-                      1 + gui.BLOCK_SPACING() * self.row + gui.HALF_PATCH_SIZE())
+        pv = Pixel_xy((1 + gui.BLOCK_SPACING() * self.col + gui.HALF_PATCH_SIZE(),
+                       1 + gui.BLOCK_SPACING() * self.row + gui.HALF_PATCH_SIZE()))
         return pv
 
     def wrap(self):
@@ -143,14 +168,13 @@ class Velocity(XY):
 
     velocity_00 = None
 
-    def __init__(self, dx, dy):
-        super().__init__(dx, dy)
+    # def __init__(self, dx, dy):
+    #     super().__init__(dx, dy)
 
     def __str__(self):
         return f'Velocity{self.dx, self.dy}'
 
     # The @property decorator allows you to call the function without parentheses: v = Velocity(3, 4); v.dx -> 3
-    # Inside the class must use self.dx, and self.dy.
     @property
     def dx(self):
         return self.x
@@ -160,7 +184,7 @@ class Velocity(XY):
         return self.y
 
 
-Velocity.velocity_00 = Velocity(0, 0)
+Velocity.velocity_00 = Velocity((0, 0))
 
 
 
@@ -218,7 +242,7 @@ def angle_to_heading(angle):
 
 def center_pixel():
     rect = gui.SCREEN.get_rect()
-    cp = Pixel_xy(rect.centerx, rect.centery)
+    cp = Pixel_xy((rect.centerx, rect.centery))
     return cp
 
 
@@ -234,7 +258,7 @@ def dxdy_to_heading(dx, dy, default_heading=None):
     else:
         # (-1) to compensate for inverted y-axis.
         angle = utils.atan2((-1) * dy, dx)
-        new_heading = utils.angle_to_heading(angle)
+        new_heading = angle_to_heading(angle)
         return new_heading
 
 
@@ -244,7 +268,7 @@ def dx(heading):
 
 @lru_cache(maxsize=512)
 def _dx_int(heading):
-    angle = utils.heading_to_angle(heading)
+    angle = heading_to_angle(heading)
     delta_x = utils.cos(angle)
     return delta_x
 
@@ -255,7 +279,7 @@ def dy(heading):
 
 @lru_cache(maxsize=512)
 def _dy_int(heading):
-    angle = utils.heading_to_angle(heading)
+    angle = heading_to_angle(heading)
     delta_y = utils.sin(angle)
     # make it negative to account for inverted y axis
     return (-1)*delta_y
@@ -292,14 +316,12 @@ def _heading_to_dxdy_int(heading) -> Velocity:
     dx = cos(angle)
     # The -1 accounts for the y-axis being inverted.
     dy = (-1) * sin(angle)
-    vel = Velocity(dx, dy)
+    vel = Velocity((dx, dy))
     return vel
 
 
-def hex_string_to_rgb(hex_string):
-    hex_string = hex_string.lstrip('#')
-    rgb = tuple(int(hex_string[i:i + 2], 16) for i in (0, 2, 4))
-    return rgb
+def hex_to_rgb(hex_string):
+    return Color(hex_string)
 
 
 def int_round(x, ndigits=None):
@@ -317,10 +339,9 @@ def normalize_180(angle):
     return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
 
 
-def rgb_to_hex_string(rgb):
+def rgb_to_hex(rgb):
     (r, g, b) = rgb[:3]
     return f"#{r:02x}{g:02x}{b:02x}"
-
 
 
 def subtract_headings(a, b):
@@ -339,7 +360,7 @@ def subtract_headings(a, b):
     Normalize to values between -180 and +180 to ensure that larger numbers are to the right, i.e., clockwise.
     No jump from 360 to 0.
     """
-    return utils.normalize_180(a - b)
+    return normalize_180(a - b)
 
 
 def turn_away_amount(new_heading, old_heading, max_turn):
@@ -359,7 +380,7 @@ def turn_toward_amount(old_heading, new_heading, max_turn):
     heading_delta will the amount old_heading should turn (positive or negative)
     to face more in the direction of new_heading.
     """
-    heading_delta = utils.subtract_headings(new_heading, old_heading)
+    heading_delta = subtract_headings(new_heading, old_heading)
     # To take max_turn (an abs value) into consideration, we want to turn the
     # smaller (in absolute terms) of abs(heading_delta) and max_turn. But no
     # matter how much we turn, we want to turn in the direction indicated by
@@ -372,20 +393,59 @@ def turn_toward_amount(old_heading, new_heading, max_turn):
 
 
 if __name__ == "__main__":
+
     # Various tests and experiments
-    pv = Pixel_xy(1.234, 5.678)
+    print('\n-----XY-----')
+    a = XY((3, 4))
+    print(f'a: {a}')
+    # print(f'a: {a.as_tuple()}')
+    print(f'a+a: {a+a}')
+    # noinspection PyTypeChecker
+    b: XY = a*3
+    assert isinstance(b, XY)
+    print(f'a*3, b: {a*3} {b}')
+    print(f'b = a*3: {b} = {a*3}: ({b}, {a*3})  {f"({b}, {a*3})"}  {(b, a*3)} {str((b, a*3))}')
+    print(f'a-a: {a-a}')
+    print(f'a*(-1): {a*(-1)}')
+    print(f'b.wrap3(2, 5): {b.wrap3(2, 5)}')
+
+    print('\n-----Pixel_xy-----')
+    a = Pixel_xy((3, 4))
+    print(f'a: {a}')
+    print(f'a+a: {a+a}')
+    # noinspection PyTypeChecker
+    b: XY = a*3
+    assert isinstance(b, Pixel_xy)
+    print(f'a*3, b: {a*3} {b}')
+    print(f'b = a*3: {b} = {a*3}: ({b}, {a*3})  {f"({b}, {a*3})"}  {(b, a*3)} {str((b, a*3))}')
+    print(f'a-a: {a-a}')
+    print(f'a*(-1): {a*(-1)}')
+    print(f'b.wrap3(2, 5): {b.wrap3(2, 5)}')
+
+    print('\n-----hex string-----')
+    hex_string = '#123456'
+    (r, g, b, _) = Color(hex_string)
+    print((r, g, b))
+    hex1 = rgb_to_hex((r, g, b))
+    print(hex1, hex_string, hex1 == hex_string)
+
+    hex2 = rgb_to_hex((r, g, b))
+    print(hex1)
+    pv = Pixel_xy((1.234, 5.678))
     print(pv.round(2))
 
-    vel = Velocity(1.234, 5.678)
+    vel = Velocity((1.234, 5.678))
     print(vel.round(2))
 
-    rc = RowCol(3, 4)
-    print(rc.as_tuple())
+    print('\n-----RowCol-----')
+    rc = RowCol((3, 4))
+    print(rc)    # , rc.as_tuple(), rc == rc.as_tuple())
 
+    print('\n-----distance-----')
     screen_width = gui.SCREEN_PIXEL_WIDTH()
     screen_height = gui.SCREEN_PIXEL_HEIGHT()
-    v1 = utils.Pixel_xy(1, 1)
-    v2 = utils.Pixel_xy(2, 2)
+    v1 = Pixel_xy((1, 1))
+    v2 = Pixel_xy((2, 2))
     print(v1.distance_to(v2, True))
     print(v1.distance_to(v2, False))
     v3 = (v1 - v2).wrap3(screen_width, screen_height)
@@ -395,9 +455,9 @@ if __name__ == "__main__":
     print(v3.distance_to(v1, True))
     print(v3.distance_to(v1, False))
     print('-----------------------------')
-    v1 = utils.Pixel_xy(1, 1)
-    v02 = utils.Pixel_xy(0, 2)
-    v20 = utils.Pixel_xy(2, 0)
+    v1 = Pixel_xy((1, 1))
+    v02 = Pixel_xy((0, 2))
+    v20 = Pixel_xy((2, 0))
     v03 = (v1 - v02).wrap3(screen_width, screen_height)
     print(v1.distance_to(v03, True))
     print(v1.distance_to(v03, False))

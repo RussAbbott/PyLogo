@@ -104,16 +104,24 @@ class Agent(Block):
         """
        Bounce agent off the screen edges
        """
-        sc_rect = gui.SCREEN.get_rect()
-        center_pixel = self.center_pixel
-        next_center_pixel = center_pixel + dxdy
-        if next_center_pixel.x <= sc_rect.left <= center_pixel.x or \
-            center_pixel.x <= sc_rect.right <= next_center_pixel.x:
-            dxdy = utils.Velocity(dxdy.dx*(-1), dxdy.dy)
+        current_center_pixel = self.center_pixel
+        # current_row_col = current_center_pixel.pixel_to_row_col()
+        next_center_pixel = current_center_pixel + dxdy
+        next_row_col = next_center_pixel.pixel_to_row_col()
+        if next_row_col.row < 0 or gui.PATCH_ROWS <= next_row_col.row:
+            dxdy = utils.Velocity((dxdy.dx, dxdy.dy*(-1)))
+        if next_row_col.col < 0 or gui.PATCH_COLS <= next_row_col.col:
+            dxdy = utils.Velocity((dxdy.dx*(-1), dxdy.dy))
 
-        if next_center_pixel.y <= sc_rect.top <= center_pixel.y or \
-            center_pixel.y <= sc_rect.bottom <= next_center_pixel.y:
-            dxdy = utils.Velocity(dxdy.dx, dxdy.dy*(-1))
+
+        # sc_rect = gui.SCREEN.get_rect()
+        # if next_center_pixel.x <= sc_rect.left <= current_center_pixel.x or \
+        #     current_center_pixel.x <= sc_rect.right-1 <= next_center_pixel.x:
+        #     dxdy = utils.Velocity((dxdy.dx*(-1), dxdy.dy))
+        #
+        # if next_center_pixel.y <= sc_rect.top <= current_center_pixel.y or \
+        #     current_center_pixel.y <= sc_rect.bottom-1 <= next_center_pixel.y:
+        #     dxdy = utils.Velocity((dxdy.dx, dxdy.dy*(-1)))
 
         return dxdy
 
@@ -135,6 +143,8 @@ class Agent(Block):
 
     def current_patch(self) -> Patch:
         row_col: utils.RowCol = (self.center_pixel).pixel_to_row_col()
+        # if row_col.row > 50 or row_col.col > 50:
+        #     print('out of bounds')
         patch = self.the_world().patches_array[row_col.row, row_col.col]
         return patch
 
@@ -145,7 +155,7 @@ class Agent(Block):
 
     def draw(self):
         self.image = pgt.rotate(self.base_image, -self.heading)
-        self.rect = self.image.get_rect(center=self.center_pixel.as_tuple())
+        self.rect = self.image.get_rect(center=self.center_pixel)  #.as_tuple())
         super().draw()
         
     def face_xy(self, xy: utils.Pixel_xy):
@@ -173,7 +183,11 @@ class Agent(Block):
             if dxdy is self.velocity:
                 self.set_velocity(new_dxdy)
             dxdy = new_dxdy
-        self.move_to_xy(self.center_pixel + dxdy)
+        new_center_pixel_unwrapped = self.center_pixel + dxdy
+        new_center_pixel = new_center_pixel_unwrapped.wrap()
+        # if new_center_pixel.x >= 612 or new_center_pixel.y >= 612:
+        #     print('out of bounds')
+        self.move_to_xy(new_center_pixel)
 
     def move_by_velocity(self):
         self.move_by_dxdy(self.velocity)
@@ -190,7 +204,9 @@ class Agent(Block):
         current_patch: Patch = self.current_patch()
         current_patch.remove_agent(self)
         self.set_center_pixel(xy)
-        new_patch = self.current_patch( )
+        new_patch = self.current_patch()
+        # if 0 > new_patch.row_col.row > 50 or 0 > new_patch.row_col.col > 50:
+        #     print('out of bounds')
         new_patch.add_agent(self)
 
     def set_center_pixel(self, xy: utils.Pixel_xy):
