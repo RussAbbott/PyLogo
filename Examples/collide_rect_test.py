@@ -1,6 +1,6 @@
 
-from PyLogo.core.super_tuple import RowCol, Velocity
-from PyLogo.core.world_patch_block import Patch, World
+from core.pairs import RowCol, Velocity
+from core.world_patch_block import Patch, World
 
 from pygame.color import Color
 from pygame.sprite import collide_rect
@@ -56,5 +56,5 @@ gui_elements = [[sg.Text('nbr agents', pad=((0, 5), (20, 0))),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.agent import PyLogo
+    from core.agent import PyLogo
     PyLogo(CollisionTest_World, 'Collision test', gui_elements, patch_class=CollisionTest_Patch, bounce=False)

@@ -107,11 +107,11 @@ end
 
 from pygame import Color
 
-from PyLogo.core.agent import Agent
-from PyLogo.core.gui import BLOCK_SPACING, HOR_SEP, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
-from PyLogo.core.super_tuple import Pixel_xy
-import PyLogo.core.utils as utils
-from PyLogo.core.world_patch_block import World
+from core.agent import Agent
+from core.gui import BLOCK_SPACING, HOR_SEP, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
+from core.pairs import Pixel_xy
+import core.utils as utils
+from core.world_patch_block import World
 
 from random import uniform
 
@@ -229,5 +229,5 @@ gui_elements = [
 
 
 if __name__ == "__main__":
-    from PyLogo.core.agent import PyLogo
+    from core.agent import PyLogo
     PyLogo(Flocking_World, 'Flocking', gui_elements, agent_class=Flocking_Agent, bounce=None)

@@ -1,6 +1,6 @@
 
-from PyLogo.core.super_tuple import center_pixel
-from PyLogo.core.world_patch_block import World
+from core.pairs import center_pixel
+from core.world_patch_block import World
 
 from math import pi
 
@@ -104,5 +104,5 @@ gui_elements = [[sg.Text('nbr of agents'),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.agent import PyLogo
+    from core.agent import PyLogo
     PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_elements, bounce=None)

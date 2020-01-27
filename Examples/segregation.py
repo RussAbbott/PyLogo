@@ -1,6 +1,6 @@
 
-from PyLogo.core.agent import Agent, PYGAME_COLORS
-from PyLogo.core.world_patch_block import Patch, World
+from core.agent import Agent, PYGAME_COLORS
+from core.world_patch_block import Patch, World
 
 from pygame import Color
 
@@ -200,5 +200,5 @@ gui_elements = [[sg.Text('density'),
                 ]
 
 if __name__ == "__main__":
-    from PyLogo.core.agent import PyLogo
+    from core.agent import PyLogo
     PyLogo(SegregationWorld, "Schelling's segregation model", gui_elements, bounce=None)

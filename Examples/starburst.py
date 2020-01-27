@@ -1,7 +1,7 @@
 
-from PyLogo.core.agent import Agent
-from PyLogo.core.super_tuple import Velocity
-from PyLogo.core.world_patch_block import World
+from core.agent import Agent
+from core.pairs import Velocity
+from core.world_patch_block import World
 
 from itertools import cycle
 
@@ -45,5 +45,5 @@ gui_elements = [ [sg.Text('nbr agents', pad=((0, 5), (20, 0))),
 
 
 if __name__ == "__main__":
-    from PyLogo.core.agent import PyLogo
+    from core.agent import PyLogo
     PyLogo(Starburst_World, 'Starburst', gui_elements)

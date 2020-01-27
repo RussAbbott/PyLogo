@@ -1,9 +1,9 @@
 from pygame.color import Color
 
-import PyLogo.core.gui as gui
-from PyLogo.core.gui import HOR_SEP
-from PyLogo.core.utils import rgb_to_hex
-from PyLogo.core.world_patch_block import Patch, World
+import core.gui as gui
+from core.gui import HOR_SEP
+from core.utils import rgb_to_hex
+from core.world_patch_block import Patch, World
 
 import PySimpleGUI as sg
 
@@ -131,5 +131,5 @@ gui_elements = [[sg.Text('Initial density'),
 
 
 if __name__ == "__main__":
-    from PyLogo.core.agent import PyLogo
+    from core.agent import PyLogo
     PyLogo(Life_World, 'Game of Life', gui_elements, patch_class=Life_Patch, bounce=None, fps=10)
