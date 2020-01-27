@@ -27,12 +27,11 @@ class CollisionTest_World(World):
     """
 
     def setup(self):
-        # nbr_agents = int(wpb.THE_WORLD.values['nbr_agents'])
         nbr_agents = int(self.get_gui_value('nbr_agents'))
         for i in range(nbr_agents):
             # Adds itself to self.agents and to its patch's list of Agents.
             agent = self.agent_class(color=Color('red'))
-            agent.set_velocity(Velocity(uniform(-2, 2), uniform(-2, 2)))
+            agent.set_velocity(Velocity((uniform(-2, 2), uniform(-2, 2))))
 
         for patch in self.patches:
             patch.update_collision_color(self.agents)
@@ -44,7 +43,7 @@ class CollisionTest_World(World):
         for agent in self.agents:
             agent.move_by_velocity()
             if random() < 0.01:
-                agent.set_velocity(Velocity(randint(-2, 2), randint(-2, 2)))
+                agent.set_velocity(Velocity((randint(-2, 2), randint(-2, 2))))
 
         for patch in self.patches:
             patch.update_collision_color(self.agents)

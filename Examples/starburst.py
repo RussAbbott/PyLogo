@@ -21,9 +21,9 @@ class Starburst_World(World):
             # self.agent_class(scale=1)
             Agent(scale=1)
 
-        initial_velocities = cycle([Velocity(-1, -1), Velocity(-1, 1),
-                                    Velocity(0, 0),
-                                    Velocity(1, -1), Velocity(1, 1)])
+        initial_velocities = cycle([Velocity((-1, -1)), Velocity((-1, 1)),
+                                    Velocity((0, 0)),
+                                    Velocity((1, -1)), Velocity((1, 1))])
         for (agent, vel) in zip(self.agents, initial_velocities):
             agent.set_velocity(vel)
 
@@ -33,8 +33,8 @@ class Starburst_World(World):
         """
         for agent in self.agents:
             agent.move_by_velocity()
-            if self.the_world().ticks > 150 and random() < 0.01:
-                agent.set_velocity(Velocity(uniform(-2, 2), uniform(-2, 2)))
+            if self.the_world().ticks > 125 and random() < 0.01:
+                agent.set_velocity(Velocity((uniform(-2, 2), uniform(-2, 2))))
 
 
 # ############################################## Define GUI ############################################## #

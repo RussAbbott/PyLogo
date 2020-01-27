@@ -4,7 +4,7 @@ from PyLogo.core.world_patch_block import World
 
 from math import pi
 
-from random import choice, randint, random
+from random import choice, randint
 
 
 class Synchronized_Agent_World(World):
@@ -27,8 +27,8 @@ class Synchronized_Agent_World(World):
             self.go_in_circle(r)
         elif self.current_figure == 'breathe':
             self.breathe()
-        elif self.current_figure == 'random':
-            self.go_randomly()
+        elif self.current_figure == 'twitchy':
+            self.go_twitchily()
         else:
             print(f'Error. No current figure: ({self.current_figure})')
 
@@ -38,11 +38,11 @@ class Synchronized_Agent_World(World):
             agent.turn_left(90 if self.current_figure == 'clockwise' else -90)
             agent.forward(2 * pi * r / 360)
 
-    def go_randomly(self):
-        random_delta = randint(-5, 5) if random() < 0.25 else 0
+    def go_twitchily(self):
+        twitchy_delta = randint(-90, 90) if self.ticks % 30 == 0 else 0
         for agent in self.agents:
             agent.set_heading(agent.cached_heading)
-            agent.turn_right(random_delta)
+            agent.turn_right(twitchy_delta)
             agent.forward()
             agent.cached_heading = agent.heading
 
@@ -61,6 +61,7 @@ class Synchronized_Agent_World(World):
         nbr_agents = self.get_gui_value('nbr_agents')
         self.create_ordered_agents(nbr_agents)
         self.reference_agent = list(self.agents)[0]
+        twitchy_turn = randint(0, 360)
         for agent in self.agents:
             agent.cached_heading = agent.heading
             agent.speed = 1
@@ -69,6 +70,8 @@ class Synchronized_Agent_World(World):
             self.breathing_phase = 'inhale'
             if self.current_figure in ['clockwise', 'counter-clockwise']:
                 agent.turn_right(90 if self.current_figure == 'clockwise' else -90)
+            elif self.current_figure == 'twitchy':
+                agent.turn_right(twitchy_turn)
 
     def step(self):
         # For simplicity, start each step by facing the center.
@@ -96,7 +99,7 @@ gui_elements = [[sg.Text('nbr of agents'),
                            orientation='horizontal', pad=((0, 0), (0, 20)))],
 
                 [sg.Text('Figure to trace'),
-                 sg.Combo(['breathe', 'clockwise', 'counter-clockwise', 'random'], key='figure',
+                 sg.Combo(['breathe', 'clockwise', 'counter-clockwise', 'twitchy'], key='figure',
                           default_value='clockwise')]
                 ]
 

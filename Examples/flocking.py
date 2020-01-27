@@ -118,7 +118,7 @@ from random import uniform
 class Flocking_Agent(Agent):
 
     def __init__(self):
-        center_pixel = utils.Pixel_xy(uniform(0, SCREEN_PIXEL_WIDTH()), uniform(0, SCREEN_PIXEL_HEIGHT()))
+        center_pixel = utils.Pixel_xy((uniform(0, SCREEN_PIXEL_WIDTH()), uniform(0, SCREEN_PIXEL_HEIGHT())))
         color = utils.color_random_variation(Color('yellow'))
         super().__init__(center_pixel=center_pixel, color=color, scale=1)
 
