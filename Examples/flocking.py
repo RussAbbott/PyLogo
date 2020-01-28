@@ -130,10 +130,13 @@ class Flocking_Agent(Agent):
         self.turn_right(amount_to_turn)
 
     def average_flockmate_heading(self, flockmates):
-        return self.average_of_headings(flockmates, lambda fm: fm.heading)
+        avg_flockmate_heading = self.average_of_headings(flockmates, lambda flockmate: flockmate.heading)
+        return avg_flockmate_heading
 
     def average_heading_toward_flockmates(self, flockmates):
-        return self.average_of_headings(flockmates, lambda fm: self.heading_toward(fm))
+        avg_heading_of_flockmates = self.average_of_headings(flockmates,
+                                                             lambda flockmate: self.heading_toward(flockmate))
+        return avg_heading_of_flockmates
 
     def cohere(self, flockmates):
         max_cohere_turn = self.get_gui_value('max-cohere-turn')

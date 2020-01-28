@@ -194,7 +194,7 @@ gui_elements = [[sg.Text('density'),
                          tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
                                  'to make someone happy.'),
                 sg.Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-                         background_color='skyblue', default_value=100,
+                         default_value=100,
                          tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
                                  'to make someone happy.')],
                 ]

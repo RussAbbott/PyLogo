@@ -9,9 +9,12 @@ import PySimpleGUI as sg
 
 from random import randint
 
+from typing import Tuple
+
 
 class Life_Patch(Patch):
 
+    # These are rgb colors
     bg_color = Color('black')
     fg_color = Color('white')
 
@@ -91,8 +94,9 @@ class Life_World(World):
         for patch in self.patches:
             patch.set_alive_or_dead(patch.is_alive)
 
-    def mouse_click(self, xy):
-        patch = self.pixel_to_patch(xy)
+    def mouse_click(self, xy: Tuple[int, int]):
+        """ Toggle clicked patch's aliveness. """
+        patch = self.pixel_tuple_to_patch(xy)
         patch.set_alive_or_dead(not patch.is_alive)
 
     def setup(self):

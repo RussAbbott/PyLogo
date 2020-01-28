@@ -11,9 +11,17 @@ class Synchronized_Agent_World(World):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.reference_agent = None
+        # The following two keep track of the agent's orientation between steps for breathing and moving twitchily.
+        self.breathing_phase = None
+        # Used to keep track of the agents' heading from one step to the next.
+        # Must be set at the start of each step() when moving twitchily.
+        self.cached_heading = None
+
+        # The sort of action we are taking.
         self.current_figure = None
-        self.breathing_phase = 'inhale'
+
+        # To see if the agents are approaching the inner or outer limit, look at just this one agent.
+        self.reference_agent = None
 
     def breathe(self):
         for agent in self.agents:
@@ -53,8 +61,9 @@ class Synchronized_Agent_World(World):
             if grow_or_shrink == 'grow':
                 agent.turn_right(180)
             agent.forward()
+            # This is needed in case we are moving twitchily.
             agent.cached_heading = agent.heading + offset
-            # Set the breathing phase whether or not we are currently breathing.
+            # Set the breathing phase in case we are currently breathing.
             self.breathing_phase = 'inhale' if grow_or_shrink == 'grow' else 'exhale'
 
     def setup(self):
@@ -63,7 +72,6 @@ class Synchronized_Agent_World(World):
         self.reference_agent = list(self.agents)[0]
         twitchy_turn = randint(0, 360)
         for agent in self.agents:
-            agent.cached_heading = agent.heading
             agent.speed = 1
             agent.forward(100)
             self.current_figure = self.get_gui_value('figure')
@@ -72,16 +80,18 @@ class Synchronized_Agent_World(World):
                 agent.turn_right(90 if self.current_figure == 'clockwise' else -90)
             elif self.current_figure == 'twitchy':
                 agent.turn_right(twitchy_turn)
+            agent.cached_heading = agent.heading
 
     def step(self):
-        # For simplicity, start each step by facing the center.
+        # For simplicity, start each step by having all agents face the center.
         for agent in self.agents:
             agent.face_xy(center_pixel())
+            # Emergency action is going beyond the inner and outer limits.
         if self.take_emergency_action():
             return
         self.current_figure = self.get_gui_value('figure')
         self.do_a_step()
-        
+
     def take_emergency_action(self):
         if self.reference_agent.distance_to_xy(center_pixel()) >= 250:
             self.grow_shrink('shrink')
