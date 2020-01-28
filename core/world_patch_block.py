@@ -100,7 +100,7 @@ class Patch(Block):
         """
         The neighbors of this patch determined by the deltas.
         Note the addition of two RowCol objects to produce a new RowCol object: self.row_col + utils.RowCol(r, c).
-        Wrap around is handled by RowCol. We then turn the RowCol object to a tuple to access the np.ndarray
+        Wrap around is handled by RowCol. We then use the RowCol object as a tuple to access the np.ndarray
         """
         # noinspection PyUnresolvedReferences
         neighbors = [self.the_world().patches_array[(self.row_col + RowCol((r, c))).wrap().as_int()]
@@ -134,7 +134,7 @@ class World:
 
     def clear_all(self):
         self.agents = set()
-        for patch in self.patches:   # .flat:
+        for patch in self.patches: 
             patch.clear()
 
     def create_agents(self, nbr_agents):
@@ -149,10 +149,8 @@ class World:
             agent.set_heading(heading)
 
     def createpatches_array(self):
-        # print('About to createpatches_array')
         patch_pseudo_array = [[self.patch_class(RowCol((r, c))) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
-        # print('Finished createpatches_array')
         patches_array = np.array(patch_pseudo_array)
         return patches_array
 
@@ -160,7 +158,11 @@ class World:
         return False
 
     def draw(self):
-        for patch in self.patches:   # .flat:.flat:
+        """ 
+        Draw the world by drawing the patches and agents. 
+        Should check to see which really need to be re-drawn.
+        """
+        for patch in self.patches: 
             patch.draw()
 
         for agent in self.agents:
@@ -169,7 +171,7 @@ class World:
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """
         pass
-        # Uncomment this code to see how well the caches work.
+        # Uncomment this code to see how well the (@lru) caches work.
         # print()
         # for fn in [utils._heading_to_dxdy_int, utils._dx_int, utils._dy_int,
         #            utils.atan2_normalized, utils._cos_int, utils._sin_int]:
@@ -177,9 +179,7 @@ class World:
         #         print()
         #     print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
 
-
-    # @staticmethod
-    def get_gui_event_values(self):
+    def get_gui_event_and_values(self):
         return (self.event, self.values)
 
     def get_gui_value(self, key):
@@ -195,14 +195,15 @@ class World:
     def mouse_click(self, xy):
         pass
 
-    def pixel_to_patch(self, xy: Tuple[int, int]):
+    def pixel_tuple_to_patch(self, xy: Tuple[int, int]):
         """
         Get the patch RowCol for this pixel
        """
-        (x, y) = xy
-        row_col: RowCol = Pixel_xy((x, y)).pixel_to_row_col()
-        patch = self.patches_array[row_col.row, row_col.col]
-        return patch
+        return self.pixel_xy_to_patch(Pixel_xy(xy))
+        # (x, y) = xy
+        # row_col: RowCol = Pixel_xy((x, y)).pixel_to_row_col()
+        # patch = self.patches_array[row_col.row, row_col.col]
+        # return patch
 
     def pixel_xy_to_patch(self, pixel_xy: Pixel_xy) -> Patch:
         """
@@ -223,20 +224,11 @@ class World:
         self.event = event
         self.values = values
 
-    # def save_event_and_values_and_handle_them(self, event, values):
-    #     self.save_event_and_values(event, values)
-    #     self.handle_events()
-
-    # def save_values_and_setup(self, event, values):
-    #     self.save_event_and_values(event, values)
-    #     self.setup()
-
     def setup(self):
+        """
+        Set up the world. Override for each world
+        """
         pass
-
-    # def save_values_and_step(self, event, values):
-    #     self.save_event_and_values(event, values)
-    #     self.step()
 
     def step(self):
         """

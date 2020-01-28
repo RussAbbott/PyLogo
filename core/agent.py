@@ -9,11 +9,9 @@ from pygame.colordict import THECOLORS
 from pygame import Surface
 import pygame.transform as pgt
 
-# noinspection PyUnresolvedReferences
-# import PyLogo.core.agent as agent  # Importing Agent avoids the use of globals.
 import core.gui as gui
 from core.gui import HALF_PATCH_SIZE, PATCH_SIZE
-import core.pairs as super_tuple
+import core.pairs as pairs
 from core.pairs import Pixel_xy, RowCol, Velocity
 import core.utils as utils
 from core.world_patch_block import Block, Patch, World
@@ -25,7 +23,7 @@ from statistics import mean
 def is_acceptable_color(rgb):
     """
     Require reasonably bright colors (sum_rgb >= 150) for which r, g, and b are not too close to each other,
-    i.e., not too close to gray.
+    i.e., not too close to gray. The numbers 150 and 100 are arbitrary.
     """
     sum_rgb = sum(rgb)
     avg_rgb = sum_rgb/3
@@ -48,15 +46,17 @@ class Agent(Block):
 
     color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
 
+    half_patch_pixel = pairs.Pixel_xy((HALF_PATCH_SIZE(), HALF_PATCH_SIZE()))
+
     id = 0
 
     SQRT_2 = sqrt(2)
 
     def __init__(self, center_pixel=None, color=None, scale=1.4, shape=SHAPES['netlogo_figure']):
-        # Can't make this a default value because super_tuple.CENTER_PIXEL() isn't defined
+        # Can't make this a default value because pairs.CENTER_PIXEL() isn't defined
         # when the default values are compiled
         if center_pixel is None:
-            center_pixel = super_tuple.center_pixel()
+            center_pixel = pairs.center_pixel()
 
         if color is None:
             # Select a color at random from the color_palette
@@ -71,7 +71,7 @@ class Agent(Block):
 
         Agent.id += 1
         self.id = Agent.id
-        self.label = None   # f'{self.id}'
+        self.label = None   
         self.the_world().agents.add(self)
         self.current_patch().add_agent(self)
         self.heading = randint(0, 360)
@@ -104,33 +104,26 @@ class Agent(Block):
 
     def bounce_off_screen_edge(self, dxdy):
         """
-       Bounce agent off the screen edges
+       Bounce agent off the screen edges. dxdv is the current agent velocity.
+       If the agent should bounce, change it as needed.
        """
+        # The center pixel of this agent.
         current_center_pixel = self.center_pixel
-        # current_row_col = current_center_pixel.pixel_to_row_col()
+        # Where the agent will be it if moves by dxdy.
         next_center_pixel = current_center_pixel + dxdy
+        # The patch's row_col or next_center_pixel. Is that off the screen? If so, the agent should bounce.
         next_row_col = next_center_pixel.pixel_to_row_col()
         if next_row_col.row < 0 or gui.PATCH_ROWS <= next_row_col.row:
             dxdy = Velocity((dxdy.dx, dxdy.dy*(-1)))
         if next_row_col.col < 0 or gui.PATCH_COLS <= next_row_col.col:
             dxdy = Velocity((dxdy.dx*(-1), dxdy.dy))
 
-
-        # sc_rect = gui.SCREEN.get_rect()
-        # if next_center_pixel.x <= sc_rect.left <= current_center_pixel.x or \
-        #     current_center_pixel.x <= sc_rect.right-1 <= next_center_pixel.x:
-        #     dxdy = Velocity((dxdy.dx*(-1), dxdy.dy))
-        #
-        # if next_center_pixel.y <= sc_rect.top <= current_center_pixel.y or \
-        #     current_center_pixel.y <= sc_rect.bottom-1 <= next_center_pixel.y:
-        #     dxdy = Velocity((dxdy.dx, dxdy.dy*(-1)))
-
         return dxdy
 
     def create_base_image(self):
         base_image = self.create_blank_base_image()
 
-        # Instead of using pgt.smoothscale to scale the image, scale the polygon instead.
+        # Instead of using pygame's smoothscale to scale the image, scale the polygon instead.
         factor = self.scale*PATCH_SIZE
         scaled_shape = [(v[0]*factor,  v[1]*factor) for v in self.shape]
         pg.draw.polygon(base_image, self.color, scaled_shape)
@@ -139,6 +132,7 @@ class Agent(Block):
     def create_blank_base_image(self):
         # Give the agent a larger Surface (by sqrt(2)) to work with since it may rotate.
         blank_base_image = Surface((self.rect.w * Agent.SQRT_2, self.rect.h * Agent.SQRT_2))
+        # This was important, but I don't remember why.
         blank_base_image = blank_base_image.convert_alpha()
         blank_base_image.fill((0, 0, 0, 0))
         return blank_base_image
@@ -165,7 +159,7 @@ class Agent(Block):
     def forward(self, speed=None):
         if speed is None:
             speed = self.speed
-        dxdy = super_tuple.heading_to_dxdy(self.heading) * speed
+        dxdy = pairs.heading_to_dxdy(self.heading) * speed
         self.move_by_dxdy(dxdy)
 
     def heading_toward(self, target):
@@ -184,8 +178,9 @@ class Agent(Block):
                 self.set_velocity(new_dxdy)
             dxdy = new_dxdy
         new_center_pixel_unwrapped = self.center_pixel + dxdy
-        new_center_pixel = new_center_pixel_unwrapped.wrap()
-        self.move_to_xy(new_center_pixel)
+        # Wrap around the grid of pixels.
+        new_center_pixel_wrapped = new_center_pixel_unwrapped.wrap()
+        self.move_to_xy(new_center_pixel_wrapped)
 
     def move_by_velocity(self):
         self.move_by_dxdy(self.velocity)
@@ -196,7 +191,7 @@ class Agent(Block):
     def move_to_xy(self, xy: Pixel_xy):
         """
         Remove this agent from the list of agents at its current patch.
-        Move this agent to its new xy center_pixel.
+        Move this agent to its new patch with center_pixel xy.
         Add this agent to the list of agents in its new patch.
         """
         current_patch: Patch = self.current_patch()
@@ -207,8 +202,8 @@ class Agent(Block):
 
     def set_center_pixel(self, xy: Pixel_xy):
         self.center_pixel: Pixel_xy = xy.wrap()
-        r = self.rect
-        (r.x, r.y) = (self.center_pixel.x - HALF_PATCH_SIZE(), self.center_pixel.y - HALF_PATCH_SIZE())
+        # Set the center point of this agent's rectangle.
+        self.rect.center = (self.center_pixel - Agent.half_patch_pixel).round()
 
     def set_color(self, color):
         self.color = color
@@ -230,6 +225,7 @@ class Agent(Block):
 
 
 class Turtle(Agent):
+    """ In case you want to call agents Turtles. """
     pass
 
 

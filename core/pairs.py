@@ -9,8 +9,6 @@ from functools import lru_cache
 
 import core.gui as gui
 import core.utils as utils
-# noinspection PyUnresolvedReferences
-# import PyLogo.core.super_tuple as super_tuple
 
 
 class XY(tuple):
@@ -44,7 +42,7 @@ class XY(tuple):
         cls = type(self)
         return cls((xx, yy))
 
-    def round(self, prec=2):
+    def round(self, prec=0):
         clas = type(self)
         return clas((round(self.x, prec), round(self.y, prec)))
 
@@ -205,6 +203,8 @@ if __name__ == "__main__":
     a = Pixel_xy((3, 4))
     print(f'a: {a}')
     print(f'a+a: {a+a}')
+    print(f'a-a: {a-a}')
+
     # noinspection PyTypeChecker
     b: XY = a*3
     assert isinstance(b, Pixel_xy)
