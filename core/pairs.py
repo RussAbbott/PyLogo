@@ -186,18 +186,16 @@ if __name__ == "__main__":
 
     # Various tests and experiments
     print('\n-----XY-----')
-    a = XY((3, 4))
-    print(f'a: {a}')
-    # print(f'a: {a.as_tuple()}')
-    print(f'a+a: {a+a}')
-    # noinspection PyTypeChecker
-    b: XY = a*3
-    assert isinstance(b, XY)
-    print(f'a*3, b: {a*3} {b}')
-    print(f'b = a*3: {b} = {a*3}: ({b}, {a*3})  {f"({b}, {a*3})"}  {(b, a*3)} {str((b, a*3))}')
-    print(f'a-a: {a-a}')
-    print(f'a*(-1): {a*(-1)}')
-    print(f'b.wrap3(2, 5): {b.wrap3(2, 5)}')
+    tuple_3_4 = (3, 4)
+    print(f'tuple_3_4: {tuple_3_4}')
+    pair_3_4 = XY((3, 4))
+    print(f'pair_3_4: {pair_3_4}')
+    print(f'tuple_3_4 + tuple_3_4: {tuple_3_4 + tuple_3_4}')
+    print(f'pair_3_4 + pair_3_4: {pair_3_4 + pair_3_4}')
+    concat_3_4_5 = tuple_3_4 * 5
+    print(f'concat_3_4_5: {concat_3_4_5}')
+    product_3_4_5 = pair_3_4 * 5
+    print(f'product_3_4_5: {product_3_4_5}')
 
     print('\n-----Pixel_xy-----')
     a = Pixel_xy((3, 4))
