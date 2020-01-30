@@ -186,18 +186,18 @@ if __name__ == "__main__":
 
     # Various tests and experiments
     print('\n-----XY-----')
-    tuple_3_4 = (3, 4)
-    print(f'tuple_3_4: {tuple_3_4}')
-    xy_3_4 = XY((3, 4))
-    print(f'xy_3_4: {xy_3_4}')
-    print(f'Can you explain why this is the case?  tuple_3_4 == xy_3_4: {tuple_3_4 == xy_3_4}!')
+    print('\n-----XY-----')
+    tuple_34 = (3, 4)
+    pair_34 = XY((3, 4))
+    print(f'tuple_34: {tuple_34};\npair_34: {pair_34}')
+    print(f'tuple_34 == pair34: {tuple_34 == pair_34}')
+    print(f'\ntuple_34 + tuple_34: {tuple_34 + tuple_34}; '
+          f'\npair_34 + pair_34: {pair_34 + pair_34}')
+    # noinspection PyTypeChecker
+    tuple_34_3 = tuple_34*3
+    pair_34_3 = pair_34*3
+    print(f'\ntuple_34_3: {tuple_34_3};\npair_343: {pair_34_3}')
 
-    print(f'tuple_3_4 + tuple_3_4: {tuple_3_4 + tuple_3_4}')
-    print(f'xy_3_4 + xy_3_4: {xy_3_4 + xy_3_4}')
-    concat_3_4_5 = tuple_3_4 * 5
-    print(f'concat_3_4_5: {concat_3_4_5}')
-    product_3_4_5 = xy_3_4 * 5
-    print(f'product_3_4_5: {product_3_4_5}')
     # print('\n-----Pixel_xy-----')
     # a = Pixel_xy((3, 4))
     # print(f'a: {a}')
