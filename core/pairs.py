@@ -186,7 +186,6 @@ if __name__ == "__main__":
 
     # Various tests and experiments
     print('\n-----XY-----')
-    print('\n-----XY-----')
     tuple_34 = (3, 4)
     pair_34 = XY((3, 4))
     print(f'tuple_34: {tuple_34};\npair_34: {pair_34}')
