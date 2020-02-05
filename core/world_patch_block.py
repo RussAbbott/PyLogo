@@ -8,7 +8,7 @@ from core.pairs import RowCol, Pixel_xy
 import core.utils as utils
 # Importing this file eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
-# import core.world_patch_block as wpb
+import core.world_patch_block as world
 
 from pygame.color import Color
 from pygame.font import Font
@@ -29,8 +29,7 @@ class Block(Sprite):
         self.rect = Rect((0, 0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         # noinspection PyTypeChecker
         sum_pixel: Pixel_xy = center_pixel + Pixel_xy((1, 1))
-        assert isinstance(sum_pixel, Pixel_xy)
-        self.rect.center = sum_pixel    # .as_tuple()
+        self.rect.center = sum_pixel
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = self.base_color = color
         self.label = None
@@ -103,7 +102,7 @@ class Patch(Block):
         Wrap around is handled by RowCol. We then use the RowCol object as a tuple to access the np.ndarray
         """
         # noinspection PyUnresolvedReferences
-        neighbors = [self.the_world().patches_array[(self.row_col + RowCol((r, c))).wrap().as_int()]
+        neighbors = [World.THE_WORLD.patches_array[(self.row_col + RowCol((r, c))).wrap().as_int()]
                      for (r, c) in deltas]
         return neighbors
 
@@ -115,8 +114,10 @@ class World:
 
     THE_WORLD = None
 
+    done = False
+
     def __init__(self, patch_class, agent_class):
-        # wpb.THE_WORLD = self
+        # world.THE_WORLD = self
         World.THE_WORLD = self
 
         self.event = None
@@ -125,7 +126,7 @@ class World:
         self.ticks = 0
 
         self.patch_class = patch_class
-        self.patches_array: np.ndarray = self.createpatches_array()
+        self.patches_array: np.ndarray = self.create_patches_array()
         # .flat is an iterator. Can't use it more than once.
         self.patches = list(self.patches_array.flat)
 
@@ -148,14 +149,15 @@ class World:
             heading = i*360/n
             agent.set_heading(heading)
 
-    def createpatches_array(self):
+    def create_patches_array(self):
         patch_pseudo_array = [[self.patch_class(RowCol((r, c))) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
         patches_array = np.array(patch_pseudo_array)
         return patches_array
 
-    def done(self):
-        return False
+    @staticmethod
+    def _done():
+        return World.done
 
     def draw(self):
         """ 
@@ -236,6 +238,6 @@ class World:
         """
         pass
 
-    @staticmethod
-    def the_world():
-        return World.THE_WORLD
+    # @staticmethod
+    # def the_world():
+    #     return World.THE_WORLD

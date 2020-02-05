@@ -69,10 +69,10 @@ class Agent(Block):
         self.shape = shape
         self.base_image = self.create_base_image()
 
-        Agent.id += 1
         self.id = Agent.id
-        self.label = None   
-        self.the_world().agents.add(self)
+        Agent.id += 1
+        self.label = None
+        World.THE_WORLD.agents.add(self)
         self.current_patch().add_agent(self)
         self.heading = randint(0, 360)
         self.speed = 1
@@ -83,8 +83,9 @@ class Agent(Block):
         class_name = utils.get_class_name(self)
         return f'{class_name}-{self.id}@{(self.center_pixel.round(2))}: heading: {round(self.heading, 2)}'
 
-    def agents(self):
-        return self.the_world().agents
+    @staticmethod
+    def agents():
+        return World.THE_WORLD.agents
 
     def agents_in_radius(self, distance):
         qualifying_agents = [agent for agent in self.agents()
@@ -132,14 +133,18 @@ class Agent(Block):
     def create_blank_base_image(self):
         # Give the agent a larger Surface (by sqrt(2)) to work with since it may rotate.
         blank_base_image = Surface((self.rect.w * Agent.SQRT_2, self.rect.h * Agent.SQRT_2))
-        # This was important, but I don't remember why.
+        # This sets the rectangle to be transparent.
+        # Otherwise it would be black and would cover nearby agents.
+        # Even though it's a method of Surface, it can also take a Surface parameter.
+        # If the Surface parameter is not given, PyCharm complains.
+        # noinspection PyArgumentList
         blank_base_image = blank_base_image.convert_alpha()
         blank_base_image.fill((0, 0, 0, 0))
         return blank_base_image
 
     def current_patch(self) -> Patch:
         row_col: RowCol = (self.center_pixel).pixel_to_row_col()
-        patch = self.the_world().patches_array[row_col.row, row_col.col]
+        patch = World.THE_WORLD.patches_array[row_col.row, row_col.col]
         return patch
 
     def distance_to(self, other):
@@ -235,7 +240,7 @@ from core.sim_engine import SimEngine
 
 def PyLogo(world_class=World, caption=None, gui_elements=None,
            agent_class=Agent, patch_class=Patch,
-           patch_size=11, bounce=True, fps=None):
+           patch_size=11, bounce=None, fps=None):
     if gui_elements is None:
         gui_elements = []
     if caption is None:

@@ -11,7 +11,7 @@ from pygame.time import Clock
 
 class SimEngine:
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=True, fps=None):
+    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=None, fps=None):
 
         # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
@@ -49,14 +49,15 @@ class SimEngine:
 
             fps = values.get('fps', None)
             if fps:
-                self.fps = int(fps)
+                # Not sure why it comes out as a string.
+                self.fps = int(round(float(fps)))
 
             if event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
                 self.window[self.simple_gui.GO_ONCE].update(disabled=False)
                 break
 
-            elif self.world.done():
+            elif self.world._done():
                 self.window['GoStop'].update(disabled=True)
                 break
 
@@ -76,8 +77,8 @@ class SimEngine:
 
         return self.NORMAL
 
-    def top_loop(self, world_class, patch_class, turtle_class):
-        self.world = world_class(patch_class, turtle_class)
+    def top_loop(self, world_class, patch_class, agent_class):
+        self.world = world_class(patch_class, agent_class)
 
         # Let events come through pygame to this level.
         pg.event.set_grab(False)

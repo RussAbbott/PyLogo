@@ -1,11 +1,9 @@
 
-# Can't call this module tuple.py because it confuses the import function.
-
 from __future__ import annotations
 
-from math import sqrt
-
 from functools import lru_cache
+
+import math
 
 import core.gui as gui
 import core.utils as utils
@@ -82,7 +80,7 @@ class Pixel_xy(XY):
                                for b in [Pixel_xy.pixel_xy_00, Pixel_xy((0, screen_height/2))]
                                ]
             end_pts += wrapped_end_pts
-        dist = min(sqrt((start.x - end.x)**2 + (start.y - end.y)**2) for (start, end) in end_pts)
+        dist = min(math.hypot(start.x - end.x, start.y - end.y) for (start, end) in end_pts)
         return dist
 
     def heading_toward(self, to_pixel: Pixel_xy):
@@ -186,17 +184,20 @@ if __name__ == "__main__":
 
     # Various tests and experiments
     print('\n-----XY-----')
-    tuple_34 = (3, 4)
-    pair_34 = XY((3, 4))
-    print(f'tuple_34: {tuple_34};\npair_34: {pair_34}')
-    print(f'tuple_34 == pair34: {tuple_34 == pair_34}')
-    print(f'\ntuple_34 + tuple_34: {tuple_34 + tuple_34}; '
-          f'\npair_34 + pair_34: {pair_34 + pair_34}')
-    # noinspection PyTypeChecker
-    tuple_34_3 = tuple_34*3
-    pair_34_3 = pair_34*3
-    print(f'\ntuple_34_3: {tuple_34_3};\npair_343: {pair_34_3}')
+    tuple_3_4 = (3, 4)
+    print(f'tuple_3_4: {tuple_3_4}')
+    xy_3_4 = XY((3, 4))
+    print(f'xy_3_4: {xy_3_4}')
+    print(f'Can you explain why this is the case?  tuple_3_4 == xy_3_4: {tuple_3_4 == xy_3_4}!')
 
+    print(f'tuple_3_4 + tuple_3_4: {tuple_3_4 + tuple_3_4}')
+    print(f'xy_3_4 + xy_3_4: {xy_3_4 + xy_3_4}')
+    concat_3_4_5 = tuple_3_4 * 5
+    print(f'concat_3_4_5: {concat_3_4_5}')
+    product_3_4_5 = xy_3_4 * 5
+    print(f'product_3_4_5: {product_3_4_5}')
+    product_5_3_4 = 5 * xy_3_4
+    print(f'product_5_3_4: {product_5_3_4}')
     # print('\n-----Pixel_xy-----')
     # a = Pixel_xy((3, 4))
     # print(f'a: {a}')

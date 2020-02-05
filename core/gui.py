@@ -61,7 +61,7 @@ WINDOW = None
 
 class SimpleGUI:
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15, bounce=True, fps=None):
+    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15, bounce=None, fps=None):
 
         gui.PATCH_SIZE = patch_size
 

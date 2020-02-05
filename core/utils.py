@@ -27,33 +27,25 @@ def atan2(y, x):
 
 @lru_cache(maxsize=1024)
 def atan2_normalized(y, x):
-    return radians_to_degrees(math.atan2(y, x))
+    return math.degrees(math.atan2(y, x))
 
 
-def cos(x):
-    return _cos_int(normalize_360(x))
-
-
-@lru_cache(maxsize=512)
-def _cos_int(x):
-    return math.cos(degrees_to_radians(x))
-
-
-def sin(x):
-    return _sin_int(normalize_360(x))
+def cos(degrees):
+    return _cos(normalize_360(degrees))
 
 
 @lru_cache(maxsize=512)
-def _sin_int(x):
-    return math.sin(degrees_to_radians(x))
+def _cos(degrees):
+    return math.cos(math.radians(degrees))
 
 
-def degrees_to_radians(degrees):
-    return degrees*math.pi/180
+def sin(degrees):
+    return _sin(normalize_360(degrees))
 
 
-def radians_to_degrees(radians):
-    return radians*180/math.pi
+@lru_cache(maxsize=512)
+def _sin(degrees):
+    return math.sin(math.radians(degrees))
 
 
 # ###################### End trig functions in degrees ###################### #
@@ -82,22 +74,22 @@ def dxdy_to_heading(dx, dy, default_heading=None):
 
 
 def dx(heading):
-    return _dx_int(heading)
+    return _dx(heading)
 
 
 @lru_cache(maxsize=512)
-def _dx_int(heading):
+def _dx(heading):
     angle = heading_to_angle(heading)
     delta_x = utils.cos(angle)
     return delta_x
 
 
 def dy(heading):
-    return _dy_int(heading)
+    return _dy(heading)
 
 
 @lru_cache(maxsize=512)
-def _dy_int(heading):
+def _dy(heading):
     angle = heading_to_angle(heading)
     delta_y = utils.sin(angle)
     # make it negative to account for inverted y axis
