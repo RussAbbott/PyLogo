@@ -136,4 +136,4 @@ gui_elements = [[sg.Text('Initial density'),
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Life_World, 'Game of Life', gui_elements, patch_class=Life_Patch, bounce=None, fps=10)
+    PyLogo(Life_World, 'Game of Life', gui_elements, patch_class=Life_Patch, fps=10)

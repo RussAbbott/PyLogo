@@ -33,7 +33,7 @@ class Starburst_World(World):
         """
         for agent in self.agents:
             agent.move_by_velocity()
-            if self.the_world().ticks > 125 and random() < 0.01:
+            if World.THE_WORLD.ticks > 125 and random() < 0.01:
                 agent.set_velocity(Velocity((uniform(-2, 2), uniform(-2, 2))))
 
 
@@ -46,4 +46,4 @@ gui_elements = [ [sg.Text('nbr agents', pad=((0, 5), (20, 0))),
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Starburst_World, 'Starburst', gui_elements)
+    PyLogo(Starburst_World, 'Starburst', gui_elements, bounce=True)

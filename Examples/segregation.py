@@ -25,7 +25,7 @@ class SegregationAgent(Agent):
         The original NetLogo code doesn't check to see if the agent would be happy in its new spot.
         (Doing so doesn't guarantee that the formerly happy new neighbors in the new spot remain happy!)
         """
-        # Keep track of current patch. Will add to empty patches after this Agent moves.
+        # Keep track of the current patch. Will add to empty patches after this Agent moves.
         current_patch = self.current_patch()
         # Find one of the best available patches. The sample size of 25 is arbitrary.
         # It seems like a reasonable compromize between speed and number of steps.
@@ -87,11 +87,8 @@ class SegregationWorld(World):
     def colors_string(self):
         return f'{self.parse_color(self.color_items[0])} and {self.parse_color(self.color_items[1])}.'
 
-    def done(self):
-        return all(tur.is_happy for tur in self.agents)
-
     def draw(self):
-        for patch in self.patches:   # .flat:.flat:
+        for patch in self.patches:
             if not patch.agents:
                 patch.draw()
         for agent in self.agents:
@@ -173,14 +170,15 @@ class SegregationWorld(World):
 
         # Update Globals
         percent_similar = round(sum(agent.pct_similar for agent in self.agents)/len(self.agents))
-        if self.the_world().ticks == 0:
+        if World.THE_WORLD.ticks == 0:
             print()
-        print(f'\t{self.the_world().ticks:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{World.THE_WORLD.ticks:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
 
         self.unhappy_agents = [agent for agent in self.agents if not agent.is_happy]
         unhappy_count = len(self.unhappy_agents)
         percent_unhappy = round(100 * unhappy_count / len(self.agents), 2)
         print(f'nbr-unhappy: {unhappy_count:3};  %-unhappy: {percent_unhappy}.')
+        World.done = unhappy_count == 0
 
 
 # ############################################## Define GUI ############################################## #

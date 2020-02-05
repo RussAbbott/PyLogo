@@ -233,4 +233,4 @@ gui_elements = [
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Flocking_World, 'Flocking', gui_elements, agent_class=Flocking_Agent, bounce=None)
+    PyLogo(Flocking_World, 'Flocking', gui_elements, agent_class=Flocking_Agent)
