@@ -241,7 +241,7 @@ class Minority_Game_World(World):
         # Adjust how far one step is based on number of steps needed to win
         Minority_Game_World.one_step = (gui.PATCH_COLS - 2) * gui.BLOCK_SPACING() / Minority_Game_World.steps_to_win
         # For longer/shorter races, speed up/slow down frames/second
-        gui.WINDOW['fps'].update(value=int(6*Minority_Game_World.steps_to_win/50))
+        gui.set_fps(round(6*Minority_Game_World.steps_to_win/50))
 
         # self.done will be True if this a repeat game with the same agents.
         if self.done:
