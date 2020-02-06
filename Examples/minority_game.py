@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from core.agent import Agent
 import core.gui as gui
-from utils import int_round
+from core.utils import int_round
 from core.world_patch_block import World
 
 from functools import reduce
