@@ -49,8 +49,7 @@ class SimEngine:
 
             fps = values.get('fps', None)
             if fps:
-                # Not sure why it comes out as a string.
-                self.fps = int(round(float(fps)))
+                self.fps = fps
 
             if event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button

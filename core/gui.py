@@ -53,6 +53,15 @@ def SCREEN_PIXEL_HEIGHT():
     return PATCH_ROWS * BLOCK_SPACING() + 1
 
 
+FPS_VALUES = values = [1, 3, 6, 10, 15, 25, 40, 60]
+
+
+def set_fps(val):
+    # Select the value in FPS_VALUES closest to val.
+    new_val = min([(abs(v - val),  v) for v in FPS_VALUES])[1]
+    WINDOW['fps'].update(new_val)
+
+
 # This variable will be available to refer to the SCREEN object from elsewhere in the code.
 # Note that it can't be imported directly because imports occur before the SCREEN is created.
 SCREEN = None
@@ -109,7 +118,7 @@ class SimpleGUI:
         fps_combo_line = ''
         if fps:
             fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', pad=((0, 10), (10, 0))),
-                              sg.Combo(key='fps', values=[1, 3, 6, 10, 15, 25, 40, 60],
+                              sg.Combo(key='fps', values=FPS_VALUES,
                                        background_color='limegreen', default_value=fps,
                                        tooltip='The maximum frames/second.', pad=((0, 0), (10, 0)))
                               ]
