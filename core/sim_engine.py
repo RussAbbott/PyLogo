@@ -11,6 +11,9 @@ from pygame.time import Clock
 
 class SimEngine:
 
+    event = None
+    values = None
+
     def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=None, fps=None):
 
         # Constants for the main loop in start() below.
@@ -32,26 +35,38 @@ class SimEngine:
         self.window = self.simple_gui.window
         self.graph_point = None
 
-
     def draw_world(self):
         # Fill the screen with the background color, draw the world, and update the display.
         self.simple_gui.fill_screen()
         self.world.draw()
         pg.display.update()
 
+    @staticmethod
+    def get_gui_event():
+        return SimEngine.event
+
+    @staticmethod
+    def get_gui_event_and_values():
+        return (SimEngine.event, SimEngine.values)
+
+    @staticmethod
+    def get_gui_value(key):
+        value = SimEngine.values.get(key, None)
+        return int(value) if isinstance(value, float) and value == int(value) else value
+
     def model_loop(self):
         # Run this loop until the model signals it is finished or until the user stops it by pressing the Stop button.
         while True:
-            (event, values) = self.window.read(timeout=10)
+            (SimEngine.event, SimEngine.values) = self.window.read(timeout=10)
 
-            if event in (None, self.simple_gui.EXIT):
+            if SimEngine.event in (None, self.simple_gui.EXIT):
                 return self.simple_gui.EXIT
 
-            fps = values.get('fps', None)
+            fps = SimEngine.values.get('fps', None)
             if fps:
                 self.fps = fps
 
-            if event == self.simple_gui.GOSTOP:
+            if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
                 self.window[self.simple_gui.GO_ONCE].update(disabled=False)
                 break
@@ -60,16 +75,16 @@ class SimEngine:
                 self.window['GoStop'].update(disabled=True)
                 break
 
-            elif event == '__TIMEOUT__':
+            elif SimEngine.event == '__TIMEOUT__':
                 # Take a step in the simulation.
                 # TICKS are our local counter for the number of times we have gone around this loop.
                 self.world.increment_ticks()
-                self.world.save_event_and_values(event, values)
+                # self.world.save_event_and_values(SimEngine.event, SimEngine.values)
                 self.world.step()
                 # The next line limits how fast the simulation runs. It is not a counter.
                 self.clock.tick(self.fps)
             else:
-                self.world.save_event_and_values(event, values)
+                # self.world.save_event_and_values(SimEngine.event, SimEngine.values)
                 self.world.handle_event_and_values()
 
             self.draw_world()
@@ -83,34 +98,34 @@ class SimEngine:
         pg.event.set_grab(False)
 
         # Give event a value so that the while loop can look at it the first time through.
-        event = None
-        while event not in [self.ESCAPE, self.q, self.Q,
-                            self.CTRL_D, self.CTRL_d]:
-            (event, values) = self.window.read(timeout=10)
+        # event = None
+        while SimEngine.event not in [self.ESCAPE, self.q, self.Q,
+                                      self.CTRL_D, self.CTRL_d]:
+            (SimEngine.event, SimEngine.values) = self.window.read(timeout=10)
 
-            if event in (None, self.simple_gui.EXIT):
+            if SimEngine.event in (None, self.simple_gui.EXIT):
                 self.window.close()
                 break
 
-            if event == '__TIMEOUT__':
+            if SimEngine.event == '__TIMEOUT__':
                 continue
 
-            self.world.save_event_and_values(event, values)
+            # self.world.save_event_and_values(event, values)
 
-            if event == self.simple_gui.GRAPH:
-                self.world.mouse_click(values['-GRAPH-'])
+            if SimEngine.event == self.simple_gui.GRAPH:
+                self.world.mouse_click(SimEngine.values['-GRAPH-'])
 
-            elif event == self.simple_gui.SETUP:
+            elif SimEngine.event == self.simple_gui.SETUP:
                 self.window[self.simple_gui.GOSTOP].update(disabled=False)
                 self.window[self.simple_gui.GO_ONCE].update(disabled=False)
                 self.world.reset_all()
                 self.world.setup()
 
-            elif event == self.simple_gui.GO_ONCE:
+            elif SimEngine.event == self.simple_gui.GO_ONCE:
                 self.world.increment_ticks()
                 self.world.step()
 
-            elif event == self.simple_gui.GOSTOP:
+            elif SimEngine.event == self.simple_gui.GOSTOP:
                 self.window[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
                 self.window[self.simple_gui.GO_ONCE].update(disabled=True)
                 self.window[self.simple_gui.SETUP].update(disabled=True)

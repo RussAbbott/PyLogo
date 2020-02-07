@@ -72,7 +72,7 @@ class Agent(Block):
         self.id = Agent.id
         Agent.id += 1
         self.label = None
-        World.THE_WORLD.agents.add(self)
+        World.agents.add(self)
         self.current_patch().add_agent(self)
         self.heading = randint(0, 360)
         self.speed = 1
@@ -85,10 +85,10 @@ class Agent(Block):
 
     @staticmethod
     def agents():
-        return World.THE_WORLD.agents
+        return World.agents
 
     def agents_in_radius(self, distance):
-        qualifying_agents = [agent for agent in self.agents()
+        qualifying_agents = [agent for agent in World.agents
                              if agent is not self and self.distance_to(agent) < distance]
         return qualifying_agents
 
@@ -144,11 +144,11 @@ class Agent(Block):
 
     def current_patch(self) -> Patch:
         row_col: RowCol = (self.center_pixel).pixel_to_row_col()
-        patch = World.THE_WORLD.patches_array[row_col.row, row_col.col]
+        patch = World.patches_array[row_col.row, row_col.col]
         return patch
 
     def distance_to(self, other):
-        wrap = not self.get_gui_value('Bounce?')
+        wrap = not SimEngine.get_gui_value('Bounce?')
         dist = (self.center_pixel).distance_to(other.center_pixel, wrap)
         return dist
 
@@ -177,7 +177,7 @@ class Agent(Block):
         """
         Move to self.center_pixel + (dx, dy)
         """
-        if self.get_gui_value('Bounce?'):
+        if SimEngine.get_gui_value('Bounce?'):
             new_dxdy = self.bounce_off_screen_edge(dxdy)
             if dxdy is self.velocity:
                 self.set_velocity(new_dxdy)

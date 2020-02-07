@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from math import sqrt
 
@@ -50,17 +51,18 @@ class Block(Sprite):
             gui.SCREEN.blit(text, (self.rect.x + offset, self.rect.y + offset))
         gui.SCREEN.blit(self.image, self.rect)
 
-    @staticmethod
-    def get_gui_value(key):
-        return World.THE_WORLD.get_gui_value(key)
+    # @staticmethod
+    # def get_gui_value(key):
+    #     return World.THE_WORLD.get_gui_value(key)
 
     def set_color(self, color):
         self.color = color
         self.image.fill(color)
 
-    @staticmethod
-    def the_world():
-        return World.THE_WORLD
+    # @staticmethod
+    # def the_world():
+    #     return World.THE_WORLD
+    #
 
 
 class Patch(Block):
@@ -102,7 +104,7 @@ class Patch(Block):
         Wrap around is handled by RowCol. We then use the RowCol object as a tuple to access the np.ndarray
         """
         # noinspection PyUnresolvedReferences
-        neighbors = [World.THE_WORLD.patches_array[(self.row_col + RowCol((r, c))).wrap().as_int()]
+        neighbors = [World.patches_array[(self.row_col + RowCol((r, c))).wrap().as_int()]
                      for (r, c) in deltas]
         return neighbors
 
@@ -112,29 +114,41 @@ class Patch(Block):
 
 class World:
 
-    THE_WORLD = None
+    # THE_WORLD = None
+
+    patches_array: np.ndarray = None
+    # .flat is an iterator. Can't use it more than once.
+    patches = None
+    agents = None
+
+    ticks = None
 
     done = False
 
     def __init__(self, patch_class, agent_class):
         # world.THE_WORLD = self
-        World.THE_WORLD = self
+        # World.THE_WORLD = self
 
         self.event = None
         self.values = None
 
-        self.ticks = 0
+        World.ticks = 0
 
         self.patch_class = patch_class
-        self.patches_array: np.ndarray = self.create_patches_array()
-        # .flat is an iterator. Can't use it more than once.
-        self.patches = list(self.patches_array.flat)
+
+        World.patches_array = self.create_patches_array()
+        World.patches = list(World.patches_array.flat)
+
+        # self.patches_array: np.ndarray = self.create_patches_array()
+        # # .flat is an iterator. Can't use it more than once.
+        # self.patches = list(self.patches_array.flat)
+        # self.agents = set()
 
         self.agent_class = agent_class
-        self.agents = set()
+        World.agents = set()
 
     def clear_all(self):
-        self.agents = set()
+        World.agents = set()
         for patch in self.patches: 
             patch.clear()
 
@@ -167,7 +181,7 @@ class World:
         for patch in self.patches: 
             patch.draw()
 
-        for agent in self.agents:
+        for agent in World.agents:
             agent.draw()
 
     def final_thoughts(self):
@@ -181,18 +195,19 @@ class World:
         #         print()
         #     print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
 
-    def get_gui_event_and_values(self):
-        return (self.event, self.values)
-
-    def get_gui_value(self, key):
-        value = self.values.get(key, None)
-        return int(value) if isinstance(value, float) and value == int(value) else value
+    # def get_gui_event_and_values(self):
+    #     return (self.event, self.values)
+    #
+    # def get_gui_value(self, key):
+    #     value = self.values.get(key, None)
+    #     return int(value) if isinstance(value, float) and value == int(value) else value
 
     def handle_event_and_values(self):
         pass
 
-    def increment_ticks(self):
-        self.ticks += 1
+    @staticmethod
+    def increment_ticks():
+        World.ticks += 1
 
     def mouse_click(self, xy):
         pass
@@ -219,12 +234,13 @@ class World:
         self.clear_all()
         self.reset_ticks()
 
-    def reset_ticks(self):
-        self.ticks = 0
+    @staticmethod
+    def reset_ticks():
+        World.ticks = 0
 
-    def save_event_and_values(self, event, values):
-        self.event = event
-        self.values = values
+    # def save_event_and_values(self, event, values):
+    #     self.event = event
+    #     self.values = values
 
     def setup(self):
         """
