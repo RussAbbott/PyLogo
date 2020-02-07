@@ -1,5 +1,6 @@
 
 from core.agent import Agent, PYGAME_COLORS
+from core.sim_engine import SimEngine
 from core.world_patch_block import Patch, World
 
 from pygame import Color
@@ -91,7 +92,7 @@ class SegregationWorld(World):
         for patch in self.patches:
             if not patch.agents:
                 patch.draw()
-        for agent in self.agents:
+        for agent in World.agents:
             current_patch = agent.current_patch()
             current_patch.set_color(agent.color)
             current_patch.draw()
@@ -132,8 +133,8 @@ class SegregationWorld(World):
             return colors if sums[0] < sums[1] else [colors[1], colors[0]]
 
     def setup(self):
-        density = self.get_gui_value('density')
-        pct_similar_wanted = self.get_gui_value('% similar wanted')
+        density = SimEngine.get_gui_value('density')
+        pct_similar_wanted = SimEngine.get_gui_value('% similar wanted')
         self.color_items = self.select_the_colors()
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
@@ -165,18 +166,18 @@ class SegregationWorld(World):
 
     def update_all(self):
         # Update Agents
-        for agent in self.agents:
+        for agent in World.agents:
             agent.update()
 
         # Update Globals
-        percent_similar = round(sum(agent.pct_similar for agent in self.agents)/len(self.agents))
-        if World.THE_WORLD.ticks == 0:
+        percent_similar = round(sum(agent.pct_similar for agent in World.agents)/len(World.agents))
+        if World.ticks == 0:
             print()
-        print(f'\t{World.THE_WORLD.ticks:2}. agents: {len(self.agents)};  %-similar: {percent_similar}%;  ', end='')
+        print(f'\t{World.ticks:2}. agents: {len(World.agents)};  %-similar: {percent_similar}%;  ', end='')
 
-        self.unhappy_agents = [agent for agent in self.agents if not agent.is_happy]
+        self.unhappy_agents = [agent for agent in World.agents if not agent.is_happy]
         unhappy_count = len(self.unhappy_agents)
-        percent_unhappy = round(100 * unhappy_count / len(self.agents), 2)
+        percent_unhappy = round(100 * unhappy_count / len(World.agents), 2)
         print(f'nbr-unhappy: {unhappy_count:3};  %-unhappy: {percent_unhappy}.')
         World.done = unhappy_count == 0
 

@@ -1,5 +1,6 @@
 
 from core.pairs import center_pixel
+from core.sim_engine import SimEngine
 from core.world_patch_block import World
 
 from math import pi
@@ -24,7 +25,7 @@ class Synchronized_Agent_World(World):
         self.reference_agent = None
 
     def breathe(self):
-        for agent in self.agents:
+        for agent in World.agents:
             if self.breathing_phase == 'inhale':
                 agent.turn_left(180)
             agent.forward()
@@ -42,13 +43,13 @@ class Synchronized_Agent_World(World):
 
     def go_in_circle(self, r):
         """ Recall that at the start of each step the agent is set to point to the center. """
-        for agent in self.agents:
+        for agent in World.agents:
             agent.turn_left(90 if self.current_figure == 'clockwise' else -90)
             agent.forward(2 * pi * r / 360)
 
     def go_twitchily(self):
         twitchy_delta = randint(-90, 90) if self.ticks % 30 == 0 else 0
-        for agent in self.agents:
+        for agent in World.agents:
             agent.set_heading(agent.cached_heading)
             agent.turn_right(twitchy_delta)
             agent.forward()
@@ -56,7 +57,7 @@ class Synchronized_Agent_World(World):
 
     def grow_shrink(self, grow_or_shrink):
         offset = choice([-30, 30])
-        for agent in self.agents:
+        for agent in World.agents:
             # At each step, the agents start pointing to the center.
             if grow_or_shrink == 'grow':
                 agent.turn_right(180)
@@ -67,14 +68,14 @@ class Synchronized_Agent_World(World):
             self.breathing_phase = 'inhale' if grow_or_shrink == 'grow' else 'exhale'
 
     def setup(self):
-        nbr_agents = self.get_gui_value('nbr_agents')
+        nbr_agents = SimEngine.get_gui_value('nbr_agents')
         self.create_ordered_agents(nbr_agents)
-        self.reference_agent = list(self.agents)[0]
+        self.reference_agent = list(World.agents)[0]
         twitchy_turn = randint(0, 360)
-        for agent in self.agents:
+        for agent in World.agents:
             agent.speed = 1
             agent.forward(100)
-            self.current_figure = self.get_gui_value('figure')
+            self.current_figure = SimEngine.get_gui_value('figure')
             self.breathing_phase = 'inhale'
             if self.current_figure in ['clockwise', 'counter-clockwise']:
                 agent.turn_right(90 if self.current_figure == 'clockwise' else -90)
@@ -84,12 +85,12 @@ class Synchronized_Agent_World(World):
 
     def step(self):
         # For simplicity, start each step by having all agents face the center.
-        for agent in self.agents:
+        for agent in World.agents:
             agent.face_xy(center_pixel())
             # Emergency action is going beyond the inner and outer limits.
         if self.take_emergency_action():
             return
-        self.current_figure = self.get_gui_value('figure')
+        self.current_figure = SimEngine.get_gui_value('figure')
         self.do_a_step()
 
     def take_emergency_action(self):

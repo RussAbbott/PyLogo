@@ -2,6 +2,7 @@ from pygame.color import Color
 
 import core.gui as gui
 from core.gui import HOR_SEP
+from core.sim_engine import SimEngine
 from core.utils import rgb_to_hex
 from core.world_patch_block import Patch, World
 
@@ -42,9 +43,10 @@ class Life_World(World):
     SELECT_FOREGROUND_TEXT = 'Select foreground color  '
     SELECT_BACKGROUND_TEXT = 'Select background color'
 
-    def get_color_and_update_button(self, button, default_color_string, values=None):
+    @staticmethod
+    def get_color_and_update_button(button, default_color_string, values=None):
         if not values:
-            values = self.values
+            values = SimEngine.values
         key = button.get_text()
         color_string = values.get(key, '')
         if color_string in {'None', '', None}:
@@ -69,7 +71,11 @@ class Life_World(World):
         the color-chooser button. The user selects a color, which we retrieve by reading
         the window. We then color the color-chooser button with that color.
         """
-        foreground = self.event == Life_World.SELECT_FOREGROUND_TEXT
+        event = SimEngine.get_gui_event()
+        if event not in {Life_World.SELECT_FOREGROUND_TEXT, Life_World.SELECT_BACKGROUND_TEXT}:
+            return
+
+        foreground = event == Life_World.SELECT_FOREGROUND_TEXT
         # There are two color-choosers: foreground and background. Determine and select the
         # desired color chooser based on the label on the button the user clicked.
         color_chooser_button = Life_World.fg_color_chooser if foreground else Life_World.bg_color_chooser
@@ -101,7 +107,7 @@ class Life_World(World):
 
     def setup(self):
         self.get_colors()
-        density = self.get_gui_value('density')
+        density = SimEngine.get_gui_value('density')
         for patch in self.patches:
             is_alive = randint(0, 100) < density
             patch.set_alive_or_dead(is_alive)

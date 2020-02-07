@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from core.agent import Agent
 import core.gui as gui
+from core.sim_engine import SimEngine
 from core.utils import int_round
 from core.world_patch_block import World
 
@@ -23,9 +24,8 @@ class Minority_Game_Agent(Agent):
     # noinspection PyAttributeOutsideInit
     def init_agent(self, starting_patch):
         """
-        A continuation of __init__ called from reset_agents().
-        Includes only what's needed to restart
-        a race once one has already been run.
+        A continuation of __init__ also called from reset_agents(). Includes
+        only what's needed to restart a race once one has already been run.
         """
         self.strategy_scores = [0] * len(self.strategies)
         # Could also use:          randint(0, len(self.strategies)-1)
@@ -46,13 +46,6 @@ class Minority_Game_Agent(Agent):
         self.guess = self.strategies[self.best_strategy_index][history_index]
         return self.guess
 
-    def set_best_strategy(self):
-        # Select the best strategy for the next round
-        for strategy_id in range(len(self.strategies)):
-            if self.strategy_scores[strategy_id] > self.strategy_scores[self.best_strategy_index]:
-                # noinspection PyAttributeOutsideInit
-                self.best_strategy_index = strategy_id
-
     def update(self, history_as_index, winner):
         """
         Update this agent.
@@ -65,12 +58,14 @@ class Minority_Game_Agent(Agent):
         self.update_strategy_scores(history_as_index, winner)
 
     def update_strategy_scores(self, history_as_index, winner):
-        # Update the strategy scores
+        # Update the strategy scores and pick best strategy
         for strategy_id in range(len(self.strategies)):
             if self.strategies[strategy_id][history_as_index] == winner:
                 self.strategy_scores[strategy_id] += 1
-        # Pick the best strategy to use in the next round.
-        self.set_best_strategy()
+            # Pick the best strategy to use in the next round.
+            if self.strategy_scores[strategy_id] > self.strategy_scores[self.best_strategy_index]:
+                # noinspection PyAttributeOutsideInit
+                self.best_strategy_index = strategy_id
 
 
 class Minority_Game_Random_Agent(Minority_Game_Agent):
@@ -139,7 +134,8 @@ class Minority_Game_Spying_Agent(Minority_Game_Agent):
         You fill in this part.
         Find out what the other agents are going to do and do the opposite of the majority.
         """
-        all_agents = World.THE_WORLD.agents
+        # noinspection PyUnusedLocal
+        all_agents = World.agents
         self.guess = ...
         return self.guess
 
@@ -168,13 +164,13 @@ class Minority_Game_World(World):
 
     @staticmethod
     def generate_a_strategy(strategy_length):
-        strategy = tuple(choice([0, 1]) for _ in range(strategy_length))
+        strategy = tuple(choice((0, 1)) for _ in range(strategy_length))
         return strategy
 
     def generate_all_strategies(self):
         # Generate enough strategies for all agents.
         strategy_length = 2 ** self.history_length
-        strategies_per_agent = self.get_gui_value(STRATEGIES_PER_AGENT)
+        strategies_per_agent = SimEngine.get_gui_value(STRATEGIES_PER_AGENT)
         strategies = set()
         # Why a while loop rather than a for loop?
         # Why is strategies a set rather than a list?
@@ -206,15 +202,16 @@ class Minority_Game_World(World):
         val = reduce(lambda so_far, next: so_far*2 + next, self.history, 0)
         return val
 
-    def max_agent_right(self):
-        return max(agent.right for agent in self.agents)
+    @staticmethod
+    def max_agent_right():
+        return max(agent.right for agent in World.agents)
 
     def print_final_scores(self):
         print('\n\t       % right '
               '\n\t  -----------------'
               '\n\t  agent  best strat'
               )
-        for agent in sorted(self.agents, key=lambda agent: agent.id):
+        for agent in sorted(World.agents, key=lambda agent: agent.id):
             best_strategy_score = agent.get_best_strategy_score()
             print(f'{agent.id:2}.\t  {int_round(100 * agent.right / self.ticks):3}'
                   f'       {"--" if not best_strategy_score else int_round(100 * best_strategy_score / self.ticks)}'
@@ -223,21 +220,22 @@ class Minority_Game_World(World):
     def print_step_info(self, history_as_index, winner):
         leading_agent_right = self.max_agent_right()
         leading_agent_strings = [f'{agent.id}: {agent.right}/{Minority_Game_World.steps_to_win}'
-                                 for agent in self.agents if agent.right == leading_agent_right]
+                                 for agent in World.agents if agent.right == leading_agent_right]
         leading_agents = '{' + ", ".join(leading_agent_strings) + '}'
         print(f'{self.ticks}. {self.history}, {history_as_index:2}, {winner}, {leading_agents}')
 
     def reset_agents(self):
         print('\n\nStarting next race with same agents, same strategies, and a new random history.\n')
-        self.history = [choice([0, 1]) for _ in range(self.history_length)]
-        self.agents = Minority_Game_World.copy_agents
-        for agent in self.agents:
+        self.history = [choice((0, 1)) for _ in range(self.history_length)]
+        World.agents = Minority_Game_World.copy_agents
+        for agent in World.agents:
             starting_patch = self.get_starting_patch(agent.id, self.agent_vertical_separation)
             agent.init_agent(starting_patch)
-            World.done = False
+        World.done = False
 
     def setup(self):
-        Minority_Game_World.steps_to_win = self.get_gui_value(STEPS_TO_WIN)
+        Agent.id = 0
+        Minority_Game_World.steps_to_win = SimEngine.get_gui_value(STEPS_TO_WIN)
         # Adjust how far one step is based on number of steps needed to win
         Minority_Game_World.one_step = (gui.PATCH_COLS - 2) * gui.BLOCK_SPACING() / Minority_Game_World.steps_to_win
         # For longer/shorter races, speed up/slow down frames/second
@@ -249,7 +247,7 @@ class Minority_Game_World(World):
             return
 
         # This is the normal setup.
-        Minority_Game_World.nbr_agents = self.get_gui_value(NBR_AGENTS)
+        Minority_Game_World.nbr_agents = SimEngine.get_gui_value(NBR_AGENTS)
         if Minority_Game_World.nbr_agents % 2 == 0:
             Minority_Game_World.nbr_agents += (1 if Minority_Game_World.nbr_agents < gui.WINDOW[NBR_AGENTS].Range[1]
                                                else (-1))
@@ -257,7 +255,7 @@ class Minority_Game_World(World):
         Minority_Game_World.random_agent_ids = {0, Minority_Game_World.nbr_agents - 1}
 
         # Generate a random initial history
-        self.history_length = self.get_gui_value(HISTORY_LENGTH)
+        self.history_length = SimEngine.get_gui_value(HISTORY_LENGTH)
         self.history = [choice([0, 1]) for _ in range(self.history_length)]
 
         self.generate_the_agents()
@@ -265,9 +263,9 @@ class Minority_Game_World(World):
     # Like NetLogo, PyLogo is a framework: "Don't call us, we'll call you."
     def step(self):
         history_as_index = self.history_to_index()
-        one_votes = sum(agent.make_selection(history_as_index) for agent in self.agents)
+        one_votes = sum(agent.make_selection(history_as_index) for agent in World.agents)
         winner = 0 if one_votes > Minority_Game_World.nbr_agents/2 else 1
-        for agent in self.agents:
+        for agent in World.agents:
             agent.update(history_as_index, winner)
 
         self.print_step_info(history_as_index, winner)
@@ -276,7 +274,7 @@ class Minority_Game_World(World):
         if self.max_agent_right() >= Minority_Game_World.steps_to_win:
             World.done = True
             # Keep the agents so that we can use them in the next game, if there is one.
-            Minority_Game_World.copy_agents = Minority_Game_World.THE_WORLD.agents
+            Minority_Game_World.copy_agents = World.agents
             self.print_final_scores()
 
 

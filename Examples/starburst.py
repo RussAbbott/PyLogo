@@ -1,6 +1,7 @@
 
 from core.agent import Agent
 from core.pairs import Velocity
+from core.sim_engine import SimEngine
 from core.world_patch_block import World
 
 from itertools import cycle
@@ -15,7 +16,7 @@ class Starburst_World(World):
     """
 
     def setup(self):
-        nbr_agents = self.get_gui_value('nbr_agents')
+        nbr_agents = SimEngine.get_gui_value('nbr_agents')
         for _ in range(nbr_agents):
             # When created, a agent adds itself to self.agents and to its patch's list of Agents.
             # self.agent_class(scale=1)
@@ -24,16 +25,16 @@ class Starburst_World(World):
         initial_velocities = cycle([Velocity((-1, -1)), Velocity((-1, 1)),
                                     Velocity((0, 0)),
                                     Velocity((1, -1)), Velocity((1, 1))])
-        for (agent, vel) in zip(self.agents, initial_velocities):
+        for (agent, vel) in zip(World.agents, initial_velocities):
             agent.set_velocity(vel)
 
     def step(self):
         """
         Update the world by moving the agents.
         """
-        for agent in self.agents:
+        for agent in World.agents:
             agent.move_by_velocity()
-            if World.THE_WORLD.ticks > 125 and random() < 0.01:
+            if World.ticks > 125 and random() < 0.01:
                 agent.set_velocity(Velocity((uniform(-2, 2), uniform(-2, 2))))
 
 
