@@ -83,9 +83,9 @@ class Agent(Block):
         class_name = utils.get_class_name(self)
         return f'{class_name}-{self.id}@{(self.center_pixel.round(2))}: heading: {round(self.heading, 2)}'
 
-    @staticmethod
-    def agents():
-        return World.agents
+    # @staticmethod
+    # def agents():
+    #     return World.agents
 
     def agents_in_radius(self, distance):
         qualifying_agents = [agent for agent in World.agents

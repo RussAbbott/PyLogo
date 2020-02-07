@@ -147,9 +147,10 @@ class World:
         self.agent_class = agent_class
         World.agents = set()
 
-    def clear_all(self):
+    @staticmethod
+    def clear_all():
         World.agents = set()
-        for patch in self.patches: 
+        for patch in World.patches:
             patch.clear()
 
     def create_agents(self, nbr_agents):
@@ -178,7 +179,7 @@ class World:
         Draw the world by drawing the patches and agents. 
         Should check to see which really need to be re-drawn.
         """
-        for patch in self.patches: 
+        for patch in World.patches:
             patch.draw()
 
         for agent in World.agents:
@@ -222,12 +223,13 @@ class World:
         # patch = self.patches_array[row_col.row, row_col.col]
         # return patch
 
-    def pixel_xy_to_patch(self, pixel_xy: Pixel_xy) -> Patch:
+    @staticmethod
+    def pixel_xy_to_patch(pixel_xy: Pixel_xy) -> Patch:
         """
         Get the patch RowCol for this pixel
        """
         row_col: RowCol = pixel_xy.pixel_to_row_col()
-        patch = self.patches_array[row_col.row, row_col.col]
+        patch = World.patches_array[row_col.row, row_col.col]
         return patch
 
     def reset_all(self):
