@@ -45,10 +45,11 @@ class Life_World(World):
 
     @staticmethod
     def get_color_and_update_button(button, default_color_string, values=None):
-        if not values:
-            values = SimEngine.values
+        # if not values:
+        #     values = SimEngine.values
+        # color_string = values.get(key, '')
         key = button.get_text()
-        color_string = values.get(key, '')
+        color_string = SimEngine.get_gui_value(key)
         if color_string in {'None', '', None}:
             color_string = default_color_string
         button.update(button_color=(color_string, color_string))
