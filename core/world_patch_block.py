@@ -51,18 +51,9 @@ class Block(Sprite):
             gui.SCREEN.blit(text, (self.rect.x + offset, self.rect.y + offset))
         gui.SCREEN.blit(self.image, self.rect)
 
-    # @staticmethod
-    # def get_gui_value(key):
-    #     return World.THE_WORLD.get_gui_value(key)
-
     def set_color(self, color):
         self.color = color
         self.image.fill(color)
-
-    # @staticmethod
-    # def the_world():
-    #     return World.THE_WORLD
-    #
 
 
 class Patch(Block):
@@ -117,7 +108,6 @@ class World:
     # THE_WORLD = None
 
     patches_array: np.ndarray = None
-    # .flat is an iterator. Can't use it more than once.
     patches = None
     agents = None
 
@@ -126,8 +116,6 @@ class World:
     done = False
 
     def __init__(self, patch_class, agent_class):
-        # world.THE_WORLD = self
-        # World.THE_WORLD = self
 
         self.event = None
         self.values = None
@@ -136,13 +124,11 @@ class World:
 
         self.patch_class = patch_class
 
-        World.patches_array = self.create_patches_array()
-        World.patches = list(World.patches_array.flat)
+        # World.patches_array = \
+        self.create_patches_array()
+        # .flat is an iterator. Can't use it more than once.
+        # World.patches = list(World.patches_array.flat)
 
-        # self.patches_array: np.ndarray = self.create_patches_array()
-        # # .flat is an iterator. Can't use it more than once.
-        # self.patches = list(self.patches_array.flat)
-        # self.agents = set()
 
         self.agent_class = agent_class
         World.agents = set()
@@ -167,8 +153,10 @@ class World:
     def create_patches_array(self):
         patch_pseudo_array = [[self.patch_class(RowCol((r, c))) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
-        patches_array = np.array(patch_pseudo_array)
-        return patches_array
+        World.patches_array = np.array(patch_pseudo_array)
+        # .flat is an iterator. Can't use it more than once.
+        World.patches = list(World.patches_array.flat)
+        # return World.patches_array
 
     @staticmethod
     def _done():
@@ -196,13 +184,6 @@ class World:
         #         print()
         #     print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
 
-    # def get_gui_event_and_values(self):
-    #     return (self.event, self.values)
-    #
-    # def get_gui_value(self, key):
-    #     value = self.values.get(key, None)
-    #     return int(value) if isinstance(value, float) and value == int(value) else value
-
     def handle_event_and_values(self):
         pass
 
@@ -218,10 +199,6 @@ class World:
         Get the patch RowCol for this pixel
        """
         return self.pixel_xy_to_patch(Pixel_xy(xy))
-        # (x, y) = xy
-        # row_col: RowCol = Pixel_xy((x, y)).pixel_to_row_col()
-        # patch = self.patches_array[row_col.row, row_col.col]
-        # return patch
 
     @staticmethod
     def pixel_xy_to_patch(pixel_xy: Pixel_xy) -> Patch:
@@ -240,10 +217,6 @@ class World:
     def reset_ticks():
         World.ticks = 0
 
-    # def save_event_and_values(self, event, values):
-    #     self.event = event
-    #     self.values = values
-
     def setup(self):
         """
         Set up the world. Override for each world
@@ -255,7 +228,3 @@ class World:
         Update the world. Override for each world
         """
         pass
-
-    # @staticmethod
-    # def the_world():
-    #     return World.THE_WORLD

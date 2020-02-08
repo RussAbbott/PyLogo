@@ -246,4 +246,8 @@ def PyLogo(world_class=World, caption=None, gui_elements=None,
     if caption is None:
         caption = utils.extract_class_name(world_class)
     sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce, fps=fps)
-    sim_engine.top_loop(world_class, patch_class, agent_class)
+    gui.WINDOW.read(timeout=10)
+
+    the_world = world_class(patch_class, agent_class)
+
+    sim_engine.top_loop(the_world)

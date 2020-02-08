@@ -3,6 +3,7 @@
 # running. It's in that loop where the user clicks, setup, go, exit, etc.
 # The model loop runs the model. Once around that loop for each model tick.
 
+import core.gui as gui
 from core.gui import SimpleGUI
 
 import pygame as pg
@@ -32,8 +33,10 @@ class SimEngine:
         self.world = None
 
         self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce, fps=fps)
-        self.window = self.simple_gui.window
+        # gui.WINDOW = self.simple_gui.window
         self.graph_point = None
+        # Read the window to make the widgets show up.
+        # gui.WINDOW.read(timeout=10)
 
     def draw_world(self):
         # Fill the screen with the background color, draw the world, and update the display.
@@ -57,7 +60,7 @@ class SimEngine:
     def model_loop(self):
         # Run this loop until the model signals it is finished or until the user stops it by pressing the Stop button.
         while True:
-            (SimEngine.event, SimEngine.values) = self.window.read(timeout=10)
+            (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
 
             if SimEngine.event in (None, self.simple_gui.EXIT):
                 return self.simple_gui.EXIT
@@ -68,11 +71,11 @@ class SimEngine:
 
             if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
-                self.window[self.simple_gui.GO_ONCE].update(disabled=False)
+                gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
                 break
 
             elif self.world._done():
-                self.window['GoStop'].update(disabled=True)
+                gui.WINDOW['GoStop'].update(disabled=True)
                 break
 
             elif SimEngine.event == '__TIMEOUT__':
@@ -91,20 +94,17 @@ class SimEngine:
 
         return self.NORMAL
 
-    def top_loop(self, world_class, patch_class, agent_class):
-        self.world = world_class(patch_class, agent_class)
-
+    def top_loop(self, the_world):
+        self.world = the_world
         # Let events come through pygame to this level.
         pg.event.set_grab(False)
 
-        # Give event a value so that the while loop can look at it the first time through.
-        # event = None
         while SimEngine.event not in [self.ESCAPE, self.q, self.Q,
                                       self.CTRL_D, self.CTRL_d]:
-            (SimEngine.event, SimEngine.values) = self.window.read(timeout=10)
+            (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
 
             if SimEngine.event in (None, self.simple_gui.EXIT):
-                self.window.close()
+                gui.WINDOW.close()
                 break
 
             if SimEngine.event == '__TIMEOUT__':
@@ -116,8 +116,8 @@ class SimEngine:
                 self.world.mouse_click(SimEngine.values['-GRAPH-'])
 
             elif SimEngine.event == self.simple_gui.SETUP:
-                self.window[self.simple_gui.GOSTOP].update(disabled=False)
-                self.window[self.simple_gui.GO_ONCE].update(disabled=False)
+                gui.WINDOW[self.simple_gui.GOSTOP].update(disabled=False)
+                gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
                 self.world.reset_all()
                 self.world.setup()
 
@@ -126,17 +126,18 @@ class SimEngine:
                 self.world.step()
 
             elif SimEngine.event == self.simple_gui.GOSTOP:
-                self.window[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
-                self.window[self.simple_gui.GO_ONCE].update(disabled=True)
-                self.window[self.simple_gui.SETUP].update(disabled=True)
+                gui.WINDOW[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
+                gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=True)
+                gui.WINDOW[self.simple_gui.SETUP].update(disabled=True)
                 returned_value = self.model_loop()
-                self.window['GoStop'].update(text='go', button_color=('white', 'green'))
-                self.window[self.simple_gui.SETUP].update(disabled=False)
+                gui.WINDOW['GoStop'].update(text='go', button_color=('white', 'green'))
+                gui.WINDOW[self.simple_gui.SETUP].update(disabled=False)
                 self.world.final_thoughts()
                 if returned_value == self.simple_gui.EXIT:
-                    self.window.close()
+                    gui.WINDOW.close()
                     break
             else:
+                # For anything else, e.g., a button the user defined.
                 self.world.handle_event_and_values()
 
             self.draw_world()

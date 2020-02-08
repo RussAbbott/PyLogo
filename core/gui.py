@@ -92,14 +92,11 @@ class SimpleGUI:
         self.model_gui_elements = model_gui_elements
 
         screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
-        self.window: sg.PySimpleGUI.Window = self.make_window(caption, model_gui_elements,
-                                                              screen_shape_width_height,
-                                                              bounce=bounce, fps=fps)
-        # Create a pointer at the top level for easy access
-        gui.WINDOW = self.window
+        gui.WINDOW = self.make_window(caption, model_gui_elements, screen_shape_width_height, bounce=bounce, fps=fps)
+
         pg.init()
 
-        # Everything is drawn to gui.SCREEN, which is a global variable.
+        # All graphics are drawn to gui.SCREEN, which is a global variable.
         gui.SCREEN = pg.display.set_mode(screen_shape_width_height)
 
     def fill_screen(self):
@@ -161,5 +158,8 @@ class SimpleGUI:
         embed: tk.Canvas = graph.TKCanvas
         os.environ['SDL_WINDOWID'] = str(embed.winfo_id( ))
         os.environ['SDL_VIDEODRIVER'] = 'windib'  # change this to 'x11' to make it work on Linux
+
+        # Read the window to make the widgets show up.
+        # window.read(timeout=10)
 
         return window
