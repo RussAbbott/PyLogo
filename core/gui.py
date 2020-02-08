@@ -159,7 +159,4 @@ class SimpleGUI:
         os.environ['SDL_WINDOWID'] = str(embed.winfo_id( ))
         os.environ['SDL_VIDEODRIVER'] = 'windib'  # change this to 'x11' to make it work on Linux
 
-        # Read the window to make the widgets show up.
-        # window.read(timeout=10)
-
         return window

@@ -123,12 +123,7 @@ class World:
         World.ticks = 0
 
         self.patch_class = patch_class
-
-        # World.patches_array = \
         self.create_patches_array()
-        # .flat is an iterator. Can't use it more than once.
-        # World.patches = list(World.patches_array.flat)
-
 
         self.agent_class = agent_class
         World.agents = set()
@@ -156,7 +151,6 @@ class World:
         World.patches_array = np.array(patch_pseudo_array)
         # .flat is an iterator. Can't use it more than once.
         World.patches = list(World.patches_array.flat)
-        # return World.patches_array
 
     @staticmethod
     def _done():

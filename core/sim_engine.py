@@ -33,10 +33,7 @@ class SimEngine:
         self.world = None
 
         self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce, fps=fps)
-        # gui.WINDOW = self.simple_gui.window
         self.graph_point = None
-        # Read the window to make the widgets show up.
-        # gui.WINDOW.read(timeout=10)
 
     def draw_world(self):
         # Fill the screen with the background color, draw the world, and update the display.
