@@ -173,11 +173,12 @@ class Flocking_World(World):
         self.create_agents(nbr_agents)
 
     def step(self):
-        # self.agents is the set of agents kept by the world
+        # World.agents is the set of agents kept by the world
         for agent in World.agents:
             # agent.flock() resets agent's heading. Agent doesn't move.
             agent.flock()
-            # Here's where agent actually moves. The actual move depends on the speed and the heading.
+            # Here's where the agent actually moves.
+            # The move depends on the speed and the heading.
             speed = SimEngine.get_gui_value('speed')
             agent.forward(speed)
 
