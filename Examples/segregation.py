@@ -184,20 +184,20 @@ class SegregationWorld(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_elements = [[sg.Text('density'),
-                sg.Slider(key='density', range=(50, 95), resolution=5, size=(10, 20),
-                          default_value=90, orientation='horizontal', pad=((0, 0), (0, 20)),
-                          tooltip='The ratio of households to housing units')],
+gui_left_upper = [[sg.Text('density'),
+                   sg.Slider(key='density', range=(50, 95), resolution=5, size=(10, 20),
+                             default_value=90, orientation='horizontal', pad=((0, 0), (0, 20)),
+                             tooltip='The ratio of households to housing units')],
 
-                [sg.Text('% similar wanted',
-                         tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
-                                 'to make someone happy.'),
-                sg.Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-                         default_value=100,
-                         tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
-                                 'to make someone happy.')],
-                ]
+                  [sg.Text('% similar wanted',
+                           tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
+                                   'to make someone happy.'),
+                  sg.Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                           default_value=100,
+                           tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
+                                   'to make someone happy.')],
+                  ]
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(SegregationWorld, "Schelling's segregation model", gui_elements, bounce=None)
+    PyLogo(SegregationWorld, "Schelling's segregation model", gui_left_upper, bounce=None)

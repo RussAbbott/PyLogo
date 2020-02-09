@@ -286,29 +286,29 @@ STEPS_TO_WIN = 'Steps to win'
 STRATEGIES_PER_AGENT = 'Strategies per agent'
 
 import PySimpleGUI as sg
-gui_elements = [[sg.Text(HISTORY_LENGTH, tooltip='The length of the history record'),
-                 sg.Slider(key=HISTORY_LENGTH, range=(0, 8), default_value=5,
-                           size=(10, 20), orientation='horizontal',
-                           tooltip='The length of the history record')],
+gui_left_upper = [[sg.Text(HISTORY_LENGTH, tooltip='The length of the history record'),
+                   sg.Slider(key=HISTORY_LENGTH, range=(0, 8), default_value=5,
+                             size=(10, 20), orientation='horizontal',
+                             tooltip='The length of the history record')],
 
-                [sg.Text(NBR_AGENTS,
-                         tooltip='The number of agents. \n(Must be an odd number.\nChecked during setup.)'),
-                 sg.Slider(key=NBR_AGENTS, range=(1, 35), default_value=25,
-                            size=(10, 20), orientation='horizontal',
-                           tooltip='The number of agents. \n(Must be an odd number.\nChecked during setup.)')],
+                  [sg.Text(NBR_AGENTS,
+                           tooltip='The number of agents. \n(Must be an odd number.\nChecked during setup.)'),
+                   sg.Slider(key=NBR_AGENTS, range=(1, 35), default_value=25,
+                             size=(10, 20), orientation='horizontal',
+                             tooltip='The number of agents. \n(Must be an odd number.\nChecked during setup.)')],
 
-                [sg.Text(STRATEGIES_PER_AGENT, tooltip='The number of strategies generated for each agent'),
-                 sg.Slider(key=STRATEGIES_PER_AGENT, range=(1, 200), default_value=100,
-                           size=(10, 20), orientation='horizontal',
-                           tooltip='The number of strategies generated for each agent')],
+                  [sg.Text(STRATEGIES_PER_AGENT, tooltip='The number of strategies generated for each agent'),
+                   sg.Slider(key=STRATEGIES_PER_AGENT, range=(1, 200), default_value=100,
+                             size=(10, 20), orientation='horizontal',
+                             tooltip='The number of strategies generated for each agent')],
 
-                [sg.Text(STEPS_TO_WIN, tooltip='The number of steps required to win'),
-                 sg.Slider(key=STEPS_TO_WIN, range=(1, 500), default_value=50, resolution=25,
-                           size=(10, 20), orientation='horizontal',
-                           tooltip='The number of steps required to win')],
-                ]
+                  [sg.Text(STEPS_TO_WIN, tooltip='The number of steps required to win'),
+                   sg.Slider(key=STEPS_TO_WIN, range=(1, 500), default_value=50, resolution=25,
+                             size=(10, 20), orientation='horizontal',
+                             tooltip='The number of steps required to win')],
+                  ]
 
 if __name__ == "__main__":
     from core.agent import PyLogo
 
-    PyLogo(Minority_Game_World, 'Minority game', gui_elements, agent_class=Minority_Game_Agent, fps=6)
+    PyLogo(Minority_Game_World, 'Minority game', gui_left_upper, agent_class=Minority_Game_Agent, fps=6)

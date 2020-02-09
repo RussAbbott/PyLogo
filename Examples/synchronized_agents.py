@@ -105,15 +105,15 @@ class Synchronized_Agent_World(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_elements = [[sg.Text('nbr of agents'),
-                 sg.Slider(key='nbr_agents', range=(1, 100), default_value=18, size=(8, 20),
-                           orientation='horizontal', pad=((0, 0), (0, 20)))],
+gui_left_upper = [[sg.Text('nbr of agents'),
+                   sg.Slider(key='nbr_agents', range=(1, 100), default_value=18, size=(8, 20),
+                             orientation='horizontal', pad=((0, 0), (0, 20)))],
 
-                [sg.Text('Figure to trace'),
-                 sg.Combo(['breathe', 'clockwise', 'counter-clockwise', 'twitchy'], key='figure',
-                          default_value='clockwise')]
-                ]
+                  [sg.Text('Figure to trace'),
+                   sg.Combo(['breathe', 'clockwise', 'counter-clockwise', 'twitchy'], key='figure',
+                            default_value='clockwise')]
+                  ]
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_elements, bounce=None)
+    PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_left_upper, bounce=None)

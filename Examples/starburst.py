@@ -40,11 +40,12 @@ class Starburst_World(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_elements = [ [sg.Text('nbr agents', pad=((0, 5), (20, 0))),
-                  sg.Slider(key='nbr_agents', range=(1, 101), resolution=25, default_value=25,
-                            orientation='horizontal', size=(10, 20))] ]
+gui_left_upper = [ [sg.Text('nbr agents', pad=((0, 5), (20, 0))),
+                    sg.Slider(key='nbr_agents', range=(1, 101), resolution=25, default_value=25,
+                              orientation='horizontal', size=(10, 20))] ]
 
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Starburst_World, 'Starburst', gui_elements, bounce=True)
+    PyLogo(Starburst_World, 'Starburst', gui_left_upper, bounce=True,
+           patch_size=9, board_rows_cols=(41, 71))

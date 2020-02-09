@@ -52,10 +52,11 @@ class CollisionTest_World(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_elements = [[sg.Text('nbr agents', pad=((0, 5), (20, 0))),
-                 sg.Slider(key='nbr_agents', range=(1, 10), default_value=3, orientation='horizontal', size=(10, 20))],
-                ]
+gui_left_upper = [[sg.Text('nbr agents', pad=((0, 5), (20, 0))),
+                   sg.Slider(key='nbr_agents', range=(1, 10), default_value=3, orientation='horizontal',
+                             size=(10, 20))],
+                  ]
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(CollisionTest_World, 'Collision test', gui_elements, patch_class=CollisionTest_Patch, bounce=False)
+    PyLogo(CollisionTest_World, 'Collision test', gui_left_upper, patch_class=CollisionTest_Patch, bounce=False)

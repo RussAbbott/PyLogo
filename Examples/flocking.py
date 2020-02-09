@@ -185,54 +185,55 @@ class Flocking_World(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_elements = [
-                [sg.Text('population', pad=((0, 5), (20, 0))),
-                 sg.Slider(key='population', range=(0, 50), resolution=1, default_value=15,
-                           orientation='horizontal', size=(10, 20))],
+gui_left_upper = [
+                  [sg.Text('population', pad=((0, 5), (20, 0))),
+                   sg.Slider(key='population', range=(0, 50), resolution=1, default_value=15,
+                             orientation='horizontal', size=(10, 20))],
 
-                [sg.Text('vision', pad=((0, 5), (20, 0)),
-                         tooltip='The number of patch-lengths that define the current flockmates'),
-                 sg.Slider(key='vision', range=(0, 20), resolution=0.5, default_value=5, orientation='horizontal',
-                           size=(10, 20), tooltip='The number of patch-lengths that define the current flockmates')],
+                  [sg.Text('vision', pad=((0, 5), (20, 0)),
+                           tooltip='The number of patch-lengths that define the current flockmates'),
+                   sg.Slider(key='vision', range=(0, 20), resolution=0.5, default_value=5, orientation='horizontal',
+                             size=(10, 20), tooltip='The number of patch-lengths that define the current flockmates')],
 
-                [sg.Text('speed', pad=((0, 5), (20, 0)),
-                         tooltip='The speed of the agents'),
-                 sg.Slider(key='speed', range=(0, 10), resolution=0.5, default_value=2, orientation='horizontal',
-                           size=(10, 20), tooltip='The speed of the agents')],
+                  [sg.Text('speed', pad=((0, 5), (20, 0)),
+                           tooltip='The speed of the agents'),
+                   sg.Slider(key='speed', range=(0, 10), resolution=0.5, default_value=2, orientation='horizontal',
+                             size=(10, 20), tooltip='The speed of the agents')],
 
-                HOR_SEP(30),
+                  HOR_SEP(30),
 
-                [sg.Text('min separation', pad=((0, 5), (20, 0)),
-                         tooltip='The minimum acceptable patch-lengths to nearest neighbor'),
-                 sg.Slider(key='minimum separation', resolution=0.5, range=(1, 5), default_value=1,
-                           orientation='horizontal', size=(10, 20),
-                           tooltip='The minimum acceptable patch-lengths to nearest neighbor')],
+                  [sg.Text('min separation', pad=((0, 5), (20, 0)),
+                           tooltip='The minimum acceptable patch-lengths to nearest neighbor'),
+                   sg.Slider(key='minimum separation', resolution=0.5, range=(1, 5), default_value=1,
+                             orientation='horizontal', size=(10, 20),
+                             tooltip='The minimum acceptable patch-lengths to nearest neighbor')],
 
-                [sg.Text('max-sep-turn', pad=((0, 5), (20, 0)),
-                         tooltip='The most degrees (in angles) an agent can turn '
-                                 'to move away from its nearest neighbor'),
-                 sg.Slider(key='max-sep-turn', range=(0, 20), resolution=0.5, default_value=1.5,
-                           orientation='horizontal', size=(10, 20),
+                  [sg.Text('max-sep-turn', pad=((0, 5), (20, 0)),
                            tooltip='The most degrees (in angles) an agent can turn '
-                                   'to move away from its nearest neighbor')],
+                                   'to move away from its nearest neighbor'),
+                   sg.Slider(key='max-sep-turn', range=(0, 20), resolution=0.5, default_value=1.5,
+                             orientation='horizontal', size=(10, 20),
+                             tooltip='The most degrees (in angles) an agent can turn '
+                                     'to move away from its nearest neighbor')],
 
-                HOR_SEP(30),
+                  HOR_SEP(30),
 
-                [sg.Text('max-cohere-turn', pad=((0, 5), (20, 0)),
-                         tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates'),
-                 sg.Slider(key='max-cohere-turn', range=(0, 20), resolution=0.5, default_value=3,
-                           orientation='horizontal', size=(10, 20),
-                           tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates')],
+                  [sg.Text('max-cohere-turn', pad=((0, 5), (20, 0)),
+                           tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates'),
+                   sg.Slider(key='max-cohere-turn', range=(0, 20), resolution=0.5, default_value=3,
+                             orientation='horizontal', size=(10, 20),
+                             tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates')],
 
-                [sg.Text('max-align-turn', pad=((0, 5), (20, 0)),
-                         tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates'),
-                 sg.Slider(key='max-align-turn', range=(0, 20), resolution=0.5, default_value=5,
-                           orientation='horizontal', size=(10, 20),
-                           tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates')],
+                  [sg.Text('max-align-turn', pad=((0, 5), (20, 0)),
+                           tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates'),
+                   sg.Slider(key='max-align-turn', range=(0, 20), resolution=0.5, default_value=5,
+                             orientation='horizontal', size=(10, 20),
+                             tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates')],
 
-                ]
+                  ]
 
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Flocking_World, 'Flocking', gui_elements, agent_class=Flocking_Agent)
+    PyLogo(Flocking_World, 'Flocking', gui_left_upper, agent_class=Flocking_Agent,
+           patch_size=9, board_rows_cols=(41, 71))
