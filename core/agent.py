@@ -83,10 +83,6 @@ class Agent(Block):
         class_name = utils.get_class_name(self)
         return f'{class_name}-{self.id}@{(self.center_pixel.round(2))}: heading: {round(self.heading, 2)}'
 
-    # @staticmethod
-    # def agents():
-    #     return World.agents
-
     def agents_in_radius(self, distance):
         qualifying_agents = [agent for agent in World.agents
                              if agent is not self and self.distance_to(agent) < distance]
@@ -238,16 +234,18 @@ class Turtle(Agent):
 from core.sim_engine import SimEngine
 
 
-def PyLogo(world_class=World, caption=None, gui_elements=None,
+def PyLogo(world_class=World, caption=None, gui_left_upper=None, gui_right_upper=None,
            agent_class=Agent, patch_class=Patch,
-           patch_size=11, bounce=None, fps=None):
-    if gui_elements is None:
-        gui_elements = []
+           patch_size=11, board_rows_cols=(51, 51), bounce=None, fps=None):
+    if gui_left_upper is None:
+        gui_left_upper = []
     if caption is None:
         caption = utils.extract_class_name(world_class)
-    sim_engine = SimEngine(gui_elements, caption=caption, patch_size=patch_size, bounce=bounce, fps=fps)
+    sim_engine = SimEngine(gui_left_upper, caption=caption, gui_right_upper=gui_right_upper,
+                           patch_size=patch_size, board_rows_cols=board_rows_cols, bounce=bounce, fps=fps)
     gui.WINDOW.read(timeout=10)
 
     the_world = world_class(patch_class, agent_class)
 
+    gui.WINDOW.read(timeout=10)
     sim_engine.top_loop(the_world)

@@ -15,7 +15,8 @@ class SimEngine:
     event = None
     values = None
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=11, bounce=None, fps=None):
+    def __init__(self, gui_left_upper, caption="Basic Model", gui_right_upper=None,
+                 patch_size=11, board_rows_cols=(51, 51), bounce=None, fps=None):
 
         # Constants for the main loop in start() below.
         self.CTRL_D = 'D:68'
@@ -32,7 +33,8 @@ class SimEngine:
 
         self.world = None
 
-        self.simple_gui = SimpleGUI(model_gui_elements, caption=caption, patch_size=patch_size, bounce=bounce, fps=fps)
+        self.simple_gui = SimpleGUI(gui_left_upper, caption=caption, gui_right_upper=gui_right_upper,
+                                    patch_size=patch_size, board_rows_cols=board_rows_cols, bounce=bounce, fps=fps)
         self.graph_point = None
 
     def draw_world(self):

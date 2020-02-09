@@ -22,6 +22,12 @@ import tkinter as tk
 PATCH_SIZE = 11
 
 
+# BOARD_SHAPE is the shape of the board
+PATCH_ROWS = 51
+PATCH_COLS = 51
+
+
+
 def BLOCK_SPACING():
     return PATCH_SIZE + 1
 
@@ -30,12 +36,9 @@ def HALF_PATCH_SIZE():
     return PATCH_SIZE//2
 
 
-PATCH_ROWS = 51
-PATCH_COLS = 51
-
 
 def HOR_SEP(length=25):
-    return [sg.Text('_' * length, text_color='black')]
+    return [sg.Text('_' * length, text_color='black', pad=((0, 0), (10, 10)))]
 
 
 
@@ -70,9 +73,12 @@ WINDOW = None
 
 class SimpleGUI:
 
-    def __init__(self, model_gui_elements, caption="Basic Model", patch_size=15, bounce=None, fps=None):
+    def __init__(self, gui_left_upper, gui_right_upper=None, caption="Basic Model",
+                 patch_size=15, board_rows_cols=(51, 51), bounce=None, fps=None):
 
-        gui.PATCH_SIZE = patch_size
+        gui.PATCH_SIZE = patch_size if patch_size % 2 == 1 else patch_size + 1
+        gui.PATCH_ROWS = board_rows_cols[0] if board_rows_cols[0] % 2 == 1 else board_rows_cols[0] + 1
+        gui.PATCH_COLS = board_rows_cols[1] if board_rows_cols[1] % 2 == 1 else board_rows_cols[1] + 1
 
         self.EXIT = 'Exit'
         self.GO = 'go'
@@ -89,20 +95,20 @@ class SimpleGUI:
         self.screen_color = pg.Color(sg.RGB(50, 60, 60))
 
         self.caption = caption
-        self.model_gui_elements = model_gui_elements
+        # self.gui_left_upper = gui_left_upper
 
-        screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
-        gui.WINDOW = self.make_window(caption, model_gui_elements, screen_shape_width_height, bounce=bounce, fps=fps)
+        self.screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
+        gui.WINDOW = self.make_window(caption, gui_left_upper, gui_right_upper=gui_right_upper, bounce=bounce, fps=fps)
 
         pg.init()
 
         # All graphics are drawn to gui.SCREEN, which is a global variable.
-        gui.SCREEN = pg.display.set_mode(screen_shape_width_height)
+        gui.SCREEN = pg.display.set_mode(self.screen_shape_width_height)
 
     def fill_screen(self):
         SCREEN.fill(self.screen_color)
 
-    def make_window(self, caption, model_gui_elements, screen_shape_width_height, bounce=True, fps=None):
+    def make_window(self, caption, gui_left_upper, gui_right_upper=None, bounce=True, fps=None):
         """
         Create the window, including sg.Graph, the drawing surface.
         """
@@ -129,7 +135,7 @@ class SimpleGUI:
 
         exit_button_line = [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((70, 0), (10, 0)))]
 
-        col1 = [ *model_gui_elements,
+        col1 = [ *gui_left_upper,
                  gui.HOR_SEP(),
                  setup_go_line,
                  bounce_checkbox_line,
@@ -138,9 +144,13 @@ class SimpleGUI:
                  exit_button_line
                  ]
 
-        lower_left_pixel_xy = (0, screen_shape_width_height[1]-1)
-        upper_right_pixel_xy = (screen_shape_width_height[0]-1, 0)
-        col2 = [[sg.Graph(screen_shape_width_height, lower_left_pixel_xy, upper_right_pixel_xy,
+        lower_left_pixel_xy = (0, self.screen_shape_width_height[1]-1)
+        upper_right_pixel_xy = (self.screen_shape_width_height[0]-1, 0)
+
+        if gui_right_upper is None:
+            gui_right_upper = [[]]
+        col2 = gui_right_upper + \
+               [[sg.Graph(self.screen_shape_width_height, lower_left_pixel_xy, upper_right_pixel_xy,
                           background_color='black', key='-GRAPH-', enable_events=True)]]
 
         # layout is the actual layout of the window. The stuff above organizes it into component parts.

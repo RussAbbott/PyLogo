@@ -57,6 +57,13 @@ def angle_to_heading(angle):
     return heading
 
 
+def bin_str(n, len):
+    """
+    Convert n to binary and add 0's to the left to ensure it is of length len
+    """
+    return ('0' * len + bin(n)[2:])[-len:]
+
+
 def color_random_variation(color: Color):
     # noinspection PyArgumentList
     new_color = Color(color.r+randint(-40, 0), color.g+randint(-40, 0), color.b+randint(0, 40), 255)
