@@ -59,9 +59,9 @@ def angle_to_heading(angle):
 
 def bin_str(n, len):
     """
-    Convert n to binary and add 0's to the left to ensure it is of length len
+    Convert n to a binary string and add 0's to the left to make it length len
     """
-    return ('0' * len + bin(n)[2:])[-len:]
+    return ('0'*len + f'{n:b}')[-len:]
 
 
 def color_random_variation(color: Color):

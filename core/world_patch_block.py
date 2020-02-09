@@ -72,6 +72,14 @@ class Patch(Block):
     def add_agent(self, tur):
         self.agents.add(tur)
 
+    @property
+    def row(self):
+        return self.row_col.row
+
+    @property
+    def col(self):
+        return self.row_col.col
+
     def clear(self):
         self.agents = set()
         self.label = None

@@ -23,7 +23,7 @@ class OnOffPatch(Patch):
         super().__init__(*args, **kw_args)
         self.is_on = False
 
-    def set_on_or_off(self, is_on: bool):
+    def set_on_off(self, is_on: bool):
         self.is_on = is_on
         self.set_color(OnOffPatch.on_color if self.is_on else OnOffPatch.off_color)
 
@@ -92,18 +92,18 @@ class OnOffWorld(World):
 
         # Update the patches.
         for patch in self.patches:
-            patch.set_on_or_off(patch.is_on)
+            patch.set_on_off(patch.is_on)
 
     def mouse_click(self, xy: Tuple[int, int]):
         """ Toggle clicked patch's aliveness. """
         patch = self.pixel_tuple_to_patch(xy)
-        patch.set_on_or_off(not patch.is_on)
+        patch.set_on_off(not patch.is_on)
 
     def setup(self):
         self.get_colors()
         for patch in self.patches:
             is_on = randint(0, 100) < 10
-            patch.set_on_or_off(is_on)
+            patch.set_on_off(is_on)
 
     def step(self):
         self.get_colors()
@@ -112,7 +112,7 @@ class OnOffWorld(World):
         if isinstance(self, OnOffWorld):
             for patch in self.patches:
                 is_on = patch.is_on and randint(0, 100) < 90 or not patch.is_on and randint(0, 100) < 1
-                patch.set_on_or_off(is_on)
+                patch.set_on_off(is_on)
 
 
 # ############################################## Define GUI ############################################## #
