@@ -18,8 +18,7 @@ class Life_Patch(OnOffPatch):
         self.live_neighbors = sum([1 for p in self.neighbors_8() if p.is_alive()])
         
     def set_alive_or_dead(self, alive_or_dead: bool):
-        self.is_on = alive_or_dead
-        self.set_color(Life_Patch.on_color if self.is_alive() else Life_Patch.off_color)
+        self.set_on_off(alive_or_dead)
 
 
 class Life_World(OnOffWorld):

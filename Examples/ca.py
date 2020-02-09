@@ -14,7 +14,7 @@ class CA_Patch(OnOffPatch):
         super().__init__(*args, **kw_args)
         self.is_on = False
 
-    def set_on_or_off(self, on_or_off: bool):
+    def set_on_off(self, on_or_off: bool):
         self.is_on = on_or_off
         self.set_color(OnOffPatch.on_color if self.is_on else OnOffPatch.off_color)
 
@@ -27,6 +27,13 @@ class CA_World(OnOffWorld):
         self.old_rule_nbr = 110
         self.set_switches_from_rule_nbr(self.old_rule_nbr)
         self.set_binary_nbr_from_rule_nbr(self.old_rule_nbr)
+        # self.row_to_fill = 0
+
+    @staticmethod
+    def fill_row_randomly(row_nbr):
+        for patch in CA_World.patches_array[row_nbr, 1:gui.PATCH_COLS-1]:
+            # Don't wrap. Keep the end patches off.
+            patch.set_on_off(choice([True, False]) and 0 < patch.col < gui.PATCH_COLS - 1)
 
     def get_rule_nbr_from_switches(self):
         rule_nbr = 0
@@ -35,6 +42,16 @@ class CA_World(OnOffWorld):
             if values[key]:
                 rule_nbr += pos
         return rule_nbr
+
+    @staticmethod
+    def get_patch_on_off(patch):
+        triple = ''.join([str(int(CA_World.patches_array[patch.row-1, patch.col + d].is_on)) for d in [-1, 0, 1]])
+        return SimEngine.get_gui_value(triple)
+
+    def propagate_to_row(self, row_nbr):
+        for patch in CA_World.patches_array[row_nbr, 1:gui.PATCH_COLS-1]:
+            # Don't wrap. Keep the end patches off.
+            patch.set_on_off(self.get_patch_on_off(patch))
 
     @staticmethod
     def set_binary_nbr_from_rule_nbr(rule_nbr):
@@ -53,6 +70,8 @@ class CA_World(OnOffWorld):
         # Make the slider and switches consistent with each other. Give switches priority.
         # That is, if both are different from self.old_rule_nbr,
         # use the value derived from the switches.
+        for patch in CA_World.patches:
+            patch.set_on_off(False)
         new_switches_nbr = self.get_rule_nbr_from_switches()
         if self.old_rule_nbr != new_switches_nbr:
             self.old_rule_nbr = new_switches_nbr
@@ -64,23 +83,30 @@ class CA_World(OnOffWorld):
         # The Slider, the switches, and the bin number are now consistent: all contain self.old_rule_nbr.
 
         # Does the user want to start with a random initial row?
-        rand = SimEngine.get_gui_value('random')
-        if rand:
+        init = SimEngine.get_gui_value('init')
+        if init == 'Random':
             # If so, set the initial row to random on/off
-            for patch in CA_World.patches_array[0]:
-                # Don't wrap. Keep the end patches off.
-                if choice([True, False]) and 0 < patch.row_col.col < gui.PATCH_COLS-1:
-                    patch.set_on_or_off(True)
+            self.fill_row_randomly(gui.PATCH_ROWS - 1)
+        elif init != 'None':
+            col = 1 if init == 'Left' else gui.PATCH_COLS // 2 if init == 'Center' else gui.PATCH_COLS - 2
+            CA_World.patches_array[gui.PATCH_ROWS - 1, col].set_on_off(True)
 
     def step(self):
         """ You write this """
         pass
+        for r in range(gui.PATCH_ROWS-1):
+            for c in range(1, gui.PATCH_COLS-1):
+                CA_World.patches_array[r, c].set_on_off(CA_World.patches_array[r+1, c].is_on)
+        # self.fill_row_randomly(gui.PATCH_ROWS - 1)
+        self.propagate_to_row(gui.PATCH_ROWS - 1)
 
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
-ca_left_upper = [[sg.CB('Initialize to random?', key='random')], HOR_SEP(30)] + \
+ca_left_upper = [[sg.Text('Initial row:'),
+                  sg.Combo(values=['Random', 'Left', 'Center', 'Right', 'None'], key='init', default_value='Right')],
+                 HOR_SEP(30)] + \
                  on_off_left_upper
 
 
@@ -102,4 +128,4 @@ if __name__ == "__main__":
     from core.agent import PyLogo
     PyLogo(CA_World, '1D CA',
            gui_left_upper=ca_left_upper, gui_right_upper=ca_right_upper,
-           patch_class=CA_Patch, fps=10)
+           patch_class=CA_Patch, fps=10, patch_size=5, board_rows_cols=(150, 150))
