@@ -25,6 +25,11 @@ class Block(Sprite):
     """
     A generic patch/agent. Has a Pixel_xy but not necessarily a RowCol. Has a Color.
     """
+
+    font = None
+    agent_text_offset = int(1.5*gui.PATCH_SIZE)
+    patch_text_offset = -int(1.0*gui.PATCH_SIZE)
+
     def __init__(self, center_pixel: Pixel_xy, color=Color('black')):
         super().__init__()
         self.center_pixel = center_pixel
@@ -35,9 +40,10 @@ class Block(Sprite):
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = self.base_color = color
         self.label = None
-        self.font = Font(None, int(1.5*gui.BLOCK_SPACING()))
-        self.agent_text_offset = int(1.5*gui.PATCH_SIZE)
-        self.patch_text_offset = -int(1.0*gui.PATCH_SIZE)
+        if not Block.font:
+            Block.font = Font(None, int(1.5*gui.BLOCK_SPACING()))
+            # self.agent_text_offset = int(1.5*gui.PATCH_SIZE)
+            # self.patch_text_offset = -int(1.0*gui.PATCH_SIZE)
 
     def distance_to_xy(self, xy: Pixel_xy):
         x_dist = self.center_pixel.x - xy.x
@@ -47,8 +53,8 @@ class Block(Sprite):
         
     def draw(self):
         if self.label:
-            text = self.font.render(self.label, True, (0, 0, 0), (255, 255, 255))
-            offset = self.patch_text_offset if isinstance(self, Patch) else self.agent_text_offset
+            text = Block.font.render(self.label, True, (0, 0, 0), (255, 255, 255))
+            offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
             gui.SCREEN.blit(text, (self.rect.x + offset, self.rect.y + offset))
         gui.SCREEN.blit(self.image, self.rect)
 
