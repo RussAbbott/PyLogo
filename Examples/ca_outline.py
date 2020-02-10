@@ -155,4 +155,4 @@ if __name__ == "__main__":
     from core.agent import PyLogo
     PyLogo(CA_World, '1D CA',
            gui_left_upper=ca_left_upper, gui_right_upper=ca_right_upper,
-           patch_class=CA_Patch, fps=10, patch_size=5, board_rows_cols=(150, 150))
+           patch_class=CA_Patch, fps=10, patch_size=3, board_rows_cols=(250, 230))
