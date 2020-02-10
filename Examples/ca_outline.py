@@ -9,10 +9,10 @@ from random import choice
 
 
 class CA_Patch(OnOffPatch):
-
-    def __init__(self, *args, **kw_args):
-        super().__init__(*args, **kw_args)
-        self.is_on = False
+    """
+    CA_Patch is just OnOffPatch
+    """
+    ...
 
 
 class CA_World(OnOffWorld):
@@ -23,18 +23,21 @@ class CA_World(OnOffWorld):
         # as 3-digit binary strings:
         #     {1: '000', 2: '001', 4: '010', 8: '011', 16: '100', 32: '101', 64: '110', 128: '111'}
         # To see it, try: print(self.pos_to_switch) after executing the next line.
+        # The function bin_str() is defined in utils.py
         self.pos_to_switch = {2**i: bin_str(i, 3) for i in range(8)}
         # print(self.pos_to_switch)
 
         # The rule number used for this run, initially set to 110 as the default rule.
+        # You might also try rule 165.
         self.rule_nbr = 110
+        # Set the switches and the binary representation of self.rule_nbr.
         self.set_switches_from_rule_nbr(self.rule_nbr)
         self.set_binary_nbr_from_rule_nbr(self.rule_nbr)
 
     @staticmethod
     def fill_row_randomly(row_nbr):
         """
-        Fill row row_nbr of CAs with random on/off.
+        Fill row row_nbr of patches with random on/off.
         This implementation doesn't wrap around the way NetLogo does. The two end cells of
         every row are always off.
         Note the use of a slice to pick out the cells in row row_nbr other than the end cells.
@@ -46,6 +49,7 @@ class CA_World(OnOffWorld):
     def get_rule_nbr_from_switches(self):
         """
         Translate the on/off of the switches to a rule number.
+        This is the inverse of set_switches_from_rule_nbr(), but it doesn't set the 'Rule_nbr' Slider.
         """
         ...
 
@@ -61,14 +65,16 @@ class CA_World(OnOffWorld):
         """
         Find and set on/off the values of all cells in this row (except the end cells)
         implied by the previous row and the current rule.
+        o Use get_patch_on_off(patch) to find the value for each patch.
+        o Use patch.set_on_off() to set patch to on or off. (patch.set_on_off() is defined in on_off.py.)
         """
         ...
 
     @staticmethod
     def set_binary_nbr_from_rule_nbr(rule_nbr):
         """
-        Translate the rule number (self.rule_nbr) into a binary string and put it into
-        the gui.WINDOW['bin_string'] widget. For example, if self.rule_nbr is 110,
+        Translate self.rule_nbr into a binary string and put it into the
+        gui.WINDOW['bin_string'] widget. For example, if self.rule_nbr is 110,
         the string '(01101110)' is stored in gui.WINDOW['bin_string'].
 
         Use gui.WINDOW['bin_string'].update(value=new_value) to update the value of the widget.
@@ -79,28 +85,34 @@ class CA_World(OnOffWorld):
         """
         Update the settings of the switches based on self.rule_nbr.
         Note that the 2^i position of self.rule_nbr corresponds to self.pos_to_switch[i].
-        Set that switch as follows: gui.WINDOW[self.pos_to_switch[pos]].update(value=new_value)
+
+        self.pos_to_switch[i] returns the key for the switch representing position  2^i.
+
+        Set that switch as follows: gui.WINDOW[self.pos_to_switch[pos]].update(value=new_value).
+        (new_value will be either True or False, i.e., 1 or 0.)
+
+        This is the inverse of get_rule_nbr_from_switches().
         """
         ...
 
     def setup(self):
         """
-        Make the slider and switches consistent with each other.
+        Make the slider, the switches, and the bin_string of the rule number consistent with each other.
         Give the switches priority.
-        That is, if the slider and the switches are different from self.rule_nbr,
+        That is, if the slider and the switches are both different from self.rule_nbr,
         use the value derived from the switches as the new value of self.rule_nbr.
 
-        Once the slider, the switches, and the bin_string of the rule number are
-        consistent, set the initial row (the borrom row) of patches as directed
-        by SimEngine.get_gui_value('init') (The bottom row is row gui.PATCH_ROWS - 1.)
+        Once the slider, the switches, and the bin_string of the rule number are consistent,
+        set the borrom row of cells as directed by SimEngine.get_gui_value('init').
+        (The bottom row is row gui.PATCH_ROWS - 1.)
         """
         ...
 
     def step(self):
         """
         Take one step in the simulation.
-        o copy all patch on/off settings to the row above it.
-        o set the bottom row as directed by the row above it.
+        o Copy all cell/patch on/off settings to the row above it.
+        o Set the bottom row of cells/patches as directed by the row above it.
         """
         ...
 
@@ -109,7 +121,7 @@ class CA_World(OnOffWorld):
 import PySimpleGUI as sg
 
 """ 
-This appears at the top-left of the window. 
+The following appears at the top-left of the window. 
 It puts a row consisting of a Text widgit and a ComboBox above the widgets from on_off.py
 """
 ca_left_upper = [[sg.Text('Initial row:'),
@@ -121,14 +133,14 @@ ca_left_upper = [[sg.Text('Initial row:'),
 # bin_7_to_0 is ['111' .. '000']
 bin_7_to_0 = [bin_str(n, 3) for n in range(7, -1, -1)]
 
-# switches are CheckBoxes from '111' to '000'
-switches = [sg.CB(n+'\n 1', key=n, pad=((30, 0), (0, 0))) for n in bin_7_to_0]
+# The switches are CheckBoxes with keys from bin_7_to_0.
+switches = [sg.CB(n+'\n 1', key=n, pad=((60, 0), (0, 0))) for n in bin_7_to_0]
 
 """ 
 This  material appears above the screen: 
 the rule number slider, its binary representation, and the switch settings.
 """
-ca_right_upper = [[sg.Text('Rule number', pad=((120, 0), (20, 10))),
+ca_right_upper = [[sg.Text('Rule number', pad=((250, 0), (20, 10))),
                    sg.Slider(key='Rule_nbr', range=(0, 255), orientation='horizontal', pad=((10, 20), (0, 10))),
                    sg.Text('(00000000)', key='bin_string', pad=((0, 0), (10, 0)))],
 
