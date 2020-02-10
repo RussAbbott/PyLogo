@@ -58,6 +58,9 @@ class CA_World(OnOffWorld):
         """
         Find and return the value of this cell implied by the associated three cells in the preceding row
         according to the current rule. All on/off values are booleans: on == True; off == False.
+                 . . x x x . . 
+                 . . . y . . .
+        Cell y is on or off depending on the values of the x cells and what the current rule says for those values.
         """
         ...
 
