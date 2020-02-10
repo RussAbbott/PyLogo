@@ -22,6 +22,7 @@ class CA_World(OnOffWorld):
         # self.pos_to_switch is a dictionary that maps positions in a binary number to range(8) represented
         # as 3-digit binary strings:
         #     {1: '000', 2: '001', 4: '010', 8: '011', 16: '100', 32: '101', 64: '110', 128: '111'}
+        # The three digits are the rule components and the keys to the switches.
         # To see it, try: print(self.pos_to_switch) after executing the next line.
         # The function bin_str() is defined in utils.py
         self.pos_to_switch = {2**i: bin_str(i, 3) for i in range(8)}
@@ -58,7 +59,7 @@ class CA_World(OnOffWorld):
         """
         Find and return the value of this cell implied by the associated three cells in the preceding row
         according to the current rule. All on/off values are booleans: on == True; off == False.
-                 . . x x x . . 
+                 . . x x x . .
                  . . . y . . .
         Cell y is on or off depending on the values of the x cells and what the current rule says for those values.
         """
