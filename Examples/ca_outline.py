@@ -8,14 +8,10 @@ from core.utils import bin_str
 from random import choice
 
 
-class CA_Patch(OnOffPatch):
-    """
-    CA_Patch is just OnOffPatch
-    """
-    ...
-
-
 class CA_World(OnOffWorld):
+
+    ca_left_extension_length = 0
+    ca_display_size = 225
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,17 +31,8 @@ class CA_World(OnOffWorld):
         self.set_switches_from_rule_nbr(self.rule_nbr)
         self.set_binary_nbr_from_rule_nbr(self.rule_nbr)
 
-    @staticmethod
-    def fill_row_randomly(row_nbr):
-        """
-        Fill row row_nbr of patches with random on/off.
-        This implementation doesn't wrap around the way NetLogo does. The two end cells of
-        every row are always off.
-        Note the use of a slice to pick out the cells in row row_nbr other than the end cells.
-        gui.PATCH_COLS is the number of columns of patches. So the end cells are 0 and gui.PATCH_COLS-1
-        """
-        for patch in CA_World.patches_array[row_nbr, 1:gui.PATCH_COLS-1]:
-            ...
+        self.ca_list = [0] * CA_World.ca_display_size
+        self.rows = 0
 
     def get_rule_nbr_from_switches(self):
         """
@@ -54,24 +41,31 @@ class CA_World(OnOffWorld):
         """
         ...
 
-    @staticmethod
-    def get_patch_on_off(patch):
+    def pad_ca_list_ends_with_0s(self):
         """
-        Find and return the value of this cell implied by the associated three cells in the preceding row
-        according to the current rule. All on/off values are booleans: on == True; off == False.
-                 . . x x x . .
-                 . . . y . . .
-        Cell y is on or off depending on the values of the x cells and what the current rule says for those values.
+        If either end of self.ca_list is 1, tack 0 onto that end (perhaps both).
+        Also return the prev_list derived from that list
         """
         ...
 
-    def propagate_to_row(self, row_nbr):
+    def propagate_ca_list_to_bottom_row(self):
         """
         Find and set on/off the values of all cells in this row (except the end cells)
         implied by the previous row and the current rule.
         o Use get_patch_on_off(patch) to find the value for each patch.
         o Use patch.set_on_off() to set patch to on or off. (patch.set_on_off() is defined in on_off.py.)
         """
+        ca_prev_list = self.pad_ca_list_ends_with_0s()
+        # At this point:
+        # self.ca_prev_list: 0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0
+        # self.ca_list:       0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0
+        # self.ca_list[i] depends on self.ca_prev_list[i:i+3].
+        # That's because self.ca_prev_list[0] is one to the left of self.ca_list[0]
+
+        # Update the elements of self.ca_list according to self.ca_prev_list and the current rule.
+
+        # If self.ca_list[i] corresponds to a patch, update the patch also.
+
         ...
 
     @staticmethod
@@ -107,8 +101,12 @@ class CA_World(OnOffWorld):
         use the value derived from the switches as the new value of self.rule_nbr.
 
         Once the slider, the switches, and the bin_string of the rule number are consistent,
-        set the borrom row of cells as directed by SimEngine.get_gui_value('init').
+        set self.ca_list as directed by SimEngine.get_gui_value('init').
+
+        Copy those values to the bottom row of patches.
         (The bottom row is row gui.PATCH_ROWS - 1.)
+
+        Increment self.rows
         """
         ...
 
@@ -117,6 +115,10 @@ class CA_World(OnOffWorld):
         Take one step in the simulation.
         o Copy all cell/patch on/off settings to the row above it.
         o Set the bottom row of cells/patches as directed by the row above it.
+        Do this by updating self.ca_list and then copying it to the bottom row of patches.
+        use self.propagate_ca_list_to_bottom_row() for this step
+
+        Increment self.rows
         """
         ...
 
@@ -129,16 +131,20 @@ The following appears at the top-left of the window.
 It puts a row consisting of a Text widgit and a ComboBox above the widgets from on_off.py
 """
 ca_left_upper = [[sg.Text('Initial row:'),
-                  sg.Combo(values=['Random', 'Left', 'Center', 'Right', 'None'], key='init', default_value='Right')],
+                  sg.Combo(values=['Right', 'Center', 'Left', 'Random', 'All off'], key='init', default_value='Right')],
+                 [sg.Text('Rows:'), sg.Text('     0', key='rows')],
                  HOR_SEP(30)] + \
                  on_off_left_upper
 
 
-# bin_7_to_0 is ['111' .. '000']
-bin_7_to_0 = [bin_str(n, 3) for n in range(7, -1, -1)]
+# bin_0_to_7 is ['000' .. '111']
+bin_0_to_7 = [bin_str(n, 3) for n in range(8)]
 
-# The switches are CheckBoxes with keys from bin_7_to_0.
-switches = [sg.CB(n+'\n 1', key=n, pad=((60, 0), (0, 0))) for n in bin_7_to_0]
+# The switches are CheckBoxes with keys from bin_0_to_7 (in reverse).
+# These are the actual GUI widgets, which we access through their keys.
+# The pos_to_switch dictionary maps positions in the rule number as a binary number
+# to these widgets. Each widget corresponds to a position in the rule number.
+switches = [sg.CB(n+'\n 1', key=n, pad=((60, 0), (0, 0))) for n in reversed(bin_0_to_7)]
 
 """ 
 This  material appears above the screen: 
@@ -146,7 +152,7 @@ the rule number slider, its binary representation, and the switch settings.
 """
 ca_right_upper = [[sg.Text('Rule number', pad=((250, 0), (20, 10))),
                    sg.Slider(key='Rule_nbr', range=(0, 255), orientation='horizontal', pad=((10, 20), (0, 10))),
-                   sg.Text('(00000000)', key='bin_string', pad=((0, 0), (10, 0)))],
+                   sg.Text('00000000 (binary)', key='bin_string', pad=((0, 0), (10, 0)))],
 
                   switches
                   ]
@@ -157,6 +163,9 @@ if __name__ == "__main__":
     Run the CA program. PyLogo is defined at the bottom of core.agent.py.
     """
     from core.agent import PyLogo
-    PyLogo(CA_World, '1D CA',
+
+    # Note that we are using OnOffPatch. We could define a CA_Patch(OnOffPatch),
+    # but since it doesn't add anything to OnOffPatch, there is no need for it.
+    PyLogo(CA_World, '1D CA', patch_class=OnOffPatch,
            gui_left_upper=ca_left_upper, gui_right_upper=ca_right_upper,
-           patch_class=CA_Patch, fps=10, patch_size=3, board_rows_cols=(250, 230))
+           fps=10, patch_size=3, board_rows_cols=(CA_World.ca_display_size, CA_World.ca_display_size))
