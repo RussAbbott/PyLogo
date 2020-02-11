@@ -59,7 +59,7 @@ def angle_to_heading(angle):
 
 def bin_str(n, len):
     """
-    Convert n to a binary string and adds 0's to the left to make it length len.
+    Convert n to a binary string and add 0's to the left to make it length len.
     """
     return ('0'*len + f'{n:b}')[-len:]
 

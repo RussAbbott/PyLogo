@@ -1,10 +1,7 @@
 
-# This file contains code that implements the GUI.
-
 import os
 
 import pygame as pg
-from pygame.time import Clock
 
 # By importing this file itself, can avoid the use of globals
 # noinspection PyUnresolvedReferences
@@ -68,7 +65,9 @@ def set_fps(val):
 # This variable will be available to refer to the SCREEN object from elsewhere in the code.
 # Note that it can't be imported directly because imports occur before the SCREEN is created.
 SCREEN = None
-WINDOW = None
+WINDOW: sg.PySimpleGUI.Window
+
+FONT = None
 
 
 class SimpleGUI:
@@ -88,19 +87,19 @@ class SimpleGUI:
         self.SETUP = 'setup'
         self.STOP = 'Stop'
 
-        self.clock = Clock()
+        self.clock = pg.time.Clock()
         self.fps = 60
         self.idle_fps = 10
 
         self.screen_color = pg.Color(sg.RGB(50, 60, 60))
 
         self.caption = caption
-        # self.gui_left_upper = gui_left_upper
 
         self.screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
         gui.WINDOW = self.make_window(caption, gui_left_upper, gui_right_upper=gui_right_upper, bounce=bounce, fps=fps)
 
         pg.init()
+        gui.FONT = pg.font.SysFont(None, int(1.5 * gui.BLOCK_SPACING()))  # None
 
         # All graphics are drawn to gui.SCREEN, which is a global variable.
         gui.SCREEN = pg.display.set_mode(self.screen_shape_width_height)
@@ -149,24 +148,26 @@ class SimpleGUI:
 
         if gui_right_upper is None:
             gui_right_upper = [[]]
-        col2 = gui_right_upper + \
-               [[sg.Graph(self.screen_shape_width_height, lower_left_pixel_xy, upper_right_pixel_xy,
-                          background_color='black', key='-GRAPH-', enable_events=True)]]
+
+        # graph is a drawing area, a screen on which the model is portrayed, i.e., the patches and the agents.
+        # It consists mainly of a TKCanvas.
+        graph = sg.Graph(self.screen_shape_width_height, lower_left_pixel_xy, upper_right_pixel_xy,
+                         background_color='black', key='-GRAPH-', enable_events=True)
+        col2 = gui_right_upper + [[graph]]
 
         # layout is the actual layout of the window. The stuff above organizes it into component parts.
         # col1 is the control buttons, sliders, etc.
-        # col2 is the screen on which the model is portrayed, i.e., the patches and the agents.
+        # col2 is the graph plus whatever the user wasnts to put above it.
         # layout is a single "GUI line" with these two components in sequence.
         layout = [[sg.Column(col1), sg.Column(col2)]]
 
-        window: sg.PySimpleGUI.Window = sg.Window(caption, layout, margins=(5, 20),
-                                                  use_default_focus=False,
-                                                  return_keyboard_events=True, finalize=True)
-        graph: sg.PySimpleGUI.Graph = window['-GRAPH-']
+        # window is a window with that layout.
+        window = sg.Window(caption, layout, margins=(5, 20), use_default_focus=False, grab_anywhere=True,
+                           return_keyboard_events=True, finalize=True)
 
         # -------------- Magic code to integrate PyGame with tkinter -------
-        embed: tk.Canvas = graph.TKCanvas
-        os.environ['SDL_WINDOWID'] = str(embed.winfo_id( ))
+        w_id = graph.TKCanvas.winfo_id( )
+        os.environ['SDL_WINDOWID'] = str(w_id)
         os.environ['SDL_VIDEODRIVER'] = 'windib'  # change this to 'x11' to make it work on Linux
 
         return window

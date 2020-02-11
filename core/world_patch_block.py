@@ -6,14 +6,14 @@ from math import sqrt
 import numpy as np
 
 import core.gui as gui
-from core.pairs import RowCol, Pixel_xy
-import core.utils as utils
+from core.pairs import Pixel_xy, RowCol
+from core.utils import get_class_name
+
 # Importing this file eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
 import core.world_patch_block as world
 
 from pygame.color import Color
-from pygame.font import Font
 from pygame.rect import Rect
 from pygame.sprite import Sprite
 from pygame.surface import Surface
@@ -26,7 +26,6 @@ class Block(Sprite):
     A generic patch/agent. Has a Pixel_xy but not necessarily a RowCol. Has a Color.
     """
 
-    font = None
     agent_text_offset = int(1.5*gui.PATCH_SIZE)
     patch_text_offset = -int(1.0*gui.PATCH_SIZE)
 
@@ -40,10 +39,6 @@ class Block(Sprite):
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = self.base_color = color
         self.label = None
-        if not Block.font:
-            Block.font = Font(None, int(1.5*gui.BLOCK_SPACING()))
-            # self.agent_text_offset = int(1.5*gui.PATCH_SIZE)
-            # self.patch_text_offset = -int(1.0*gui.PATCH_SIZE)
 
     def distance_to_xy(self, xy: Pixel_xy):
         x_dist = self.center_pixel.x - xy.x
@@ -53,7 +48,7 @@ class Block(Sprite):
         
     def draw(self):
         if self.label:
-            text = Block.font.render(self.label, True, (0, 0, 0), (255, 255, 255))
+            text = gui.FONT.render(self.label, True, (0, 0, 0), (255, 255, 255))
             offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
             gui.SCREEN.blit(text, (self.rect.x + offset, self.rect.y + offset))
         gui.SCREEN.blit(self.image, self.rect)
@@ -72,7 +67,7 @@ class Patch(Block):
         self._neighbors_8 = None
 
     def __str__(self):
-        class_name = utils.get_class_name(self)
+        class_name = get_class_name(self)
         return f'{class_name}{(self.row_col.row, self.row_col.col)}'
 
     def add_agent(self, tur):
