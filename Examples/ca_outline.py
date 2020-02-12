@@ -41,6 +41,21 @@ class CA_World(OnOffWorld):
         """
         ...
 
+    def handle_event_and_values(self):
+        """
+        This is called when a GUI widget is changed and isn't handled by the system.
+        The widget that changed is in SimEngine.event.
+        If the changed widget has to do with the rule number or switches, make them all consistent.
+        """
+        if SimEngine.event in ... :
+            ...
+
+    def make_switches_and_rule_nbr_consistent(self):
+        """
+        Make the Slider, the switches, and the bin number consistent: all contain self.rule_nbr.
+        """
+        ...
+
     def pad_ca_list_ends_with_0s(self):
         """
         If either end of self.ca_list is 1, tack 0 onto that end (perhaps both).
@@ -99,6 +114,8 @@ class CA_World(OnOffWorld):
         Give the switches priority.
         That is, if the slider and the switches are both different from self.rule_nbr,
         use the value derived from the switches as the new value of self.rule_nbr.
+        Use the method:  self.make_switches_and_rule_nbr_consistent()
+
 
         Once the slider, the switches, and the bin_string of the rule number are consistent,
         set self.ca_list as directed by SimEngine.get_gui_value('init').
@@ -164,7 +181,7 @@ if __name__ == "__main__":
     """
     from core.agent import PyLogo
 
-    # Note that we are using OnOffPatch. We could define a CA_Patch(OnOffPatch),
+    # Note that we are using OnOffPatch. We could define CA_Patch(OnOffPatch),
     # but since it doesn't add anything to OnOffPatch, there is no need for it.
     PyLogo(CA_World, '1D CA', patch_class=OnOffPatch,
            gui_left_upper=ca_left_upper, gui_right_upper=ca_right_upper,
