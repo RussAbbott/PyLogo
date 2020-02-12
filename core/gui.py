@@ -132,7 +132,8 @@ class SimpleGUI:
                       key=self.GOSTOP)   ]
 
 
-        exit_button_line = [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((70, 0), (10, 0)))]
+        exit_button_line = [sg.Exit(button_color=('white', 'firebrick4'), key=self.EXIT, pad=((0, 0), (10, 0))),
+                            sg.Checkbox('Grab anywhere', key='Grab', default=False, pad=((40, 0), (10, 0)))]
 
         col1 = [ *gui_left_upper,
                  gui.HOR_SEP(),
@@ -162,7 +163,7 @@ class SimpleGUI:
         layout = [[sg.Column(col1), sg.Column(col2)]]
 
         # window is a window with that layout.
-        window = sg.Window(caption, layout, margins=(5, 20), use_default_focus=False, grab_anywhere=True,
+        window = sg.Window(caption, layout, margins=(5, 20), use_default_focus=False, grab_anywhere=False,
                            return_keyboard_events=True, finalize=True)
 
         # -------------- Magic code to integrate PyGame with tkinter -------

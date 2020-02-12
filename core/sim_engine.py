@@ -68,6 +68,12 @@ class SimEngine:
             if fps:
                 self.fps = fps
 
+            if self.get_gui_value('Grab'):
+                gui.WINDOW.grab_any_where_on()
+            else:
+                gui.WINDOW.grab_any_where_off()
+
+
             if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
                 gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
@@ -106,10 +112,13 @@ class SimEngine:
                 gui.WINDOW.close()
                 break
 
+            if self.get_gui_value('Grab'):
+                gui.WINDOW.grab_any_where_on()
+            else:
+                gui.WINDOW.grab_any_where_off()
+
             if SimEngine.event == '__TIMEOUT__':
                 continue
-
-            # self.world.save_event_and_values(event, values)
 
             if SimEngine.event == self.simple_gui.GRAPH:
                 self.world.mouse_click(SimEngine.values['-GRAPH-'])
