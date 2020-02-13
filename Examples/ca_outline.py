@@ -78,7 +78,7 @@ class CA_World(OnOffWorld):
 
     def make_switches_and_rule_nbr_consistent(self):
         """
-        Make the Slider, the switches, and the bin number consistent: all contain self.rule_nbr.
+        Make the Slider, the switches, and the bin number consistent: all should contain self.rule_nbr.
         """
         ...
 
