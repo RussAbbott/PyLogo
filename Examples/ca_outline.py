@@ -86,7 +86,8 @@ class CA_World(OnOffWorld):
         """
         Translate self.rule_nbr into a binary string and put it into the
         gui.WINDOW['bin_string'] widget. For example, if self.rule_nbr is 110,
-        the string '(01101110)' is stored in gui.WINDOW['bin_string'].
+        the string '(01101110)' is stored in gui.WINDOW['bin_string']. Include
+        the parentheses around the binary number.
 
         Use gui.WINDOW['bin_string'].update(value=new_value) to update the value of the widget.
         """
