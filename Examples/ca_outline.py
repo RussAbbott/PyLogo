@@ -9,6 +9,9 @@ from copy import copy
 
 from random import choice
 
+from typing import List
+
+
 
 class CA_World(OnOffWorld):
 
