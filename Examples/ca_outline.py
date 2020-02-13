@@ -12,10 +12,9 @@ from random import choice
 from typing import List
 
 
-
 class CA_World(OnOffWorld):
 
-    ca_display_size = 225
+    ca_display_size = 151
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
