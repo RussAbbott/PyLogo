@@ -157,7 +157,7 @@ switches = [sg.CB(n+'\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True) fo
 This  material appears above the screen: 
 the rule number slider, its binary representation, and the switch settings.
 """
-ca_right_upper = [[sg.Text('Rule number', pad=((250, 0), (20, 10))),
+ca_right_upper = [[sg.Text('Rule number', pad=((100, 0), (20, 10))),
                    sg.Slider(key='Rule_nbr', range=(0, 255), orientation='horizontal',
                              enable_events=True, pad=((10, 20), (0, 10))),
                    sg.Text('00000000 (binary)', key='bin_string', enable_events=True, pad=((0, 0), (10, 0)))],
