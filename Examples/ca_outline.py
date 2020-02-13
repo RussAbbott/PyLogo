@@ -5,22 +5,25 @@ from core.on_off import on_off_left_upper, OnOffPatch, OnOffWorld
 from core.sim_engine import SimEngine
 from core.utils import bin_str
 
+from copy import copy
+
 from random import choice
 
 
 class CA_World(OnOffWorld):
 
-    ca_left_extension_length = 0
     ca_display_size = 225
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         # self.pos_to_switch is a dictionary that maps positions in a binary number to range(8) represented
         # as 3-digit binary strings:
         #     {1: '000', 2: '001', 4: '010', 8: '011', 16: '100', 32: '101', 64: '110', 128: '111'}
         # The three digits are the rule components and the keys to the switches.
         # To see it, try: print(self.pos_to_switch) after executing the next line.
         # The function bin_str() is defined in utils.py
+
         self.pos_to_switch = {2**i: bin_str(i, 3) for i in range(8)}
         # print(self.pos_to_switch)
 
@@ -28,11 +31,28 @@ class CA_World(OnOffWorld):
         # You might also try rule 165.
         self.rule_nbr = 110
         # Set the switches and the binary representation of self.rule_nbr.
-        self.set_switches_from_rule_nbr(self.rule_nbr)
-        self.set_binary_nbr_from_rule_nbr(self.rule_nbr)
+        self.set_switches_from_rule_nbr()
+        self.set_binary_nbr_from_rule_nbr()
+        self.init = None
 
-        self.ca_list = [0] * CA_World.ca_display_size
-        self.rows = 0
+        self.ca_lines: List[List[int]] = []
+        gui.WINDOW['rows'].update(value=len(self.ca_lines))
+
+    def build_initial_line(self):
+        """
+        Construct the initial row
+        """
+        self.init = SimEngine.get_gui_value('init')
+        if self.init == 'Random':
+            # Set the initial row to random 1/0
+            line = ...
+        else:
+            line = [0] * self.ca_display_size
+            col = 0 if self.init == 'Left' else \
+                  CA_World.ca_display_size // 2 if self.init == 'Center' else \
+                  CA_World.ca_display_size - 1  # self.init == 'Right'
+            line[col] = 1
+        return line
 
     def get_rule_nbr_from_switches(self):
         """
@@ -44,10 +64,12 @@ class CA_World(OnOffWorld):
     def handle_event_and_values(self):
         """
         This is called when a GUI widget is changed and isn't handled by the system.
-        The widget that changed is in SimEngine.event.
+        The key of the widget that changed is in SimEngine.event.
         If the changed widget has to do with the rule number or switches, make them all consistent.
+
+        This is the function that will trigger all the code you write this week
         """
-        if SimEngine.event in ... :
+        if SimEngine.event in ...:
             ...
 
     def make_switches_and_rule_nbr_consistent(self):
@@ -56,35 +78,7 @@ class CA_World(OnOffWorld):
         """
         ...
 
-    def pad_ca_list_ends_with_0s(self):
-        """
-        If either end of self.ca_list is 1, tack 0 onto that end (perhaps both).
-        Also return the prev_list derived from that list
-        """
-        ...
-
-    def propagate_ca_list_to_bottom_row(self):
-        """
-        Find and set on/off the values of all cells in this row (except the end cells)
-        implied by the previous row and the current rule.
-        o Use get_patch_on_off(patch) to find the value for each patch.
-        o Use patch.set_on_off() to set patch to on or off. (patch.set_on_off() is defined in on_off.py.)
-        """
-        ca_prev_list = self.pad_ca_list_ends_with_0s()
-        # At this point:
-        # self.ca_prev_list: 0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0
-        # self.ca_list:       0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0
-        # self.ca_list[i] depends on self.ca_prev_list[i:i+3].
-        # That's because self.ca_prev_list[0] is one to the left of self.ca_list[0]
-
-        # Update the elements of self.ca_list according to self.ca_prev_list and the current rule.
-
-        # If self.ca_list[i] corresponds to a patch, update the patch also.
-
-        ...
-
-    @staticmethod
-    def set_binary_nbr_from_rule_nbr(rule_nbr):
+    def set_binary_nbr_from_rule_nbr(self):
         """
         Translate self.rule_nbr into a binary string and put it into the
         gui.WINDOW['bin_string'] widget. For example, if self.rule_nbr is 110,
@@ -94,11 +88,16 @@ class CA_World(OnOffWorld):
         """
         ...
 
-    def set_switches_from_rule_nbr(self, rule_nbr):
+    def set_display_from_lines(self):
+        """
+        Copy values from self.ca_lines to the patches.
+        """
+        ...
+
+    def set_switches_from_rule_nbr(self):
         """
         Update the settings of the switches based on self.rule_nbr.
-        Note that the 2^i position of self.rule_nbr corresponds to self.pos_to_switch[i].
-
+        Note that the 2^i position of self.rule_nbr corresponds to self.pos_to_switch[i]. That is,
         self.pos_to_switch[i] returns the key for the switch representing position  2^i.
 
         Set that switch as follows: gui.WINDOW[self.pos_to_switch[pos]].update(value=new_value).
@@ -114,28 +113,20 @@ class CA_World(OnOffWorld):
         Give the switches priority.
         That is, if the slider and the switches are both different from self.rule_nbr,
         use the value derived from the switches as the new value of self.rule_nbr.
-        Use the method:  self.make_switches_and_rule_nbr_consistent()
-
 
         Once the slider, the switches, and the bin_string of the rule number are consistent,
-        set self.ca_list as directed by SimEngine.get_gui_value('init').
+        set self.ca__lines[0] as directed by SimEngine.get_gui_value('init').
 
         Copy those values to the bottom row of patches.
         (The bottom row is row gui.PATCH_ROWS - 1.)
-
-        Increment self.rows
         """
         ...
 
     def step(self):
         """
         Take one step in the simulation.
-        o Copy all cell/patch on/off settings to the row above it.
-        o Set the bottom row of cells/patches as directed by the row above it.
-        Do this by updating self.ca_list and then copying it to the bottom row of patches.
-        use self.propagate_ca_list_to_bottom_row() for this step
-
-        Increment self.rows
+        o Generate an additional line in self.ca_lines.
+        o Copy self.ca_lines to the display
         """
         ...
 
@@ -148,28 +139,28 @@ The following appears at the top-left of the window.
 It puts a row consisting of a Text widgit and a ComboBox above the widgets from on_off.py
 """
 ca_left_upper = [[sg.Text('Initial row:'),
-                  sg.Combo(values=['Right', 'Center', 'Left', 'Random', 'All off'], key='init', default_value='Right')],
+                  sg.Combo(values=['Right', 'Center', 'Left', 'Random'], key='init', default_value='Right')],
                  [sg.Text('Rows:'), sg.Text('     0', key='rows')],
                  HOR_SEP(30)] + \
                  on_off_left_upper
-
 
 # bin_0_to_7 is ['000' .. '111']
 bin_0_to_7 = [bin_str(n, 3) for n in range(8)]
 
 # The switches are CheckBoxes with keys from bin_0_to_7 (in reverse).
-# These are the actual GUI widgets, which we access through their keys.
+# These are the actual GUI widgets, which we access via their keys.
 # The pos_to_switch dictionary maps positions in the rule number as a binary number
 # to these widgets. Each widget corresponds to a position in the rule number.
-switches = [sg.CB(n+'\n 1', key=n, pad=((60, 0), (0, 0))) for n in reversed(bin_0_to_7)]
+switches = [sg.CB(n+'\n 1', key=n, pad=((60, 0), (0, 0)), enable_events=True) for n in reversed(bin_0_to_7)]
 
 """ 
 This  material appears above the screen: 
 the rule number slider, its binary representation, and the switch settings.
 """
 ca_right_upper = [[sg.Text('Rule number', pad=((250, 0), (20, 10))),
-                   sg.Slider(key='Rule_nbr', range=(0, 255), orientation='horizontal', pad=((10, 20), (0, 10))),
-                   sg.Text('00000000 (binary)', key='bin_string', pad=((0, 0), (10, 0)))],
+                   sg.Slider(key='Rule_nbr', range=(0, 255), orientation='horizontal',
+                             enable_events=True, pad=((10, 20), (0, 10))),
+                   sg.Text('00000000 (binary)', key='bin_string', enable_events=True, pad=((0, 0), (10, 0)))],
 
                   switches
                   ]
