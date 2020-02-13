@@ -15,6 +15,8 @@ from typing import List
 class CA_World(OnOffWorld):
 
     ca_display_size = 151
+    # bin_0_to_7 is ['000' .. '111']
+    bin_0_to_7 = [bin_str(n, 3) for n in range(8)]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,7 +28,7 @@ class CA_World(OnOffWorld):
         # To see it, try: print(self.pos_to_switch) after executing the next line.
         # The function bin_str() is defined in utils.py
 
-        self.pos_to_switch = {2**i: bin_str(i, 3) for i in range(8)}
+        self.pos_to_switch = dict(zip([2**i for i in range(8)], CA_World.bin_0_to_7))
         # print(self.pos_to_switch)
 
         # The rule number used for this run, initially set to 110 as the default rule.
@@ -145,14 +147,11 @@ ca_left_upper = [[sg.Text('Initial row:'),
                  HOR_SEP(30)] + \
                  on_off_left_upper
 
-# bin_0_to_7 is ['000' .. '111']
-bin_0_to_7 = [bin_str(n, 3) for n in range(8)]
-
-# The switches are CheckBoxes with keys from bin_0_to_7 (in reverse).
+# The switches are CheckBoxes with keys from CA_World.bin_0_to_7 (in reverse).
 # These are the actual GUI widgets, which we access via their keys.
 # The pos_to_switch dictionary maps positions in the rule number as a binary number
 # to these widgets. Each widget corresponds to a position in the rule number.
-switches = [sg.CB(n+'\n 1', key=n, pad=((40, 0), (0, 0)), enable_events=True) for n in reversed(bin_0_to_7)]
+switches = [sg.CB(n+'\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True) for n in reversed(CA_World.bin_0_to_7)]
 
 """ 
 This  material appears above the screen: 
