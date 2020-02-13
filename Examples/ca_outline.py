@@ -119,8 +119,7 @@ class CA_World(OnOffWorld):
         Once the slider, the switches, and the bin_string of the rule number are consistent,
         set self.ca__lines[0] as directed by SimEngine.get_gui_value('init').
 
-        Copy those values to the bottom row of patches.
-        (The bottom row is row gui.PATCH_ROWS - 1.)
+        Copy (the setting on) that line to the bottom row of patches.
         """
         ...
 
@@ -153,7 +152,7 @@ bin_0_to_7 = [bin_str(n, 3) for n in range(8)]
 # These are the actual GUI widgets, which we access via their keys.
 # The pos_to_switch dictionary maps positions in the rule number as a binary number
 # to these widgets. Each widget corresponds to a position in the rule number.
-switches = [sg.CB(n+'\n 1', key=n, pad=((60, 0), (0, 0)), enable_events=True) for n in reversed(bin_0_to_7)]
+switches = [sg.CB(n+'\n 1', key=n, pad=((40, 0), (0, 0)), enable_events=True) for n in reversed(bin_0_to_7)]
 
 """ 
 This  material appears above the screen: 
