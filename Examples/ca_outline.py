@@ -32,7 +32,8 @@ class CA_World(OnOffWorld):
         # print(self.pos_to_switch)
 
         # The rule number used for this run, initially set to 110 as the default rule.
-        # You might also try rule 165.
+        # (You might also try rule 165.)
+        # The following sets the local variable self.rule_nbr. It doesn't change the 'Rule_nbr' slider widget. 
         self.rule_nbr = 110
         # Set the switches and the binary representation of self.rule_nbr.
         self.set_switches_from_rule_nbr()
