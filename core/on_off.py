@@ -69,6 +69,11 @@ class OnOffWorld(World):
         if event in {OnOffWorld.SELECT_ON_TEXT, OnOffWorld.SELECT_OFF_TEXT}:
             self.select_color(event)
 
+    def mouse_click(self, xy: Tuple[int, int]):
+        """ Toggle clicked patch's aliveness. """
+        patch = self.pixel_tuple_to_patch(xy)
+        patch.set_on_off(not patch.is_on)
+
     def select_color(self, event):
         selecting_on = event == OnOffWorld.SELECT_ON_TEXT
         # There are two color-choosers: selecting_on and selecting_off. Determine and select the
@@ -90,11 +95,6 @@ class OnOffWorld(World):
         # Update the patches.
         for patch in self.patches:
             patch.set_on_off(patch.is_on)
-
-    def mouse_click(self, xy: Tuple[int, int]):
-        """ Toggle clicked patch's aliveness. """
-        patch = self.pixel_tuple_to_patch(xy)
-        patch.set_on_off(not patch.is_on)
 
     def setup(self):
         self.get_colors()
