@@ -75,10 +75,12 @@ class CA_World(OnOffWorld):
         This is the function that will trigger all the code you write this week
         """
         event = SimEngine.event
+        
         # Handle switches and rule slider
         if event in ...:
             ...
         # Handle color change request. (Look at on_off.py.)
+        # This will work because CA_World is a subclass of OnOffWorld
         elif event in ...:
             ...
 
