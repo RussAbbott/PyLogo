@@ -59,7 +59,7 @@ class CA_World(OnOffWorld):
             line = [0] * self.ca_display_size
             col = 0 if self.init == 'Left' else \
                   CA_World.ca_display_size // 2 if self.init == 'Center' else \
-                  CA_World.ca_display_size - 1  # self.init == 'Right'
+                  CA_World.ca_display_size - 1   # self.init == 'Right'
             line[col] = 1
         return line
 
@@ -78,14 +78,13 @@ class CA_World(OnOffWorld):
 
         This is the function that will trigger all the code you write this week
         """
+        # Let OnOffWorld handle color change requests.
+        ...
+
         event = SimEngine.event
 
         # Handle switches and rule slider
         if event in ...:
-            ...
-        # Handle color change request. (Look at on_off.py.)
-        # This will work because CA_World is a subclass of OnOffWorld
-        elif event in ...:
             ...
 
     def make_switches_and_rule_nbr_consistent(self):
