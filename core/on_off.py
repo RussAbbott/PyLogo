@@ -66,30 +66,27 @@ class OnOffWorld(World):
         the window. We then color the color-chooser button with that color.
         """
         event = SimEngine.get_gui_event()
-        if event not in {OnOffWorld.SELECT_ON_TEXT, OnOffWorld.SELECT_OFF_TEXT}:
-            return
+        if event in {OnOffWorld.SELECT_ON_TEXT, OnOffWorld.SELECT_OFF_TEXT}:
+            self.select_color(event)
 
+    def select_color(self, event):
         selecting_on = event == OnOffWorld.SELECT_ON_TEXT
         # There are two color-choosers: selecting_on and selecting_off. Determine and select the
         # desired color chooser based on the label on the button the user clicked.
         color_chooser_button = OnOffWorld.on_color_chooser if selecting_on else OnOffWorld.off_color_chooser
         # Run it
         color_chooser_button.click()
-
         # Create a default color_string in case the user had cancelled color selection.
         # The default color string is the string of the current color.
         default_color_string = rgb_to_hex(OnOffPatch.on_color if selecting_on else OnOffPatch.off_color)
         # Retrieve the color choice by reading the window.
         (_event, SimEngine.values) = gui.WINDOW.read(timeout=10)
-
         color = self.get_color_and_update_button(color_chooser_button, default_color_string)
-
         # Set the color to the new choice
         if selecting_on:
             OnOffPatch.on_color = color
         else:
             OnOffPatch.off_color = color
-
         # Update the patches.
         for patch in self.patches:
             patch.set_on_off(patch.is_on)
