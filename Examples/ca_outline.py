@@ -33,7 +33,7 @@ class CA_World(OnOffWorld):
 
         # The rule number used for this run, initially set to 110 as the default rule.
         # (You might also try rule 165.)
-        # The following sets the local variable self.rule_nbr. It doesn't change the 'Rule_nbr' slider widget. 
+        # The following sets the local variable self.rule_nbr. It doesn't change the 'Rule_nbr' slider widget.
         self.rule_nbr = 110
         # Set the switches and the binary representation of self.rule_nbr.
         self.set_switches_from_rule_nbr()
@@ -74,7 +74,12 @@ class CA_World(OnOffWorld):
 
         This is the function that will trigger all the code you write this week
         """
-        if SimEngine.event in ...:
+        event = SimEngine.event
+        # Handle switches and rule slider
+        if event in ...:
+            ...
+        # Handle color change request. (Look at on_off.py.)
+        elif event in ...:
             ...
 
     def make_switches_and_rule_nbr_consistent(self):
