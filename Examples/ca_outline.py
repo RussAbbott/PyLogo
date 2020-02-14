@@ -15,6 +15,7 @@ from typing import List
 class CA_World(OnOffWorld):
 
     ca_display_size = 151
+
     # bin_0_to_7 is ['000' .. '111']
     bin_0_to_7 = [bin_str(n, 3) for n in range(8)]
 
@@ -40,6 +41,9 @@ class CA_World(OnOffWorld):
         self.set_binary_nbr_from_rule_nbr()
         self.init = None
 
+        # self.ca_lines is a list of lines, each of which is a list of 0/1. Each line represents
+        # a state of the CA, i.e., all the cells in the line. self.ca_list contains the entire
+        # history of the CA.
         self.ca_lines: List[List[int]] = []
         gui.WINDOW['rows'].update(value=len(self.ca_lines))
 
@@ -75,7 +79,7 @@ class CA_World(OnOffWorld):
         This is the function that will trigger all the code you write this week
         """
         event = SimEngine.event
-        
+
         # Handle switches and rule slider
         if event in ...:
             ...
@@ -103,7 +107,8 @@ class CA_World(OnOffWorld):
 
     def set_display_from_lines(self):
         """
-        Copy values from self.ca_lines to the patches.
+        Copy values from self.ca_lines to the patches. The difficulties involve
+        cases in which there are more or fewer lines than Patch row.
         """
         ...
 
@@ -151,7 +156,7 @@ The following appears at the top-left of the window.
 It puts a row consisting of a Text widgit and a ComboBox above the widgets from on_off.py
 """
 ca_left_upper = [[sg.Text('Initial row:'),
-                  sg.Combo(values=['Right', 'Center', 'Left', 'Random'], key='init', default_value='Right')],
+                  sg.Combo(values=['Left', 'Center', 'Right', 'Random'], key='init', default_value='Right')],
                  [sg.Text('Rows:'), sg.Text('     0', key='rows')],
                  HOR_SEP(30)] + \
                  on_off_left_upper
