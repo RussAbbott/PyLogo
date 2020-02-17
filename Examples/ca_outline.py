@@ -81,7 +81,7 @@ class CA_World(OnOffWorld):
         # Handle color change requests.
         super().handle_event_and_values()
 
-        event = SimEngine.event
+        event = SimEngine.get_gui_event()
         if event in ['Rule_nbr'] + CA_World.bin_0_to_7:
             self.make_switches_and_rule_nbr_consistent()
 
