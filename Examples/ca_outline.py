@@ -78,14 +78,12 @@ class CA_World(OnOffWorld):
 
         This is the function that will trigger all the code you write this week
         """
-        # Let OnOffWorld handle color change requests.
-        ...
+        # Handle color change requests.
+        super().handle_event_and_values()
 
         event = SimEngine.event
-
-        # Handle switches and rule slider
-        if event in ...:
-            ...
+        if event in ['Rule_nbr'] + CA_World.bin_0_to_7:
+            self.make_switches_and_rule_nbr_consistent()
 
     def make_switches_and_rule_nbr_consistent(self):
         """
