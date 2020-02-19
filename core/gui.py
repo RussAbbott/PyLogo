@@ -58,7 +58,8 @@ FPS_VALUES = values = [1, 3, 6, 10, 15, 25, 40, 60]
 
 def set_fps(val):
     # Select the value in FPS_VALUES closest to val.
-    new_val = min([(abs(v - val),  v) for v in FPS_VALUES])[1]
+    # new_val = min([(abs(v - val),  v) for v in FPS_VALUES])[1]
+    new_val = min(FPS_VALUES, key=lambda v: abs(v - val))
     WINDOW['fps'].update(new_val)
 
 
@@ -96,16 +97,18 @@ class SimpleGUI:
         self.caption = caption
 
         self.screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
+
+        # All these gui.<variable> elements are globals in this file.
         gui.WINDOW = self.make_window(caption, gui_left_upper, gui_right_upper=gui_right_upper, bounce=bounce, fps=fps)
 
         pg.init()
-        gui.FONT = pg.font.SysFont(None, int(1.5 * gui.BLOCK_SPACING()))  # None
+        gui.FONT = pg.font.SysFont(None, int(1.5 * gui.BLOCK_SPACING()))
 
         # All graphics are drawn to gui.SCREEN, which is a global variable.
         gui.SCREEN = pg.display.set_mode(self.screen_shape_width_height)
 
     def fill_screen(self):
-        SCREEN.fill(self.screen_color)
+        gui.SCREEN.fill(self.screen_color)
 
     def make_window(self, caption, gui_left_upper, gui_right_upper=None, bounce=True, fps=None):
         """

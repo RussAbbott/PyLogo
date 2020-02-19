@@ -39,6 +39,7 @@ NETLOGO_PRIMARY_COLORS = [(color_name, Color(color_name))
                                              'turquoise', 'cyan', 'skyblue3', 'blue', 'violet', 'magenta', 'pink']]
 
 # Since it's used as a default value, can't be a list. A tuple works just as well.
+# Only one shape defined so far.
 SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4))}
 
 
@@ -60,7 +61,6 @@ class Agent(Block):
 
         if color is None:
             # Select a color at random from the color_palette
-            # Agent.color_palette is set during World.setup().
             color = choice(Agent.color_palette)[1]
 
         super().__init__(center_pixel, color)
@@ -74,7 +74,7 @@ class Agent(Block):
         self.label = None
         World.agents.add(self)
         self.current_patch().add_agent(self)
-        self.heading = randint(0, 360)
+        self.heading = randint(0, 359)
         self.speed = 1
         # To keep PyCharm happy.
         self.velocity = Velocity.velocity_00
@@ -144,13 +144,13 @@ class Agent(Block):
         return patch
 
     def distance_to(self, other):
-        wrap = not SimEngine.get_gui_value('Bounce?')
+        wrap = not SimEngine.gui_get('Bounce?')
         dist = (self.center_pixel).distance_to(other.center_pixel, wrap)
         return dist
 
     def draw(self):
         self.image = pgt.rotate(self.base_image, -self.heading)
-        self.rect = self.image.get_rect(center=self.center_pixel)  #.as_tuple())
+        self.rect = self.image.get_rect(center=self.center_pixel)
         super().draw()
         
     def face_xy(self, xy: Pixel_xy):
@@ -164,7 +164,7 @@ class Agent(Block):
         self.move_by_dxdy(dxdy)
 
     def heading_toward(self, target):
-        """ The heading to face the target """
+        """ The heading required to face the target """
         from_pixel = self.center_pixel
         to_pixel = target.center_pixel
         return from_pixel.heading_toward(to_pixel)
@@ -173,7 +173,7 @@ class Agent(Block):
         """
         Move to self.center_pixel + (dx, dy)
         """
-        if SimEngine.get_gui_value('Bounce?'):
+        if SimEngine.gui_get('Bounce?'):
             new_dxdy = self.bounce_off_screen_edge(dxdy)
             if dxdy is self.velocity:
                 self.set_velocity(new_dxdy)

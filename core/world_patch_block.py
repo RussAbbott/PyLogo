@@ -74,12 +74,12 @@ class Patch(Block):
         self.agents.add(tur)
 
     @property
-    def row(self):
-        return self.row_col.row
-
-    @property
     def col(self):
         return self.row_col.col
+
+    @property
+    def row(self):
+        return self.row_col.row
 
     def clear(self):
         self.agents = set()
@@ -114,8 +114,6 @@ class Patch(Block):
 
 
 class World:
-
-    # THE_WORLD = None
 
     patches_array: np.ndarray = None
     patches = None
@@ -188,7 +186,7 @@ class World:
         #         print()
         #     print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
 
-    def handle_event_and_values(self):
+    def handle_event(self, _event):
         pass
 
     @staticmethod

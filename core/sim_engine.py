@@ -43,18 +43,30 @@ class SimEngine:
         self.world.draw()
         pg.display.update()
 
+    # @staticmethod
+    # def get_gui_event():
+    #     return SimEngine.event
+    #
+    # @staticmethod
+    # def get_gui_event_and_values():
+    #     return (SimEngine.event, SimEngine.values)
+    #
     @staticmethod
-    def get_gui_event():
-        return SimEngine.event
-
-    @staticmethod
-    def get_gui_event_and_values():
-        return (SimEngine.event, SimEngine.values)
-
-    @staticmethod
-    def get_gui_value(key):
+    def gui_get(key):
         value = SimEngine.values.get(key, None)
         return int(value) if isinstance(value, float) and value == int(value) else value
+
+    @staticmethod
+    def gui_set(key, **kwargs):
+        widget = gui.WINDOW[key]
+        widget.update(**kwargs)
+
+    @staticmethod
+    def grab_anywhere(allow_grab_anywhere):
+        if allow_grab_anywhere:
+            gui.WINDOW.grab_any_where_on()
+        else:
+            gui.WINDOW.grab_any_where_off()
 
     def model_loop(self):
         # Run this loop until the model signals it is finished or until the user stops it by pressing the Stop button.
@@ -68,19 +80,17 @@ class SimEngine:
             if fps:
                 self.fps = fps
 
-            if self.get_gui_value('Grab'):
-                gui.WINDOW.grab_any_where_on()
-            else:
-                gui.WINDOW.grab_any_where_off()
-
+            self.grab_anywhere(self.gui_get('Grab'))
 
             if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
-                gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
+                # gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
+                SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=False)
                 break
 
             elif self.world._done():
-                gui.WINDOW['GoStop'].update(disabled=True)
+                # gui.WINDOW['GoStop'].update(disabled=True)
+                SimEngine.gui_set('GoStop', disabled=True)
                 break
 
             elif SimEngine.event == '__TIMEOUT__':
@@ -93,7 +103,7 @@ class SimEngine:
                 self.clock.tick(self.fps)
             else:
                 # self.world.save_event_and_values(SimEngine.event, SimEngine.values)
-                self.world.handle_event_and_values()
+                self.world.handle_event(SimEngine.event)
 
             self.draw_world()
 
@@ -112,10 +122,7 @@ class SimEngine:
                 gui.WINDOW.close()
                 break
 
-            if self.get_gui_value('Grab'):
-                gui.WINDOW.grab_any_where_on()
-            else:
-                gui.WINDOW.grab_any_where_off()
+            self.grab_anywhere(self.gui_get('Grab'))
 
             if SimEngine.event == '__TIMEOUT__':
                 continue
@@ -124,8 +131,10 @@ class SimEngine:
                 self.world.mouse_click(SimEngine.values['-GRAPH-'])
 
             elif SimEngine.event == self.simple_gui.SETUP:
-                gui.WINDOW[self.simple_gui.GOSTOP].update(disabled=False)
-                gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
+                # gui.WINDOW[self.simple_gui.GOSTOP].update(disabled=False)
+                SimEngine.gui_set(self.simple_gui.GOSTOP, disabled=False)
+                # gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
+                SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=False)
                 self.world.reset_all()
                 self.world.setup()
 
@@ -134,19 +143,24 @@ class SimEngine:
                 self.world.step()
 
             elif SimEngine.event == self.simple_gui.GOSTOP:
-                gui.WINDOW[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
-                gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=True)
-                gui.WINDOW[self.simple_gui.SETUP].update(disabled=True)
+                # gui.WINDOW[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
+                SimEngine.gui_set(self.simple_gui.GOSTOP, text='stop', button_color=('white', 'red'))
+                # gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=True)
+                SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=True)
+                # gui.WINDOW[self.simple_gui.SETUP].update(disabled=True)
+                SimEngine.gui_set(self.simple_gui.SETUP, disabled=True)
                 returned_value = self.model_loop()
-                gui.WINDOW['GoStop'].update(text='go', button_color=('white', 'green'))
-                gui.WINDOW[self.simple_gui.SETUP].update(disabled=False)
+                # gui.WINDOW['GoStop'].update(text='go', button_color=('white', 'green'))
+                SimEngine.gui_set(self.simple_gui.GOSTOP, text='go', button_color=('white', 'green'))
+                # gui.WINDOW[self.simple_gui.SETUP].update(disabled=False)
+                SimEngine.gui_set(self.simple_gui.SETUP, disabled=False)
                 self.world.final_thoughts()
                 if returned_value == self.simple_gui.EXIT:
                     gui.WINDOW.close()
                     break
             else:
                 # For anything else, e.g., a button the user defined.
-                self.world.handle_event_and_values()
+                self.world.handle_event(SimEngine.event)
 
             self.draw_world()
 

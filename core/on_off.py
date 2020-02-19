@@ -42,7 +42,7 @@ class OnOffWorld(World):
     @staticmethod
     def get_color_and_update_button(button, default_color_string):
         key = button.get_text()
-        color_string = SimEngine.get_gui_value(key)
+        color_string = SimEngine.gui_get(key)
         if color_string in {'None', '', None}:
             color_string = default_color_string
         button.update(button_color=(color_string, color_string))
@@ -57,7 +57,7 @@ class OnOffWorld(World):
                                             self.on_color_chooser,
                                             default_color_string=rgb_to_hex(OnOffPatch.on_color))
 
-    def handle_event_and_values(self):
+    def handle_event(self, event):
         """
         This method handles the color chooser. It does it in a round-about way because
         the color chooser can't generate events. Consequently, the user is asked to click
@@ -65,7 +65,6 @@ class OnOffWorld(World):
         the color-chooser button. The user selects a color, which we retrieve by reading
         the window. We then color the color-chooser button with that color.
         """
-        event = SimEngine.get_gui_event()
         if event in {OnOffWorld.SELECT_ON_TEXT, OnOffWorld.SELECT_OFF_TEXT}:
             self.select_color(event)
 
