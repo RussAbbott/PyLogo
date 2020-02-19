@@ -15,7 +15,7 @@ from typing import Tuple
 
 class OnOffPatch(Patch):
 
-    # These are rgb colors
+    # These are the default colors. They are rgb colors.
     on_color = Color('white')
     off_color = Color('black')
 
@@ -36,7 +36,7 @@ class OnOffWorld(World):
     on_color_chooser = sg.ColorChooserButton('on', button_color=(WHITE, WHITE), size=(10, 1))
     off_color_chooser = sg.ColorChooserButton('off', button_color=(BLACK, BLACK), size=(10, 1))
 
-    SELECT_ON_TEXT = 'Select "on" color  '
+    SELECT_ON_TEXT = 'Select "on" color'
     SELECT_OFF_TEXT = 'Select "off" color'
 
     @staticmethod
@@ -74,9 +74,9 @@ class OnOffWorld(World):
         patch.set_on_off(not patch.is_on)
 
     def select_color(self, event):
-        selecting_on = event == OnOffWorld.SELECT_ON_TEXT
         # There are two color-choosers: selecting_on and selecting_off. Determine and select the
         # desired color chooser based on the label on the button the user clicked.
+        selecting_on = event == OnOffWorld.SELECT_ON_TEXT
         color_chooser_button = OnOffWorld.on_color_chooser if selecting_on else OnOffWorld.off_color_chooser
         # Run it
         color_chooser_button.click()
@@ -86,14 +86,18 @@ class OnOffWorld(World):
         # Retrieve the color choice by reading the window.
         (_event, SimEngine.values) = gui.WINDOW.read(timeout=10)
         color = self.get_color_and_update_button(color_chooser_button, default_color_string)
+        # If there was no change, do nothing.
+        if selecting_on and color == OnOffPatch.on_color or not selecting_on and color == OnOffPatch.off_color:
+            return
         # Set the color to the new choice
         if selecting_on:
             OnOffPatch.on_color = color
         else:
             OnOffPatch.off_color = color
-        # Update the patches.
+        # Update the colors of the patches whose color was changed.
         for patch in self.patches:
-            patch.set_on_off(patch.is_on)
+            if patch.is_on == selecting_on:
+                patch.set_on_off(patch.is_on)
 
     def setup(self):
         self.get_colors()
