@@ -43,14 +43,6 @@ class SimEngine:
         self.world.draw()
         pg.display.update()
 
-    # @staticmethod
-    # def get_gui_event():
-    #     return SimEngine.event
-    #
-    # @staticmethod
-    # def get_gui_event_and_values():
-    #     return (SimEngine.event, SimEngine.values)
-    #
     @staticmethod
     def gui_get(key):
         value = SimEngine.values.get(key, None)
@@ -58,15 +50,7 @@ class SimEngine:
 
     @staticmethod
     def gui_set(key, **kwargs):
-        widget = gui.WINDOW[key]
-        widget.update(**kwargs)
-
-    @staticmethod
-    def grab_anywhere(allow_grab_anywhere):
-        if allow_grab_anywhere:
-            gui.WINDOW.grab_any_where_on()
-        else:
-            gui.WINDOW.grab_any_where_off()
+        gui.gui_set(key, **kwargs)
 
     def model_loop(self):
         # Run this loop until the model signals it is finished or until the user stops it by pressing the Stop button.
@@ -80,7 +64,7 @@ class SimEngine:
             if fps:
                 self.fps = fps
 
-            self.grab_anywhere(self.gui_get('Grab'))
+            self.set_grab_anywhere(self.gui_get('Grab'))
 
             if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
@@ -94,35 +78,42 @@ class SimEngine:
                 break
 
             elif SimEngine.event == '__TIMEOUT__':
-                # Take a step in the simulation.
-                # TICKS are our local counter for the number of times we have gone around this loop.
+                # This increments the World's tick counter for the number of times we have gone around this loop.
+                # Examples.starburst uses it to decide when to "explode." Look at its step method.
                 self.world.increment_ticks()
-                # self.world.save_event_and_values(SimEngine.event, SimEngine.values)
+                # Take a step in the simulation.
                 self.world.step()
-                # The next line limits how fast the simulation runs. It is not a counter.
+                # This line limits how fast the simulation runs. It is not a counter.
                 self.clock.tick(self.fps)
+
             else:
-                # self.world.save_event_and_values(SimEngine.event, SimEngine.values)
                 self.world.handle_event(SimEngine.event)
 
             self.draw_world()
 
         return self.NORMAL
 
+    @staticmethod
+    def set_grab_anywhere(allow_grab_anywhere):
+        if allow_grab_anywhere:
+            gui.WINDOW.grab_any_where_on()
+        else:
+            gui.WINDOW.grab_any_where_off()
+
     def top_loop(self, the_world):
         self.world = the_world
         # Let events come through pygame to this level.
         pg.event.set_grab(False)
 
-        while SimEngine.event not in [self.ESCAPE, self.q, self.Q,
-                                      self.CTRL_D, self.CTRL_d]:
+        while SimEngine.event not in [self.ESCAPE, self.q, self.Q, self.CTRL_D, self.CTRL_d]:
+
             (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
 
             if SimEngine.event in (None, self.simple_gui.EXIT):
                 gui.WINDOW.close()
                 break
 
-            self.grab_anywhere(self.gui_get('Grab'))
+            self.set_grab_anywhere(self.gui_get('Grab'))
 
             if SimEngine.event == '__TIMEOUT__':
                 continue

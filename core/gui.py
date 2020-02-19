@@ -56,11 +56,16 @@ def SCREEN_PIXEL_HEIGHT():
 FPS_VALUES = values = [1, 3, 6, 10, 15, 25, 40, 60]
 
 
+def gui_set(key, **kwargs):
+    widget = WINDOW[key]
+    widget.update(**kwargs)
+
+
 def set_fps(val):
     # Select the value in FPS_VALUES closest to val.
-    # new_val = min([(abs(v - val),  v) for v in FPS_VALUES])[1]
     new_val = min(FPS_VALUES, key=lambda v: abs(v - val))
-    WINDOW['fps'].update(new_val)
+    # WINDOW['fps'].update(value=new_val)
+    gui_set('fps', value=new_val)
 
 
 # This variable will be available to refer to the SCREEN object from elsewhere in the code.
