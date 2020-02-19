@@ -22,7 +22,7 @@ class CA_World(OnOffWorld):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # self.pos_to_switch is a dictionary that maps positions in a binary number to range(8) represented
+        # self.pos_to_switch is a dictionary that maps position values in a binary number to range(8) represented
         # as 3-digit binary strings:
         #     {1: '000', 2: '001', 4: '010', 8: '011', 16: '100', 32: '101', 64: '110', 128: '111'}
         # The three digits are the rule components and the keys to the switches.
@@ -50,11 +50,12 @@ class CA_World(OnOffWorld):
 
     def build_initial_line(self):
         """
-        Construct the initial row
+        Construct the initial CA line
         """
         self.init = SimEngine.gui_get('init')
         if self.init == 'Random':
-            # Set the initial row to random 1/0
+            # Set the initial row to random 1/0.
+            # You complete this line.
             line = ...
         else:
             line = [0] * self.ca_display_size
@@ -87,7 +88,7 @@ class CA_World(OnOffWorld):
 
     def make_switches_and_rule_nbr_consistent(self):
         """
-        Make the Slider, the switches, and the bin number consistent: all should contain self.rule_nbr.
+        Make the Slider, the switches, and the bin number consistent: all should equal self.rule_nbr.
         """
         ...
 
@@ -105,7 +106,7 @@ class CA_World(OnOffWorld):
 
     def set_display_from_lines(self):
         """
-        Copy values from self.ca_lines to the patches. The difficulties involve
+        Copy values from self.ca_lines to the patches. One issue is dealing with
         cases in which there are more or fewer lines than Patch row.
         """
         ...
@@ -132,10 +133,10 @@ class CA_World(OnOffWorld):
         use the value derived from the switches as the new value of self.rule_nbr.
 
         Once the slider, the switches, and the bin_string of the rule number are consistent,
-        set self.ca_lines[0] as directed by SimEngine.get_gui_value('init').
+        set self.ca_lines[0] as directed by SimEngine.gui_get('init').
 
-        Copy (the setting on) that line to the bottom row of patches.
-        NOte that the lists in self.ca_lines are lists of 0/1.
+        Copy (the settings on) that line to the bottom row of patches.
+        Note that the lists in self.ca_lines are lists of 0/1. They are not lists of Patches.
         """
         ...
 
@@ -163,13 +164,15 @@ ca_left_upper = [[sg.Text('Initial row:'),
 
 # The switches are CheckBoxes with keys from CA_World.bin_0_to_7 (in reverse).
 # These are the actual GUI widgets, which we access via their keys.
-# The pos_to_switch dictionary maps positions in the rule number as a binary number
+# The pos_to_switch dictionary maps position values in the rule number as a binary number
 # to these widgets. Each widget corresponds to a position in the rule number.
-switches = [sg.CB(n+'\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True) for n in reversed(CA_World.bin_0_to_7)]
+# Note how we generate the text for the chechboxes.
+switches = [sg.CB(n + '\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True)
+                                             for n in reversed(CA_World.bin_0_to_7)]
 
 """ 
 This  material appears above the screen: 
-the rule number slider, its binary representation, and the switch settings.
+the rule number slider, its binary representation, and the switches.
 """
 ca_right_upper = [[sg.Text('Rule number', pad=((100, 0), (20, 10))),
                    sg.Slider(key='Rule_nbr', range=(0, 255), orientation='horizontal',
@@ -186,7 +189,7 @@ if __name__ == "__main__":
     """
     from core.agent import PyLogo
 
-    # Note that we are using OnOffPatch. We could define CA_Patch(OnOffPatch),
+    # Note that we are using OnOffPatch as the Patch class. We could define CA_Patch(OnOffPatch),
     # but since it doesn't add anything to OnOffPatch, there is no need for it.
     PyLogo(CA_World, '1D CA', patch_class=OnOffPatch,
            gui_left_upper=ca_left_upper, gui_right_upper=ca_right_upper,
