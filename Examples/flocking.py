@@ -125,7 +125,7 @@ class Flocking_Agent(Agent):
         super().__init__(center_pixel=center_pixel, color=color, scale=1)
 
     def align(self, flockmates):
-        max_align_turn = SimEngine.get_gui_value('max-align-turn')
+        max_align_turn = SimEngine.gui_get('max-align-turn')
         average_flockmate_heading = self.average_flockmate_heading(flockmates)
         amount_to_turn = utils.turn_toward_amount(self.heading, average_flockmate_heading, max_align_turn)
         self.turn_right(amount_to_turn)
@@ -140,7 +140,7 @@ class Flocking_Agent(Agent):
         return avg_heading_of_flockmates
 
     def cohere(self, flockmates):
-        max_cohere_turn = SimEngine.get_gui_value('max-cohere-turn')
+        max_cohere_turn = SimEngine.gui_get('max-cohere-turn')
         avg_heading_toward_flockmates = self.average_heading_toward_flockmates(flockmates)
         amount_to_turn = utils.turn_toward_amount(self.heading, avg_heading_toward_flockmates, max_cohere_turn)
         self.turn_right(amount_to_turn)
@@ -148,12 +148,12 @@ class Flocking_Agent(Agent):
     def flock(self):
         # NetLogo allows one to specify the units within the Gui widget.
         # Here we do it explicitly by multiplying by BLOCK_SPACING().
-        vision_limit_in_pixels = SimEngine.get_gui_value('vision') * BLOCK_SPACING()
+        vision_limit_in_pixels = SimEngine.gui_get('vision') * BLOCK_SPACING()
         flockmates = self.agents_in_radius(vision_limit_in_pixels)
         if len(flockmates) > 0:
             nearest_neighbor = min(flockmates, key=lambda flockmate: self.distance_to(flockmate))
 
-            min_separation = SimEngine.get_gui_value('minimum separation') * BLOCK_SPACING()
+            min_separation = SimEngine.gui_get('minimum separation') * BLOCK_SPACING()
             if self.distance_to(nearest_neighbor) < min_separation:
                 self.separate(nearest_neighbor)
             else:
@@ -161,7 +161,7 @@ class Flocking_Agent(Agent):
                 self.cohere(flockmates)
 
     def separate(self, nearest_neighbor):
-        max_separate_turn = SimEngine.get_gui_value('max-sep-turn')
+        max_separate_turn = SimEngine.gui_get('max-sep-turn')
         amount_to_turn = utils.turn_away_amount(self.heading, nearest_neighbor.heading, max_separate_turn)
         self.turn_right(amount_to_turn)
 
@@ -169,7 +169,7 @@ class Flocking_Agent(Agent):
 class Flocking_World(World):
 
     def setup(self):
-        nbr_agents = SimEngine.get_gui_value('population')
+        nbr_agents = SimEngine.gui_get('population')
         self.create_agents(nbr_agents)
 
     def step(self):
@@ -179,7 +179,7 @@ class Flocking_World(World):
             agent.flock()
             # Here's where the agent actually moves.
             # The move depends on the speed and the heading.
-            speed = SimEngine.get_gui_value('speed')
+            speed = SimEngine.gui_get('speed')
             agent.forward(speed)
 
 

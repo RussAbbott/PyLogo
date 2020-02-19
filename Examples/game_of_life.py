@@ -25,7 +25,7 @@ class Life_World(OnOffWorld):
 
     def setup(self):
         super().setup()
-        density = SimEngine.get_gui_value('density')
+        density = SimEngine.gui_get('density')
         for patch in self.patches:
             is_alive = randint(0, 100) < density
             patch.set_alive_or_dead(is_alive)

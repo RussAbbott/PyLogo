@@ -133,8 +133,8 @@ class SegregationWorld(World):
             return colors if sums[0] < sums[1] else [colors[1], colors[0]]
 
     def setup(self):
-        density = SimEngine.get_gui_value('density')
-        pct_similar_wanted = SimEngine.get_gui_value('% similar wanted')
+        density = SimEngine.gui_get('density')
+        pct_similar_wanted = SimEngine.gui_get('% similar wanted')
         self.color_items = self.select_the_colors()
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')

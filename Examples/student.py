@@ -9,6 +9,7 @@ from core.world_patch_block import World
 from functools import reduce
 
 from random import choice
+from collections import Counter
 
 
 class Minority_Game_Agent(Agent):
@@ -20,6 +21,9 @@ class Minority_Game_Agent(Agent):
         self.strategies = strategies
         self.guess = None
         self.init_agent(starting_patch)
+
+    def get_guess(self):
+        return self.guess
 
     # noinspection PyAttributeOutsideInit
     def init_agent(self, starting_patch):
@@ -106,14 +110,23 @@ class Minority_Game_Prev_Best_Strat_Agent(Minority_Game_Agent):
         was one, and use it throughout this game.
         """
         super().init_agent(starting_patch)
-        ...
+        # if World.done:
+        #     best_strats = Minority_Game_World.get_best_strategies()
+        #     print(best_strats)
+        #     self.prev_game_best_strategy_index = Counter(best_strats).most_common(1)[0][0]
+
+    def get_prev_strat(self, best_strats):
+        self.prev_game_best_strategy_index = Counter(best_strats).most_common(1)[0][0]
 
     def make_selection(self, history_index):
         """
         You fill in this part. Instead of using self.best_strategy_index
         use the final best_strategy_index from the previous game.
         """
-        self.guess = ...
+        if self.prev_game_best_strategy_index is not None:
+            self.guess = self.prev_game_best_strategy_index
+        else:
+            self.guess = self.strategies[self.best_strategy_index][history_index]
         return self.guess
 
 
@@ -136,7 +149,14 @@ class Minority_Game_Spying_Agent(Minority_Game_Agent):
         """
         # noinspection PyUnusedLocal
         all_agents = World.agents
-        self.guess = ...
+        _minority = None
+        choice_list = []
+        for agent in all_agents:
+            choice_list.append(agent.get_guess())
+        most_chosen = Counter(choice_list).most_common(1)[0][0]
+        if most_chosen is None:
+            most_chosen = Counter(choice_list).most_common(2)[1][0]
+        self.guess = abs(most_chosen - 1)
         return self.guess
 
     def update_strategy_scores(self, _history_as_index, _winner):
@@ -145,7 +165,6 @@ class Minority_Game_Spying_Agent(Minority_Game_Agent):
 
 
 class Minority_Game_World(World):
-
     # These values are used by the agents.
     # Make them easy to access by putting them at the Minority_Game_World class level.
     copy_agents = None
@@ -155,12 +174,19 @@ class Minority_Game_World(World):
     steps_to_win = None
 
     random_agent_ids = None
+    pb_agent_ids = None
+    spy_agent_ids = None
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.history_length = None
+        self.round_best_strategy = []
         self.history = []
         self.agent_vertical_separation = None
+
+    def get_best_strategies(self):
+        return self.round_best_strategy
 
     @staticmethod
     def generate_a_strategy(strategy_length):
@@ -179,17 +205,20 @@ class Minority_Game_World(World):
             strategies.add(self.generate_a_strategy(strategy_length))
         strategies = list(strategies)
         return (strategies, strategies_per_agent)
-    
+
     def generate_the_agents(self):
         (strategies, strategies_per_agent) = self.generate_all_strategies()
         self.agent_vertical_separation = gui.PATCH_ROWS / Minority_Game_World.nbr_agents
         for agent_id in range(Minority_Game_World.nbr_agents):
             starting_patch = self.get_starting_patch(agent_id, self.agent_vertical_separation)
-            strategies_for_this_agent = strategies[strategies_per_agent*agent_id:strategies_per_agent*(agent_id + 1)]
+            strategies_for_this_agent = strategies[
+                                        strategies_per_agent * agent_id:strategies_per_agent * (agent_id + 1)]
 
             # Which agent class (or subclass) is this agent?
             agent_class = Minority_Game_Random_Agent if agent_id in Minority_Game_World.random_agent_ids else \
-                          Minority_Game_Agent
+                        Minority_Game_Prev_Best_Strat_Agent if agent_id in Minority_Game_World.pb_agent_ids else \
+                        Minority_Game_Spying_Agent if agent_id in Minority_Game_World.spy_agent_ids else \
+                        Minority_Game_Agent
             # Create the agent
             agent_class(strategies_for_this_agent, starting_patch)
 
@@ -199,7 +228,7 @@ class Minority_Game_World(World):
 
     def history_to_index(self):
         # The final argument (0) is optional.
-        val = reduce(lambda so_far, next: so_far*2 + next, self.history, 0)
+        val = reduce(lambda so_far, next: so_far * 2 + next, self.history, 0)
         return val
 
     @staticmethod
@@ -225,12 +254,16 @@ class Minority_Game_World(World):
         print(f'{self.ticks}. {self.history}, {history_as_index:2}, {winner}, {leading_agents}')
 
     def reset_agents(self):
+        for agent in sorted(World.agents, key=lambda agent: agent.id):
+            self.round_best_strategy.append(agent.get_best_strategy_score())
         print('\n\nStarting next race with same agents, same strategies, and a new random history.\n')
         self.history = [choice((0, 1)) for _ in range(self.history_length)]
         World.agents = Minority_Game_World.copy_agents
         for agent in World.agents:
             starting_patch = self.get_starting_patch(agent.id, self.agent_vertical_separation)
             agent.init_agent(starting_patch)
+            if agent is Minority_Game_Prev_Best_Strat_Agent:
+                agent.get_prev_strat(self.round_best_strategy)
         World.done = False
 
     def setup(self):
@@ -239,7 +272,7 @@ class Minority_Game_World(World):
         # Adjust how far one step is based on number of steps needed to win
         Minority_Game_World.one_step = (gui.PATCH_COLS - 2) * gui.BLOCK_SPACING() / Minority_Game_World.steps_to_win
         # For longer/shorter races, speed up/slow down frames/second
-        gui.set_fps(round(6*Minority_Game_World.steps_to_win/50))
+        gui.set_fps(round(6 * Minority_Game_World.steps_to_win / 50))
 
         # self.done will be True if this a repeat game with the same agents.
         if self.done:
@@ -254,6 +287,8 @@ class Minority_Game_World(World):
             # gui.WINDOW[NBR_AGENTS].update(value=Minority_Game_World.nbr_agents)
             SimEngine.gui_set(NBR_AGENTS, value=Minority_Game_World.nbr_agents)
         Minority_Game_World.random_agent_ids = {0, Minority_Game_World.nbr_agents - 1}
+        Minority_Game_World.pb_agent_ids = {Minority_Game_World.nbr_agents - 4}
+        Minority_Game_World.spy_agent_ids = {Minority_Game_World.nbr_agents - 3, Minority_Game_World.nbr_agents - 2}
 
         # Generate a random initial history
         self.history_length = SimEngine.gui_get(HISTORY_LENGTH)
@@ -265,7 +300,7 @@ class Minority_Game_World(World):
     def step(self):
         history_as_index = self.history_to_index()
         one_votes = sum(agent.make_selection(history_as_index) for agent in World.agents)
-        winner = 0 if one_votes > Minority_Game_World.nbr_agents/2 else 1
+        winner = 0 if one_votes > Minority_Game_World.nbr_agents / 2 else 1
         for agent in World.agents:
             agent.update(history_as_index, winner)
 
@@ -287,6 +322,7 @@ STEPS_TO_WIN = 'Steps to win'
 STRATEGIES_PER_AGENT = 'Strategies per agent'
 
 import PySimpleGUI as sg
+
 gui_left_upper = [[sg.Text(HISTORY_LENGTH, tooltip='The length of the history record'),
                    sg.Slider(key=HISTORY_LENGTH, range=(0, 8), default_value=5,
                              size=(10, 20), orientation='horizontal',

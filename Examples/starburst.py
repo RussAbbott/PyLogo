@@ -16,7 +16,7 @@ class Starburst_World(World):
     """
 
     def setup(self):
-        nbr_agents = SimEngine.get_gui_value('nbr_agents')
+        nbr_agents = SimEngine.gui_get('nbr_agents')
         for _ in range(nbr_agents):
             # When created, a agent adds itself to self.agents and to its patch's list of Agents.
             # self.agent_class(scale=1)

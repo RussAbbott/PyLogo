@@ -45,13 +45,14 @@ class CA_World(OnOffWorld):
         # a state of the CA, i.e., all the cells in the line. self.ca_list contains the entire
         # history of the CA.
         self.ca_lines: List[List[int]] = []
-        gui.WINDOW['rows'].update(value=len(self.ca_lines))
+        # gui.WINDOW['rows'].update(value=len(self.ca_lines))
+        SimEngine.gui_set('rows', value=len(self.ca_lines))
 
     def build_initial_line(self):
         """
         Construct the initial row
         """
-        self.init = SimEngine.get_gui_value('init')
+        self.init = SimEngine.gui_get('init')
         if self.init == 'Random':
             # Set the initial row to random 1/0
             line = ...
@@ -70,18 +71,17 @@ class CA_World(OnOffWorld):
         """
         ...
 
-    def handle_event_and_values(self):
+    def handle_event(self, event):
         """
         This is called when a GUI widget is changed and isn't handled by the system.
-        The key of the widget that changed is in SimEngine.event.
+        The key of the widget that changed is the event.
         If the changed widget has to do with the rule number or switches, make them all consistent.
 
         This is the function that will trigger all the code you write this week
         """
         # Handle color change requests.
-        super().handle_event_and_values()
+        super().handle_event(event)
 
-        event = SimEngine.get_gui_event()
         if event in ['Rule_nbr'] + CA_World.bin_0_to_7:
             self.make_switches_and_rule_nbr_consistent()
 
@@ -99,6 +99,7 @@ class CA_World(OnOffWorld):
         the parentheses around the binary number.
 
         Use gui.WINDOW['bin_string'].update(value=new_value) to update the value of the widget.
+        Use SimEngine.gui_set('bin_string', value=new_value) to update the value of the widget.
         """
         ...
 
@@ -116,6 +117,7 @@ class CA_World(OnOffWorld):
         self.pos_to_switch[i] returns the key for the switch representing position  2^i.
 
         Set that switch as follows: gui.WINDOW[self.pos_to_switch[pos]].update(value=new_value).
+        Set that switch as follows: SimEngine.gui_set(self.pos_to_switch[pos], value=new_value).
         (new_value will be either True or False, i.e., 1 or 0.)
 
         This is the inverse of get_rule_nbr_from_switches().
@@ -130,9 +132,10 @@ class CA_World(OnOffWorld):
         use the value derived from the switches as the new value of self.rule_nbr.
 
         Once the slider, the switches, and the bin_string of the rule number are consistent,
-        set self.ca__lines[0] as directed by SimEngine.get_gui_value('init').
+        set self.ca_lines[0] as directed by SimEngine.get_gui_value('init').
 
         Copy (the setting on) that line to the bottom row of patches.
+        NOte that the lists in self.ca_lines are lists of 0/1.
         """
         ...
 

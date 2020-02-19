@@ -68,14 +68,14 @@ class Synchronized_Agent_World(World):
             self.breathing_phase = 'inhale' if grow_or_shrink == 'grow' else 'exhale'
 
     def setup(self):
-        nbr_agents = SimEngine.get_gui_value('nbr_agents')
+        nbr_agents = SimEngine.gui_get('nbr_agents')
         self.create_ordered_agents(nbr_agents)
         self.reference_agent = list(World.agents)[0]
         twitchy_turn = randint(0, 360)
         for agent in World.agents:
             agent.speed = 1
             agent.forward(100)
-            self.current_figure = SimEngine.get_gui_value('figure')
+            self.current_figure = SimEngine.gui_get('figure')
             self.breathing_phase = 'inhale'
             if self.current_figure in ['clockwise', 'counter-clockwise']:
                 agent.turn_right(90 if self.current_figure == 'clockwise' else -90)
@@ -90,7 +90,7 @@ class Synchronized_Agent_World(World):
             # Emergency action is going beyond the inner and outer limits.
         if self.take_emergency_action():
             return
-        self.current_figure = SimEngine.get_gui_value('figure')
+        self.current_figure = SimEngine.gui_get('figure')
         self.do_a_step()
 
     def take_emergency_action(self):

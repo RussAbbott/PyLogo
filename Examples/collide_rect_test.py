@@ -28,7 +28,7 @@ class CollisionTest_World(World):
     """
 
     def setup(self):
-        nbr_agents = int(SimEngine.get_gui_value('nbr_agents'))
+        nbr_agents = int(SimEngine.gui_get('nbr_agents'))
         for i in range(nbr_agents):
             # Adds itself to self.agents and to its patch's list of Agents.
             agent = self.agent_class(color=Color('red'))
