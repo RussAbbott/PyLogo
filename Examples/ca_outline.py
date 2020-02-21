@@ -29,8 +29,11 @@ class CA_World(OnOffWorld):
         # To see it, try: print(self.pos_to_switch) after executing the next line.
         # The function bin_str() is defined in utils.py
 
-        self.pos_to_switch = dict(zip([2**i for i in range(8)], CA_World.bin_0_to_7))
-        # print(self.pos_to_switch)
+        # The following two lines do the same thing. Explain how both work.
+        pos_to_switch_a = {2**i: bin_str(i, 3) for i in range(8)}
+        pos_to_switch_b = dict(zip([2**i for i in range(8)], CA_World.bin_0_to_7))
+        assert pos_to_switch_a == pos_to_switch_b
+        self.pos_to_switch = ...  # pos_to_switch_a or pos_to_switch_b
 
         # The rule number used for this run, initially set to 110 as the default rule.
         # (You might also try rule 165.)
@@ -65,6 +68,48 @@ class CA_World(OnOffWorld):
             line[col] = 1
         return line
 
+    @staticmethod
+    def drop_extraneous_0s_from_ends_of_new_line(new_line):
+        """
+        Drop the end cell at each end of new_line if it is 0. Keep it otherwise.
+        Return the result.
+        Args:
+            new_line: ca_state with perhaps extraneous 0 cells at the ends
+
+        Returns: trimmed ca_state without extraneous 0 cells at the ends.
+        """
+        ...
+
+    def extend_ca_lines_if_needed(self, new_line):
+        """
+        new_line is one cell longer at each then than ca_lines[-1]. If those extra
+        cells are 0, delete them. If they are 1, insert a 0 cell at the corresponding
+        end of each line in ca_lines
+        """
+        ...
+
+    @staticmethod
+    def generate_new_line_from_current_line(prev_line):
+        """
+        The argument is (a copy of) the current line, i.e., copy(self.ca_lines[-1]).
+        We call it prev_line because that's the role it plays in this method.
+        Generate the new line in these steps.
+        1. Add 0 to both ends of prev_line. (We do that because we want to allow the
+        new line to extend the current line on either end. So start with a default extension.
+        2. Insert an additional 0 at each end of prev_line. That's because we need a triple
+        to generate the cells at the end of the new line. So, by this time the original
+        line has been extended by [0, 0] on both ends.
+        3. Apply the rules (i.e., the switches) to the result of step 2. This produces a line
+        which is one cell shorter than the current prev_line on each end. That is, it is
+        one cell longer on each end than the original prev_line.
+        4. Return that newly generated line. It may have 0 or 1 at each end.
+        Args:
+            prev_line: The current state of the CA.
+        Returns: The next state of the CA.
+        """
+        ...
+        return new_line
+
     def get_rule_nbr_from_switches(self):
         """
         Translate the on/off of the switches to a rule number.
@@ -75,7 +120,7 @@ class CA_World(OnOffWorld):
     def handle_event(self, event):
         """
         This is called when a GUI widget is changed and isn't handled by the system.
-        The key of the widget that changed is the event.
+        The key of the widget that changed is in event.
         If the changed widget has to do with the rule number or switches, make them all consistent.
 
         This is the function that will trigger all the code you write this week
@@ -88,7 +133,7 @@ class CA_World(OnOffWorld):
 
     def make_switches_and_rule_nbr_consistent(self):
         """
-        Make the Slider, the switches, and the bin number consistent: all should equal self.rule_nbr.
+        Make the Slider, the switches, and the bin number consistent: all should contain self.rule_nbr.
         """
         ...
 
@@ -143,10 +188,24 @@ class CA_World(OnOffWorld):
     def step(self):
         """
         Take one step in the simulation.
-        o Generate an additional line in self.ca_lines.
-        o Copy self.ca_lines to the display
+        (a) Generate an additional line for the ca. (Use a copy of self.ca_lines[-1].)
+        (b) Extend all lines in ca_lines if the new line is longer than its predecessor.
+        (c) Trim the new line and add to self.ca_lines
+        (d) Copy self.ca_lines to the display
         """
-        ...
+        # (a)
+        new_line = ... # The new state derived from self.ca_lines[-1]
+
+        # (b)
+        ... # Extend lines in self.ca_lines at each end as needed.
+
+        # (c)
+        trimmed_new_line = ... # Drop extraneous 0s at the end of new_line
+        ... # Add trimmed_new_line to the end of self.ca_lines
+
+        # (d)
+        ... # Refresh the display from self.ca_lines
+
 
 
 # ############################################## Define GUI ############################################## #
@@ -172,7 +231,7 @@ switches = [sg.CB(n + '\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True)
 
 """ 
 This  material appears above the screen: 
-the rule number slider, its binary representation, and the switches.
+the rule number slider, its binary representation, and the switch settings.
 """
 ca_right_upper = [[sg.Text('Rule number', pad=((100, 0), (20, 10))),
                    sg.Slider(key='Rule_nbr', range=(0, 255), orientation='horizontal',
