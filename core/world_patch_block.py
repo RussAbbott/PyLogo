@@ -14,6 +14,7 @@ from core.utils import get_class_name
 import core.world_patch_block as world
 
 from pygame.color import Color
+from pygame.draw import line
 from pygame.rect import Rect
 from pygame.sprite import Sprite
 from pygame.surface import Surface
@@ -45,13 +46,22 @@ class Block(Sprite):
         y_dist = self.center_pixel.y - xy.y
         dist = sqrt(x_dist * x_dist + y_dist*y_dist)
         return dist
-        
+
+    # Note that the actual drawing (blit and draw_line) takes place in core.gui.
     def draw(self):
         if self.label:
-            text = gui.FONT.render(self.label, True, (0, 0, 0), (255, 255, 255))
-            offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
-            gui.SCREEN.blit(text, (self.rect.x + offset, self.rect.y + offset))
-        gui.SCREEN.blit(self.image, self.rect)
+            self.draw_label()
+        gui.blit(self.image, self.rect)
+
+    def draw_label(self):
+        text = gui.FONT.render(self.label, True, Color('black'), Color('white'))
+        offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
+        text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
+        # gui.SCREEN.blit(text, text_center)
+        gui.blit(text, text_center)
+        line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
+        # self.draw_line(line_color=line_color, start_pixel=self.rect.center, end_pixel=text_center)
+        gui.draw_line(start_pixel=self.rect.center, end_pixel=text_center, line_color=line_color)
 
     def set_color(self, color):
         self.color = color
@@ -118,6 +128,7 @@ class World:
     patches_array: np.ndarray = None
     patches = None
     agents = None
+    links = None
 
     ticks = None
 
@@ -135,10 +146,12 @@ class World:
 
         self.agent_class = agent_class
         World.agents = set()
+        World.links = set()
 
     @staticmethod
     def clear_all():
         World.agents = set()
+        World.links = set()
         for patch in World.patches:
             patch.clear()
 
@@ -174,6 +187,9 @@ class World:
 
         for agent in World.agents:
             agent.draw()
+
+        for link in World.links:
+            link.draw()
 
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """

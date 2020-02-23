@@ -2,12 +2,20 @@
 import os
 
 import pygame as pg
+from pygame.color import Color
+from pygame.draw import line
+from pygame.font import SysFont
+from pygame.rect import Rect
+from pygame.sprite import Sprite
+from pygame.surface import Surface
 
 # By importing this file itself, can avoid the use of globals
 # noinspection PyUnresolvedReferences
 import core.gui as gui
 
 import PySimpleGUI as sg
+
+from typing import Optional, Tuple, Union
 
 import tkinter as tk
 
@@ -68,12 +76,23 @@ def set_fps(val):
     gui_set('fps', value=new_val)
 
 
-# This variable will be available to refer to the SCREEN object from elsewhere in the code.
-# Note that it can't be imported directly because imports occur before the SCREEN is created.
-SCREEN = None
+# The WINDOW variable will be available to refer to the WINDOW object from elsewhere in the code.
+# Neither the WINDOW nor the SCREEN can be imported directly because imports occur before they are created.
 WINDOW: sg.PySimpleGUI.Window
 
-FONT = None
+
+# The following are from pygame.
+SCREEN: Surface
+FONT: SysFont
+
+
+# These pygame functions draw to the SCREEN, which is a pygame Surface.
+def blit(image: Surface, rect: Union[Rect, Tuple]):
+    gui.SCREEN.blit(image, rect)
+
+
+def draw_line(start_pixel, end_pixel, line_color: Color = Color('white'), width: int = 1):
+    line(gui.SCREEN, line_color, start_pixel, end_pixel, width)
 
 
 class SimpleGUI:
@@ -107,7 +126,7 @@ class SimpleGUI:
         gui.WINDOW = self.make_window(caption, gui_left_upper, gui_right_upper=gui_right_upper, bounce=bounce, fps=fps)
 
         pg.init()
-        gui.FONT = pg.font.SysFont(None, int(1.5 * gui.BLOCK_SPACING()))
+        gui.FONT = SysFont(None, int(1.5 * gui.BLOCK_SPACING()))
 
         # All graphics are drawn to gui.SCREEN, which is a global variable.
         gui.SCREEN = pg.display.set_mode(self.screen_shape_width_height)
@@ -166,7 +185,7 @@ class SimpleGUI:
 
         # layout is the actual layout of the window. The stuff above organizes it into component parts.
         # col1 is the control buttons, sliders, etc.
-        # col2 is the graph plus whatever the user wasnts to put above it.
+        # col2 is the graph plus whatever the user wants to put above it.
         # layout is a single "GUI line" with these two components in sequence.
         layout = [[sg.Column(col1), sg.Column(col2)]]
 
