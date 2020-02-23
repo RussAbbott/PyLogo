@@ -109,12 +109,13 @@ from pygame import Color
 
 from core.agent import Agent
 from core.gui import BLOCK_SPACING, HOR_SEP, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
+from core.link import hash_object, Link, link_exists
 from core.pairs import Pixel_xy
 from core.sim_engine import SimEngine
 import core.utils as utils
 from core.world_patch_block import World
 
-from random import uniform
+from random import choice, uniform
 
 
 class Flocking_Agent(Agent):
@@ -145,12 +146,21 @@ class Flocking_Agent(Agent):
         amount_to_turn = utils.turn_toward_amount(self.heading, avg_heading_toward_flockmates, max_cohere_turn)
         self.turn_right(amount_to_turn)
 
-    def flock(self):
+    def flock(self, show_links):
         # NetLogo allows one to specify the units within the Gui widget.
         # Here we do it explicitly by multiplying by BLOCK_SPACING().
         vision_limit_in_pixels = SimEngine.gui_get('vision') * BLOCK_SPACING()
+
         flockmates = self.agents_in_radius(vision_limit_in_pixels)
+
         if len(flockmates) > 0:
+            # If show_links, create links to flockmates if they don't already exist.
+            if show_links:
+                for flockmate in flockmates:
+                    # Don't make a link if it already exists.
+                    if not link_exists(self, flockmate):
+                        Link(self, flockmate, color=Color('skyblue3'))
+
             nearest_neighbor = min(flockmates, key=lambda flockmate: self.distance_to(flockmate))
 
             min_separation = SimEngine.gui_get('minimum separation') * BLOCK_SPACING()
@@ -173,10 +183,12 @@ class Flocking_World(World):
         self.create_agents(nbr_agents)
 
     def step(self):
+        World.links = set()
+        show_links = SimEngine.gui_get('Show links?')
         # World.agents is the set of agents kept by the world
         for agent in World.agents:
             # agent.flock() resets agent's heading. Agent doesn't move.
-            agent.flock()
+            agent.flock(show_links)
             # Here's where the agent actually moves.
             # The move depends on the speed and the heading.
             speed = SimEngine.gui_get('speed')
@@ -229,6 +241,11 @@ gui_left_upper = [
                    sg.Slider(key='max-align-turn', range=(0, 20), resolution=0.5, default_value=5,
                              orientation='horizontal', size=(10, 20),
                              tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates')],
+
+                  HOR_SEP(30),
+
+                  [sg.Checkbox('Show links?', key='Show links?', default=False,
+                               tooltip='Show links between bird "neighbors."')]
 
                   ]
 
