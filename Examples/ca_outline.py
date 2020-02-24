@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 import core.gui as gui
 from core.gui import HOR_SEP
 from core.on_off import on_off_left_upper, OnOffPatch, OnOffWorld
@@ -6,6 +8,8 @@ from core.sim_engine import SimEngine
 from core.utils import bin_str
 
 from copy import copy
+
+from itertools import chain, repeat
 
 from random import choice
 
@@ -61,10 +65,11 @@ class CA_World(OnOffWorld):
             # You complete this line.
             line = ...
         else:
-            line = [0] * self.ca_display_size
+            line_length = self.ca_display_size if SimEngine.gui_get('000') else 1
+            line = [0] * line_length
             col = 0 if self.init == 'Left' else \
-                  CA_World.ca_display_size // 2 if self.init == 'Center' else \
-                  CA_World.ca_display_size - 1   # self.init == 'Right'
+                  line_length // 2 if self.init == 'Center' else \
+                  line_length - 1  # self.init == 'Right'
             line[col] = 1
         return line
 
@@ -151,9 +156,55 @@ class CA_World(OnOffWorld):
 
     def set_display_from_lines(self):
         """
-        Copy values from self.ca_lines to the patches. One issue is dealing with
-        cases in which there are more or fewer lines than Patch row.
+        Copy values from self.ca_lines to the patches. There are two issues.
+        1. There are more or fewer lines than Patch row.
+        2. The ca_lines are longer or shorter than the Patch rows.
         """
+        # This is the most difficult method. Here is the outline I used.
+        display_width = gui.PATCH_COLS
+        ca_line_width = len(self.ca_lines[0])
+        # The number of blanks to prepend to the line to be displayed to fill the display row.
+        # Will be 0 if the ca_line is at least as long as the display row or the line is left-justified.
+        left_padding_needed = 0 if ca_line_width >= display_width or self.init == 'Left' else ...
+        # This is the position in the ca_line to be displayed that is displayed in the leftmost display Patch.
+        # Will be 0 if the display width is greater than or equal to the line width or we are left-justifying.
+        left_ca_line_index = 0 if display_width >= ca_line_width or self.init == 'Left' else ...
+
+        display_height = gui.PATCH_ROWS
+        nbr_ca_lines = len(self.ca_lines)
+        # The first line from self.ca_lines to display.
+        # Will be 0 if display_height >= nbr_ca_lines
+        first_ca_line_to_display = 0 if display_height >= nbr_ca_lines else ...
+        # The row of the patch display where the first ca_line is displayed.
+        # Will be 0 if nbr_ca_lines >= display_height
+        first_patches_row_nbr = 0 if nbr_ca_lines >= display_height else ...
+        # Zip the indices of ca_lines to be display together with the indices of
+        # the Patch rows where they are to be displayed.
+        ca_lines_patch_rows = zip(..., ...)
+
+        # Step through the corresponding index pairs.
+        for (ca_line_index, patch_row_index) in ca_lines_patch_rows:
+            # This is the portion of self.ca_lines[ca_line] to be displayed.
+            # What matters is where it starts. It's ok if it's too long!
+            ca_line_portion = ...
+            # This is the entire line to be displayed. It may have some 0-padding
+            # at the left and some 0-padding at the right. (Use repeat from itertools
+            # for the padding on the right. It doesn't matter if it's too long!)
+            # Use chain from itertools to combine the three parts of the line.
+            padded_line = chain(..., ..., ...)
+            # Zip the values from the padded_line to be displayed with the indices
+            # where they will be displayed. The second parameter to zip limits the number
+            # of values to be displayed. That's why it doesn't matter if the first
+            # parameter is too long.
+            ca_value_patch_index = zip(..., range(display_width))
+            # Step through these pairs and put the values into the associated Patches.
+            for (ca_val, col_nbr) in ca_value_patch_index:
+                # Get the Patch to be updated from the patches_array.
+                patch = CA_World.patches_array[patch_row, col_nbr]
+                # Use the set_on_off method of OnOffPatch to set the patch to ca_val.
+                ...
+
+        # Update the 'rows' widget.
         ...
 
     def set_switches_from_rule_nbr(self):
@@ -226,8 +277,7 @@ ca_left_upper = [[sg.Text('Initial row:'),
 # The pos_to_switch dictionary maps position values in the rule number as a binary number
 # to these widgets. Each widget corresponds to a position in the rule number.
 # Note how we generate the text for the chechboxes.
-switches = [sg.CB(n + '\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True)
-                                             for n in reversed(CA_World.bin_0_to_7)]
+switches = [sg.CB(n + '\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True) for n in reversed(CA_World.bin_0_to_7)]
 
 """ 
 This  material appears above the screen: 
