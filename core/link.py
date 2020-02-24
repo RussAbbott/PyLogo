@@ -14,7 +14,7 @@ def hash_object(agent_1, agent_2, directed=False):
 
 def link_exists(agent_1, agent_2, directed=False):
     """
-    Determine whether a directed/undirected link between agent_a and agent_b already exists in World.links
+    Determine whether a directed/undirected link between agent_1 and agent_2 already exists in World.links
     """
     hash_obj = hash_object(agent_1, agent_2, directed)
     return any({hash_obj == ln.hash_object for ln in World.links})

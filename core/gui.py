@@ -42,8 +42,8 @@ def HALF_PATCH_SIZE():
 
 
 
-def HOR_SEP(length=25):
-    return [sg.Text('_' * length, text_color='black', pad=((0, 0), (10, 10)))]
+def HOR_SEP(length=25, pad=((0, 0), (10, 10))):
+    return [sg.Text('_' * length, text_color='black', pad=pad)]
 
 
 
