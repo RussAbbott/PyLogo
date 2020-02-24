@@ -154,6 +154,7 @@ class Flocking_Agent(Agent):
         flockmates = self.agents_in_radius(vision_limit_in_pixels)
 
         if len(flockmates) > 0:
+
             # If showing_flockmates, create links to flockmates if they don't already exist.
             if showing_flockmates:
                 for flockmate in flockmates:
@@ -216,7 +217,7 @@ gui_left_upper = [
                    sg.Slider(key='speed', range=(0, 10), resolution=0.5, default_value=2, orientation='horizontal',
                              size=(10, 20), tooltip='The speed of the agents')],
 
-                  HOR_SEP(30),
+                  HOR_SEP(30, pad=((0, 0), (0, 0))),
 
                   [sg.Text('min separation', pad=((0, 5), (20, 0)),
                            tooltip='The minimum acceptable patch-lengths to nearest neighbor'),
@@ -232,7 +233,7 @@ gui_left_upper = [
                              tooltip='The most degrees (in angles) an agent can turn '
                                      'to move away from its nearest neighbor')],
 
-                  HOR_SEP(30),
+                  HOR_SEP(30, pad=((0, 0), (0, 0))),
 
                   [sg.Text('max-cohere-turn', pad=((0, 5), (20, 0)),
                            tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates'),
@@ -246,7 +247,7 @@ gui_left_upper = [
                              orientation='horizontal', size=(10, 20),
                              tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates')],
 
-                  HOR_SEP(30),
+                  HOR_SEP(30, pad=((0, 0), (0, 0))),
 
                   [sg.Checkbox('Show flockmates?', key='Show flockmates?', default=False,
                                tooltip='Show links between flockmates')]
