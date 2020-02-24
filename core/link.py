@@ -45,9 +45,6 @@ class Link:
 
     def __str__(self):
         return f'{self.agent_1} {"-->" if self.directed else "<-->"} {self.agent_2}'
-        # return f'Agent-{self.agent_1.id}{tuple(self.agent_1.center_pixel.round())} ' \
-        #        f'{"-->" if self.directed else "<-->"} ' \
-        #        f'Agent-{self.agent_2.id}{tuple(self.agent_2.center_pixel.round())}'
 
     def draw(self):
         gui.draw_line(self.agent_1.rect.center, self.agent_2.rect.center, line_color=self.color)
