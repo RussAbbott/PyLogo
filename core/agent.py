@@ -81,12 +81,15 @@ class Agent(Block):
 
     def __str__(self):
         class_name = utils.get_class_name(self)
-        return f'{class_name}-{self.id}@{(self.center_pixel.round(2))}: heading: {round(self.heading, 2)}'
+        return f'{class_name}-{self.id}{tuple(self.center_pixel.round())}'
 
     def agents_in_radius(self, distance):
         qualifying_agents = [agent for agent in World.agents
                              if agent is not self and self.distance_to(agent) < distance]
         return qualifying_agents
+
+    def all_links(self):
+        return [lnk for lnk in World.links if self in (lnk.agent_1, lnk.agent_2)]
 
     def average_of_headings(self, agent_set, fn):
         """
@@ -169,6 +172,9 @@ class Agent(Block):
         to_pixel = target.center_pixel
         return from_pixel.heading_toward(to_pixel)
 
+    def in_links(self):
+        return [lnk for lnk in World.links if lnk.directed and lnk.agent_2 is self]
+
     def move_by_dxdy(self, dxdy: Velocity):
         """
         Move to self.center_pixel + (dx, dy)
@@ -201,6 +207,9 @@ class Agent(Block):
         new_patch = self.current_patch()
         new_patch.add_agent(self)
 
+    def out_links(self):
+        return [lnk for lnk in World.links if lnk.directed and lnk.agent_1 is self]
+
     def set_center_pixel(self, xy: Pixel_xy):
         self.center_pixel: Pixel_xy = xy.wrap()
         # Set the center point of this agent's rectangle.
@@ -223,6 +232,9 @@ class Agent(Block):
     def set_velocity(self, velocity):
         self.velocity = velocity
         self.face_xy(self.center_pixel + velocity)
+
+    def undirected_links(self):
+        return [lnk for lnk in self.all_links() if not lnk.directed]
 
 
 class Turtle(Agent):
