@@ -146,7 +146,7 @@ class Flocking_Agent(Agent):
         amount_to_turn = utils.turn_toward_amount(self.heading, avg_heading_toward_flockmates, max_cohere_turn)
         self.turn_right(amount_to_turn)
 
-    def flock(self, show_links):
+    def flock(self, showing_flockmates):
         # NetLogo allows one to specify the units within the Gui widget.
         # Here we do it explicitly by multiplying by BLOCK_SPACING().
         vision_limit_in_pixels = SimEngine.gui_get('vision') * BLOCK_SPACING()
@@ -154,8 +154,8 @@ class Flocking_Agent(Agent):
         flockmates = self.agents_in_radius(vision_limit_in_pixels)
 
         if len(flockmates) > 0:
-            # If show_links, create links to flockmates if they don't already exist.
-            if show_links:
+            # If showing_flockmates, create links to flockmates if they don't already exist.
+            if showing_flockmates:
                 for flockmate in flockmates:
                     # Don't make a link if it already exists.
                     if not link_exists(self, flockmate):
@@ -184,11 +184,15 @@ class Flocking_World(World):
 
     def step(self):
         World.links = set()
-        show_links = SimEngine.gui_get('Show links?')
+        showing_flockmates = SimEngine.gui_get('Show flockmates?')
         # World.agents is the set of agents kept by the world
         for agent in World.agents:
             # agent.flock() resets agent's heading. Agent doesn't move.
-            agent.flock(show_links)
+            agent.flock(showing_flockmates)
+
+            # Print this agent's flockmate links if curious.
+            # print(f'{agent}: {[str(lnk) for lnk in agent.all_links()]}')
+
             # Here's where the agent actually moves.
             # The move depends on the speed and the heading.
             speed = SimEngine.gui_get('speed')
@@ -244,8 +248,8 @@ gui_left_upper = [
 
                   HOR_SEP(30),
 
-                  [sg.Checkbox('Show links?', key='Show links?', default=False,
-                               tooltip='Show links between bird "neighbors."')]
+                  [sg.Checkbox('Show flockmates?', key='Show flockmates?', default=False,
+                               tooltip='Show links between flockmates')]
 
                   ]
 
