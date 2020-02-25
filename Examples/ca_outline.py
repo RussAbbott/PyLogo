@@ -155,27 +155,29 @@ class CA_World(OnOffWorld):
     def set_display_from_lines(self):
         """
         Copy values from self.ca_lines to the patches. There are two issues.
-        1. Are the ca_lines longer/shorter than the Patch rows?
-        2. Are there more/fewer lines than Patch row?
+        1. Is self.ca_lines longer/shorter than the number of Patch rows in the display?
+        2. Are there more/fewer cells-per-line than Patches-per-row?
         What do you do in each case?
 
         This is the most difficult method. Here is the outline I used.
         """
-        # Check to see if the user changed this value.
+        # Get the current setting of 'init'.
         init = SimEngine.gui_get('init')
 
         # Get the two relevant widths.
         display_width = gui.PATCH_COLS
+
+        # All the lines in self.ca_lies are the same length.
         ca_line_width = len(self.ca_lines[0])
 
         # How many blanks must be prepended to the line to be displayed to fill the display row?
         # Will be 0 if the ca_line is at least as long as the display row or the line is left-justified.
         left_padding_needed = 0 if ca_line_width >= display_width or init == 'Left' else ...
 
-        # Use [0]*n to get a sequence of n 0s.
+        # Use [0]*n to get a list of n 0s to use as left padding.
         left_padding = ...
 
-        # Which elements of the ca_line to be displayed?
+        # Which elements of the ca_line are to be displayed?
         # More to the point, what is index of the first element of the line to be displayed?
         # Will be 0 if the display width is greater than or equal to the line width or we are left-justifying.
         left_ca_line_index = 0 if display_width >= ca_line_width or init == 'Left' else ...
@@ -184,27 +186,31 @@ class CA_World(OnOffWorld):
         display_height = gui.PATCH_ROWS
         nbr_ca_lines = len(self.ca_lines)
 
-        # Which is the first line from self.ca_lines to display.
+        # Which is the first line from self.ca_lines to be displayed.
         # Will be 0 if display_height >= nbr_ca_lines
         first_ca_line_to_display = 0 if display_height >= nbr_ca_lines else ...
+
+
+        # Which lines from self.ca_lies should be displayed?
+        ca_lines_to_display = ...
 
         # On which Patch row, do we start displaying lines from ca_lines?
         # Will be 0 if nbr_ca_lines >= display_height
         first_patches_row_nbr = 0 if nbr_ca_lines >= display_height else ...
 
-        # We now have all the relevant values for deciding how to paint the ca_lines onto the Patch display.
-        ca_lines_to_display = ...
-
+        # Which are the patch rows on which to display the ca_lines_to_display?
         # This is a slice from CA_World.patches_array
         patch_rows_to_display_on = CA_World.patches_array[...]
 
-        # Zip the ca_lines to be displayed together with the Patch rows where they are to be displayed.
+        # We now have all the relevant information for deciding how to paint the ca_lines onto the Patch display.
+
+        # Zip the ca_lines to be displayed together with the Patch rows on which they are to be displayed.
         ca_lines_patch_rows = zip(ca_lines_to_display, patch_rows_to_display_on)
 
         # Step through the corresponding pairs.
         for (ca_line, patch_row) in ca_lines_patch_rows:
 
-            # Which elements from ca_lines[ca_line] should be displayed?
+            # Which elements from self.ca_lines[ca_line] should be displayed?
             # We display the elements starting at left_ca_line_index.
             ca_line_portion = ...
 
@@ -265,15 +271,16 @@ class CA_World(OnOffWorld):
         """
         Take one step in the simulation.
         (a) Generate an additional line for the ca. (Use a copy of self.ca_lines[-1].)
-        (b) Extend all lines in ca_lines if the new line is longer than its predecessor.
+        (b) Extend all lines in ca_lines if the new line is longer (with additional 1's) than its predecessor.
         (c) Trim the new line and add to self.ca_lines
-        (d) Copy self.ca_lines to the display
+        (d) Refresh display from values in self.ca_lines.
         """
         # (a)
         new_line = ... # The new state derived from self.ca_lines[-1]
 
         # (b)
-        ... # Extend lines in self.ca_lines at each end as needed.
+        ... # Extend lines in self.ca_lines at each end as needed. (Don't extend for extra 0's at the ends.)
+            # Can't drop the 0's first because we then lose track of which end was extended.
 
         # (c)
         trimmed_new_line = ... # Drop extraneous 0s at the end of new_line
