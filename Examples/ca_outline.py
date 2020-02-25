@@ -46,7 +46,6 @@ class CA_World(OnOffWorld):
         # Set the switches and the binary representation of self.rule_nbr.
         self.set_switches_from_rule_nbr()
         self.set_binary_nbr_from_rule_nbr()
-        self.init = None
 
         # self.ca_lines is a list of lines, each of which is a list of 0/1. Each line represents
         # a state of the CA, i.e., all the cells in the line. self.ca_list contains the entire
@@ -59,17 +58,17 @@ class CA_World(OnOffWorld):
         """
         Construct the initial CA line
         """
-        self.init = SimEngine.gui_get('init')
-        if self.init == 'Random':
+        init = SimEngine.gui_get('init')
+        if init == 'Random':
             # Set the initial row to random 1/0.
             # You complete this line.
             line = ...
         else:
             line_length = self.ca_display_size if SimEngine.gui_get('000') else 1
             line = [0] * line_length
-            col = 0 if self.init == 'Left' else \
-                  line_length // 2 if self.init == 'Center' else \
-                  line_length - 1  # self.init == 'Right'
+            col = 0                if init == 'Left' else \
+                  line_length // 2 if init == 'Center' else \
+                  line_length - 1   # init == 'Right'
             line[col] = 1
         return line
 
@@ -149,7 +148,6 @@ class CA_World(OnOffWorld):
         the string '(01101110)' is stored in gui.WINDOW['bin_string']. Include
         the parentheses around the binary number.
 
-        Use gui.WINDOW['bin_string'].update(value=new_value) to update the value of the widget.
         Use SimEngine.gui_set('bin_string', value=new_value) to update the value of the widget.
         """
         ...
@@ -157,50 +155,77 @@ class CA_World(OnOffWorld):
     def set_display_from_lines(self):
         """
         Copy values from self.ca_lines to the patches. There are two issues.
-        1. There are more or fewer lines than Patch row.
-        2. The ca_lines are longer or shorter than the Patch rows.
+        1. Are the ca_lines longer/shorter than the Patch rows?
+        2. Are there more/fewer lines than Patch row?
+        What do you do in each case?
+
+        This is the most difficult method. Here is the outline I used.
         """
-        # This is the most difficult method. Here is the outline I used.
+        # Check to see if the user changed this value.
+        init = SimEngine.gui_get('init')
+
+        # Get the two relevant widths.
         display_width = gui.PATCH_COLS
         ca_line_width = len(self.ca_lines[0])
-        # The number of blanks to prepend to the line to be displayed to fill the display row.
-        # Will be 0 if the ca_line is at least as long as the display row or the line is left-justified.
-        left_padding_needed = 0 if ca_line_width >= display_width or self.init == 'Left' else ...
-        # This is the position in the ca_line to be displayed that is displayed in the leftmost display Patch.
-        # Will be 0 if the display width is greater than or equal to the line width or we are left-justifying.
-        left_ca_line_index = 0 if display_width >= ca_line_width or self.init == 'Left' else ...
 
+        # How many blanks must be prepended to the line to be displayed to fill the display row?
+        # Will be 0 if the ca_line is at least as long as the display row or the line is left-justified.
+        left_padding_needed = 0 if ca_line_width >= display_width or init == 'Left' else ...
+
+        # Use [0]*n to get a sequence of n 0s.
+        left_padding = ...
+
+        # Which elements of the ca_line to be displayed?
+        # More to the point, what is index of the first element of the line to be displayed?
+        # Will be 0 if the display width is greater than or equal to the line width or we are left-justifying.
+        left_ca_line_index = 0 if display_width >= ca_line_width or init == 'Left' else ...
+
+        # Get the two relevant heights.
         display_height = gui.PATCH_ROWS
         nbr_ca_lines = len(self.ca_lines)
-        # The first line from self.ca_lines to display.
+
+        # Which is the first line from self.ca_lines to display.
         # Will be 0 if display_height >= nbr_ca_lines
         first_ca_line_to_display = 0 if display_height >= nbr_ca_lines else ...
-        # The row of the patch display where the first ca_line is displayed.
+
+        # On which Patch row, do we start displaying lines from ca_lines?
         # Will be 0 if nbr_ca_lines >= display_height
         first_patches_row_nbr = 0 if nbr_ca_lines >= display_height else ...
-        # Zip the indices of ca_lines to be display together with the indices of
-        # the Patch rows where they are to be displayed.
-        ca_lines_patch_rows = zip(..., ...)
 
-        # Step through the corresponding index pairs.
-        for (ca_line_index, patch_row_index) in ca_lines_patch_rows:
-            # This is the portion of self.ca_lines[ca_line] to be displayed.
-            # What matters is where it starts. It's ok if it's too long!
+        # We now have all the relevant values for deciding how to paint the ca_lines onto the Patch display.
+        ca_lines_to_display = ...
+
+        # This is a slice from CA_World.patches_array
+        patch_rows_to_display_on = CA_World.patches_array[...]
+
+        # Zip the ca_lines to be displayed together with the Patch rows where they are to be displayed.
+        ca_lines_patch_rows = zip(ca_lines_to_display, patch_rows_to_display_on)
+
+        # Step through the corresponding pairs.
+        for (ca_line, patch_row) in ca_lines_patch_rows:
+
+            # Which elements from ca_lines[ca_line] should be displayed?
+            # We display the elements starting at left_ca_line_index.
             ca_line_portion = ...
-            # This is the entire line to be displayed. It may have some 0-padding
-            # at the left and some 0-padding at the right. (Use repeat from itertools
-            # for the padding on the right. It doesn't matter if it's too long!)
-            # Use chain from itertools to combine the three parts of the line.
+
+            # For the complete display line, we may need to pad ca_line_portion to the left or right.
+            # We need left_padding_needed 0s to the left and an arbitrary sequence of 0s to the right.
+            # (Use repeat from itertools for the padding on the right. It doesn't matter if it's too long!)
+
+            # Put the three pieces together to get the full line.
+            # Use chain from itertools to combine the three parts of the line:
+            #       left_padding, ca_line_portion, right_padding.
             padded_line = chain(..., ..., ...)
-            # Zip the values from the padded_line to be displayed with the indices
-            # where they will be displayed. The second parameter to zip limits the number
-            # of values to be displayed. That's why it doesn't matter if the first
-            # parameter is too long.
-            ca_value_patch_index = zip(..., range(display_width))
-            # Step through these pairs and put the values into the associated Patches.
-            for (ca_val, col_nbr) in ca_value_patch_index:
-                # Get the Patch to be updated from the patches_array.
-                patch = CA_World.patches_array[patch_row, col_nbr]
+
+            # Where will the padded_line be displayed? On patch_row.
+
+            # Zip the values from the padded_line with the Patches that will display them.
+            # (The second parameter to zip, i.e., the Patches, limits the number of values to be displayed.
+            # That's why it doesn't matter if the first parameter is too long.)
+            ca_values_patchs = zip(padded_line, patch_row)
+
+            # Step through these value-patch pairs and put the values into the associated Patches.
+            for (ca_val, patch) in ca_values_patchs:
                 # Use the set_on_off method of OnOffPatch to set the patch to ca_val.
                 ...
 
@@ -256,7 +281,6 @@ class CA_World(OnOffWorld):
 
         # (d)
         ... # Refresh the display from self.ca_lines
-
 
 
 # ############################################## Define GUI ############################################## #
