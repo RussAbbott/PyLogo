@@ -137,6 +137,9 @@ class CA_World(OnOffWorld):
         if event in ['Rule_nbr'] + CA_World.bin_0_to_7:
             self.make_switches_and_rule_nbr_consistent()
 
+        elif event == 'Random?':
+            SimEngine.gui_set('init', ...)
+
     def make_switches_and_rule_nbr_consistent(self):
         """
         Make the Slider, the switches, and the bin number consistent: all should contain self.rule_nbr.
@@ -277,15 +280,18 @@ class CA_World(OnOffWorld):
         new_line = ... # The new state derived from self.ca_lines[-1]
 
         # (b)
-        ... # Extend lines in self.ca_lines at each end as needed. (Don't extend for extra 0's at the ends.)
-            # Can't drop the 0's first because we then lose track of which end was extended.
+        # Extend lines in self.ca_lines at each end as needed. (Don't extend for extra 0's at the ends.)
+        # Can't drop the 0's first because we then lose track of which end was extended.
+        ...
 
         # (c)
         trimmed_new_line = ... # Drop extraneous 0s at the end of new_line
-        ... # Add trimmed_new_line to the end of self.ca_lines
+        # Add trimmed_new_line to the end of self.ca_lines
+        ...
 
         # (d)
-        ... # Refresh the display from self.ca_lines
+        # Refresh the display from self.ca_lines
+        ...
 
 
 # ############################################## Define GUI ############################################## #
@@ -297,10 +303,14 @@ The following appears at the top-left of the window.
 ca_left_upper = [[sg.Text('Row justification'),
                   sg.Combo(values=['Left', 'Center', 'Right'], key='justification', default_value='Right')],
 
-                 [sg.Text('Initial row:',
+                 HOR_SEP(30),
+
+                 [sg.Text('Initial row:', pad=(None, (20, 0)),
                           tooltip="0's and 1's for the initial row. An empty \n" +
                                   "string will set the initial row to all 0's."),
-                  sg.Input(default_text="1", key='init', size=(20, None), justification='center')],
+                  sg.Input(default_text="1", key='init', size=(20, None), text_color='white',
+                           background_color='steelblue4', justification='center')
+                ],
 
                  [sg.CB('Random?', key='Random?', enable_events=True,
                         tooltip="Set the initial row to random 0's and 1's.")],
@@ -309,16 +319,17 @@ ca_left_upper = [[sg.Text('Row justification'),
 
                  [sg.Text('Rows:'), sg.Text('     0', key='rows')],
 
-                 HOR_SEP(30),
+                 HOR_SEP(30, pad=(None, (0, 10)))
 
-                 *on_off_left_upper]
+                 ] + on_off_left_upper
+
 
 # The switches are CheckBoxes with keys from CA_World.bin_0_to_7 (in reverse).
 # These are the actual GUI widgets, which we access via their keys.
 # The pos_to_switch dictionary maps position values in the rule number as a binary number
 # to these widgets. Each widget corresponds to a position in the rule number.
 # Note how we generate the text for the chechboxes.
-switches = [sg.CB(n + '\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True) for n in reversed(CA_World.bin_0_to_7)]
+switches = [sg.CB(n+'\n 1', key=n, pad=((30, 0), (0, 0)), enable_events=True) for n in reversed(CA_World.bin_0_to_7)]
 
 """ 
 This  material appears above the screen: 
