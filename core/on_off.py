@@ -118,12 +118,7 @@ class OnOffWorld(World):
 # ############################################## Define GUI ############################################## #
 on_off_left_upper = [
                      [sg.Button(OnOffWorld.SELECT_ON_TEXT), OnOffWorld.on_color_chooser],
-
-                     [sg.Button(OnOffWorld.SELECT_OFF_TEXT), OnOffWorld.off_color_chooser],
-
-                     HOR_SEP(),
-
-                     [sg.Text('Cells can be toggled when\nthe system is stopped.')],
+                     [sg.Button(OnOffWorld.SELECT_OFF_TEXT), OnOffWorld.off_color_chooser]
                     ]
 
 
