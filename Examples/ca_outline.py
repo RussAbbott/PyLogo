@@ -293,17 +293,25 @@ import PySimpleGUI as sg
 
 """ 
 The following appears at the top-left of the window. 
-It puts a row consisting of a Text widgit and a ComboBox above the widgets from on_off.py
 """
 ca_left_upper = [[sg.Text('Row justification'),
                   sg.Combo(values=['Left', 'Center', 'Right'], key='justification', default_value='Right')],
-                 [sg.Text('Initial row'), sg.CB('Random?', key='Random?', pad=((30, 0), (0, 0)), enable_events=True)],
-                 [sg.Input(default_text="1", key='init', tooltip="0's and 1's for the initial row.",
-                               size=(10, None), pad=((50, 0), (0, 0)), justification='center')],
-                 HOR_SEP(30),
+
+                 [sg.Text('Initial row:',
+                          tooltip="0's and 1's for the initial row. An empty \n" +
+                                  "string will set the initial row to all 0's."),
+                  sg.Input(default_text="1", key='init', size=(20, None), justification='center')],
+
+                 [sg.CB('Random?', key='Random?', enable_events=True,
+                        tooltip="Set the initial row to random 0's and 1's.")],
+
+                 HOR_SEP(30, pad=(None, None)),
+
                  [sg.Text('Rows:'), sg.Text('     0', key='rows')],
-                 HOR_SEP(30)] + \
-                 on_off_left_upper
+
+                 HOR_SEP(30),
+
+                 *on_off_left_upper]
 
 # The switches are CheckBoxes with keys from CA_World.bin_0_to_7 (in reverse).
 # These are the actual GUI widgets, which we access via their keys.
