@@ -1,4 +1,5 @@
 
+from core.gui import HOR_SEP
 from core.on_off import on_off_left_upper, OnOffPatch, OnOffWorld
 from core.sim_engine import SimEngine
 
@@ -47,9 +48,13 @@ import PySimpleGUI as sg
 gol_left_upper = [[sg.Text('Initial density'),
                    sg.Slider(key='density', range=(0, 80), resolution=5, size=(10, 20),
                              default_value=35, orientation='horizontal', pad=((0, 0), (0, 20)),
-                             tooltip='The ratio of alive cells to all cells')]] \
-                  + \
+                             tooltip='The ratio of alive cells to all cells')],
+                  HOR_SEP(pad=((0, 0), (0, 0))),
+                  [sg.Text('Cells can be toggled when\nthe system is stopped.')],
+                  HOR_SEP(pad=((0, 0), (0, 0))),
+                  ] + \
                   on_off_left_upper
+
 
 if __name__ == "__main__":
     from core.agent import PyLogo

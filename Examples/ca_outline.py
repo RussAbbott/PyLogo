@@ -11,6 +11,8 @@ from copy import copy
 
 from itertools import chain, repeat
 
+import numpy as np
+
 from random import choice
 
 from typing import List
@@ -58,7 +60,7 @@ class CA_World(OnOffWorld):
         """
         Construct the initial CA line
         """
-        init = SimEngine.gui_get('init')
+        init = SimEngine.gui_get('justification')
         if init == 'Random':
             # Set the initial row to random 1/0.
             # You complete this line.
@@ -161,8 +163,8 @@ class CA_World(OnOffWorld):
 
         This is the most difficult method. Here is the outline I used.
         """
-        # Get the current setting of 'init'.
-        init = SimEngine.gui_get('init')
+        # Get the current setting of 'justification'.
+        init = SimEngine.gui_get('justification')
 
         # Get the two relevant widths.
         display_width = gui.PATCH_COLS
@@ -172,7 +174,8 @@ class CA_World(OnOffWorld):
 
         # How many blanks must be prepended to the line to be displayed to fill the display row?
         # Will be 0 if the ca_line is at least as long as the display row or the line is left-justified.
-        left_padding_needed = 0 if ca_line_width >= display_width or init == 'Left' else ...
+        left_padding_needed = 0 if ca_line_width >= display_width or init == 'Left' else \
+                              ...
 
         # Use [0]*n to get a list of n 0s to use as left padding.
         left_padding = ...
@@ -180,57 +183,52 @@ class CA_World(OnOffWorld):
         # Which elements of the ca_line are to be displayed?
         # More to the point, what is index of the first element of the line to be displayed?
         # Will be 0 if the display width is greater than or equal to the line width or we are left-justifying.
-        left_ca_line_index = 0 if display_width >= ca_line_width or init == 'Left' else ...
+        left_ca_line_index = 0 if display_width >= ca_line_width or init == 'Left' else \
+                             ...
 
-        # Get the two relevant heights.
-        display_height = gui.PATCH_ROWS
-        nbr_ca_lines = len(self.ca_lines)
+        # Reverse self.ca_lines?
+        ca_lines_to_display = reversed(self.ca_lines)
+        # Reverse the rows of CA_World.patches_array
+        patch_rows_to_display_on = np.flip(CA_World.patches_array, axis=0)
 
-        # Which is the first line from self.ca_lines to be displayed.
-        # Will be 0 if display_height >= nbr_ca_lines
-        first_ca_line_to_display = 0 if display_height >= nbr_ca_lines else ...
-
-
-        # Which lines from self.ca_lies should be displayed?
-        ca_lines_to_display = ...
-
-        # On which Patch row, do we start displaying lines from ca_lines?
-        # Will be 0 if nbr_ca_lines >= display_height
-        first_patches_row_nbr = 0 if nbr_ca_lines >= display_height else ...
-
-        # Which are the patch rows on which to display the ca_lines_to_display?
-        # This is a slice from CA_World.patches_array
-        patch_rows_to_display_on = CA_World.patches_array[...]
-
-        # We now have all the relevant information for deciding how to paint the ca_lines onto the Patch display.
-
-        # Zip the ca_lines to be displayed together with the Patch rows on which they are to be displayed.
+        # Now we can use zip to match up ca_lines_to_display and patch_rows_to_display on.
+        # In both cases we are starting at the bottom and working our way up.
         ca_lines_patch_rows = zip(ca_lines_to_display, patch_rows_to_display_on)
 
-        # Step through the corresponding pairs.
-        for (ca_line, patch_row) in ca_lines_patch_rows:
+        # zip is given two iterables and produces a sequence of pairs of elements, one from each.
+        # An important feature of zip is that it stops whenever either of its arguments ends.
+        # In particular, the two arguments needn't be the same length. Zip simply uses all the
+        # elements of the shorter and pairs them with the initial elements of the longer.
 
-            # Which elements from self.ca_lines[ca_line] should be displayed?
-            # We display the elements starting at left_ca_line_index.
+        # We can now step through the corresponding pairs.
+        for (ca_line, patch_row) in ca_lines_patch_rows:
+            # The values in ca_line are to be displayed on patch_row.
+            # The issue now is how to align them.
+
+            # Which elements of ca_line should be displayed?
+            # We display the elements starting at left_ca_line_index (computed above).
             ca_line_portion = ...
 
-            # For the complete display line, we may need to pad ca_line_portion to the left or right.
-            # We need left_padding_needed 0s to the left and an arbitrary sequence of 0s to the right.
-            # (Use repeat from itertools for the padding on the right. It doesn't matter if it's too long!)
+            # For the complete display line and the desired justification,
+            # we may need to pad ca_line_portion to the left or right (or both).
+            # We need left_padding_needed 0's to the left and an arbitrary sequence of 0's to the right.
+            # (Use repeat() from itertools for the padding on the right. It doesn't matter if it's too long!)
 
             # Put the three pieces together to get the full line.
-            # Use chain from itertools to combine the three parts of the line:
-            #       left_padding, ca_line_portion, right_padding.
+            # Use chain() from itertools to combine the three parts of the line:
+            #          left_padding, ca_line_portion, right_padding.
             padded_line = chain(..., ..., ...)
+            # padded_line has the right number of 0's at the left. It then contains the elements from ca_line
+            # to be displayed. If we need more elements to display, padded_line includes an unlimted number of
+            # trailing 0's.
 
-            # Where will the padded_line be displayed? On patch_row.
+            # Since padded_line will be dispalyed on patch_row, we can use zip again to pair up the values
+            # from padded_line with the Patches in patch_row. Since padded_line includes an unlimited number
+            # of 0's at the end, zip will stop when it reaches the last Patch in patch_row.
 
-            # Zip the values from the padded_line with the Patches that will display them.
-            # (The second parameter to zip, i.e., the Patches, limits the number of values to be displayed.
-            # That's why it doesn't matter if the first parameter is too long.)
             ca_values_patchs = zip(padded_line, patch_row)
 
-            # Step through these value-patch pairs and put the values into the associated Patches.
+            # Step through these value/patch pairs and put the values into the associated Patches.
             for (ca_val, patch) in ca_values_patchs:
                 # Use the set_on_off method of OnOffPatch to set the patch to ca_val.
                 ...
@@ -260,7 +258,7 @@ class CA_World(OnOffWorld):
         use the value derived from the switches as the new value of self.rule_nbr.
 
         Once the slider, the switches, and the bin_string of the rule number are consistent,
-        set self.ca_lines[0] as directed by SimEngine.gui_get('init').
+        set self.ca_lines[0] as directed by SimEngine.gui_get('justification').
 
         Copy (the settings on) that line to the bottom row of patches.
         Note that the lists in self.ca_lines are lists of 0/1. They are not lists of Patches.
@@ -297,8 +295,8 @@ import PySimpleGUI as sg
 The following appears at the top-left of the window. 
 It puts a row consisting of a Text widgit and a ComboBox above the widgets from on_off.py
 """
-ca_left_upper = [[sg.Text('Initial row:'),
-                  sg.Combo(values=['Left', 'Center', 'Right', 'Random'], key='init', default_value='Right')],
+ca_left_upper = [[sg.Text('Row justification'),
+                  sg.Combo(values=['Left', 'Center', 'Right'], key='justification', default_value='Right')],
                  [sg.Text('Rows:'), sg.Text('     0', key='rows')],
                  HOR_SEP(30)] + \
                  on_off_left_upper
