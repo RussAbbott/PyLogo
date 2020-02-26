@@ -58,20 +58,20 @@ class CA_World(OnOffWorld):
 
     def build_initial_line(self):
         """
-        Construct the initial CA line
+        Construct the initial CA line.
+        It is a random line if SimEngine.gui_get('Random?').
+        It is a line (of length ca_display_size) if SimEngine.gui_get('init') == ''.
+        Otherwise it is the string in SimEngine.gui_get('init') converted into 0's and 1's.
+        (' ' and '0' are converted to 0; everything else is converted to 1.)
         """
-        init = SimEngine.gui_get('justification')
-        if init == 'Random':
-            # Set the initial row to random 1/0.
-            # You complete this line.
+        if SimEngine.gui_get('Random?'):
+            line = ...
+        elif SimEngine.gui_get('init') == '':
             line = ...
         else:
-            line_length = self.ca_display_size if SimEngine.gui_get('000') else 1
-            line = [0] * line_length
-            col = 0                if init == 'Left' else \
-                  line_length // 2 if init == 'Center' else \
-                  line_length - 1   # init == 'Right'
-            line[col] = 1
+            line_0 = SimEngine.gui_get('init')
+            # Convert line_0 to 0's and 1's
+            line = ...
         return line
 
     @staticmethod
@@ -297,6 +297,10 @@ It puts a row consisting of a Text widgit and a ComboBox above the widgets from 
 """
 ca_left_upper = [[sg.Text('Row justification'),
                   sg.Combo(values=['Left', 'Center', 'Right'], key='justification', default_value='Right')],
+                 [sg.Text('Initial row'), sg.CB('Random?', key='Random?', pad=((30, 0), (0, 0)), enable_events=True)],
+                 [sg.Input(default_text="1", key='init', tooltip="0's and 1's for the initial row.",
+                               size=(10, None), pad=((50, 0), (0, 0)), justification='center')],
+                 HOR_SEP(30),
                  [sg.Text('Rows:'), sg.Text('     0', key='rows')],
                  HOR_SEP(30)] + \
                  on_off_left_upper
