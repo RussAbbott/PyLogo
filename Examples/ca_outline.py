@@ -136,7 +136,7 @@ class CA_World(OnOffWorld):
 
     def handle_event(self, event):
         """
-        This is called when a GUI widget is changed and the changge isn't handled by the system.
+        This is called when a GUI widget is changed and the change isn't handled by the system.
         The key of the widget that changed is in event.
         """
         # Handle color change requests.
