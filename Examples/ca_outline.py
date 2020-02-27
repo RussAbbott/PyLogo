@@ -138,7 +138,6 @@ class CA_World(OnOffWorld):
         """
         This is called when a GUI widget is changed and the changge isn't handled by the system.
         The key of the widget that changed is in event.
-        If the changed widget has to do with the rule number or switches, make them all consistent.
         """
         # Handle color change requests.
         super().handle_event(event)
