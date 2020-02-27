@@ -76,7 +76,7 @@ class CA_World(OnOffWorld):
             else:
                 line_0 = SimEngine.gui_get('init_line')
                 # Convert line_0 to 0's and 1's
-                line = [f(c) for c in line_0]
+                line = [... for c in line_0]
                 # If the rule include 000 -> 1, fill out the new line with 0's.
                 if SimEngine.gui_get('000'):
                     justification = SimEngine.gui_get('justification')
