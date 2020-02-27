@@ -60,18 +60,29 @@ class CA_World(OnOffWorld):
         """
         Construct the initial CA line.
         It is a random line if SimEngine.gui_get('Random?').
-        It is a line (of length ca_display_size) if SimEngine.gui_get('init') == ''.
-        Otherwise it is the string in SimEngine.gui_get('init') converted into 0's and 1's.
-        (' ' and '0' are converted to 0; everything else is converted to 1.)
+        It is a line (of length ca_display_size) if SimEngine.gui_get('init_line') == ''.
+        Otherwise it is the string in SimEngine.gui_get('init_line') converted into 0's and 1's.
+        (' ' and '0' are converted to 0; everything else is converted to 1.) 
+        However, if the rule includes 000 -> 1,pad the line with 0's on both ends to fill the display.
+        How much to put on each end depends on the user-specific initial line and the requested justification.
         """
         if SimEngine.gui_get('Random?'):
             line = ...
-        elif SimEngine.gui_get('init') == '':
-            line = ...
         else:
-            line_0 = SimEngine.gui_get('init')
-            # Convert line_0 to 0's and 1's
-            line = ...
+            padding = [0] * (self.ca_display_size)
+            if SimEngine.gui_get('init_line') == '':
+                line = padding
+            else:
+                line_0 = SimEngine.gui_get('init_line')
+                # Convert line_0 to 0's and 1's
+                line = ...
+                if SimEngine.gui_get('000'):
+                    justification = SimEngine.gui_get('justification')
+                    line_len = len(line)
+                    actual_padding = padding[line_len:]
+                    line = ... if justification == 'Right' else \
+                           ... if justification == 'Left' else \
+                           ...
         return line
 
     @staticmethod
@@ -88,9 +99,9 @@ class CA_World(OnOffWorld):
 
     def extend_ca_lines_if_needed(self, new_line):
         """
-        new_line is one cell longer at each then than ca_lines[-1]. If those extra
+        new_line is one cell longer at each end than ca_lines[-1]. If those extra
         cells are 0, delete them. If they are 1, insert a 0 cell at the corresponding
-        end of each line in ca_lines
+        end of each line in ca_lines.
         """
         ...
 
@@ -125,20 +136,21 @@ class CA_World(OnOffWorld):
 
     def handle_event(self, event):
         """
-        This is called when a GUI widget is changed and isn't handled by the system.
+        This is called when a GUI widget is changed and the changge isn't handled by the system.
         The key of the widget that changed is in event.
         If the changed widget has to do with the rule number or switches, make them all consistent.
-
-        This is the function that will trigger all the code you write this week
         """
         # Handle color change requests.
         super().handle_event(event)
 
+        # Handle rule nbr change events, either switches or rule_nbr slider
         if event in ['Rule_nbr'] + CA_World.bin_0_to_7:
             self.make_switches_and_rule_nbr_consistent()
 
+        # When the user checks the 'Random?' box, the Input line area should disappear.
+        # When the user unchecks the 'Random?' box, the Input line area should re-appear.
         elif event == 'Random?':
-            SimEngine.gui_set('init', ...)
+            ...
 
     def make_switches_and_rule_nbr_consistent(self):
         """
@@ -167,17 +179,17 @@ class CA_World(OnOffWorld):
         This is the most difficult method. Here is the outline I used.
         """
         # Get the current setting of 'justification'.
-        init = SimEngine.gui_get('justification')
+        justification = SimEngine.gui_get('justification')
 
         # Get the two relevant widths.
         display_width = gui.PATCH_COLS
 
-        # All the lines in self.ca_lies are the same length.
+        # All the lines in self.ca_lines are the same length.
         ca_line_width = len(self.ca_lines[0])
 
-        # How many blanks must be prepended to the line to be displayed to fill the display row?
+        # How many blanks must be prepended to a line to be displayed to fill a display row?
         # Will be 0 if the ca_line is at least as long as the display row or the line is left-justified.
-        left_padding_needed = 0 if ca_line_width >= display_width or init == 'Left' else \
+        left_padding_needed = 0 if ca_line_width >= display_width or justification == 'Left' else \
                               ...
 
         # Use [0]*n to get a list of n 0s to use as left padding.
@@ -185,13 +197,12 @@ class CA_World(OnOffWorld):
 
         # Which elements of the ca_line are to be displayed?
         # More to the point, what is index of the first element of the line to be displayed?
-        # Will be 0 if the display width is greater than or equal to the line width or we are left-justifying.
-        left_ca_line_index = 0 if display_width >= ca_line_width or init == 'Left' else \
+        # Will be 0 if left_padding is the empty list. Otherwise compute the values for the other cases.
+        left_ca_line_index = 0 if display_width >= ca_line_width or justification == 'Left' else \
                              ...
 
-        # Reverse self.ca_lines?
+        # Reverse both self.ca_lines and CA_World.patches_array.
         ca_lines_to_display = reversed(self.ca_lines)
-        # Reverse the rows of CA_World.patches_array
         patch_rows_to_display_on = np.flip(CA_World.patches_array, axis=0)
 
         # Now we can use zip to match up ca_lines_to_display and patch_rows_to_display on.
@@ -200,8 +211,8 @@ class CA_World(OnOffWorld):
 
         # zip is given two iterables and produces a sequence of pairs of elements, one from each.
         # An important feature of zip is that it stops whenever either of its arguments ends.
-        # In particular, the two arguments needn't be the same length. Zip simply uses all the
-        # elements of the shorter and pairs them with the initial elements of the longer.
+        # In particular, the two arguments needn't be the same length. Zip simply uses all the elements
+        # of the shorter argument and pairs them with the initial elements of the longer argument.
 
         # We can now step through the corresponding pairs.
         for (ca_line, patch_row) in ca_lines_patch_rows:
@@ -209,23 +220,25 @@ class CA_World(OnOffWorld):
             # The issue now is how to align them.
 
             # Which elements of ca_line should be displayed?
-            # We display the elements starting at left_ca_line_index (computed above).
+            # We display all the elements starting at left_ca_line_index (computed above).
+            # Use a slice to identify these elements.
             ca_line_portion = ...
 
             # For the complete display line and the desired justification,
             # we may need to pad ca_line_portion to the left or right (or both).
-            # We need left_padding_needed 0's to the left and an arbitrary sequence of 0's to the right.
+            # We need left_padding (computed above) to the left and an arbitrary sequence of 0's to the right.
             # (Use repeat() from itertools for the padding on the right. It doesn't matter if it's too long!)
 
             # Put the three pieces together to get the full line.
             # Use chain() from itertools to combine the three parts of the line:
             #          left_padding, ca_line_portion, right_padding.
-            padded_line = chain(..., ..., ...)
+            padded_line = chain(..., ca_line_portion, ...)
+
             # padded_line has the right number of 0's at the left. It then contains the elements from ca_line
             # to be displayed. If we need more elements to display, padded_line includes an unlimted number of
             # trailing 0's.
 
-            # Since padded_line will be dispalyed on patch_row, we can use zip again to pair up the values
+            # Since padded_line will be displayed on patch_row, we can use zip again to pair up the values
             # from padded_line with the Patches in patch_row. Since padded_line includes an unlimited number
             # of 0's at the end, zip will stop when it reaches the last Patch in patch_row.
 
@@ -233,11 +246,9 @@ class CA_World(OnOffWorld):
 
             # Step through these value/patch pairs and put the values into the associated Patches.
             for (ca_val, patch) in ca_values_patchs:
-                # Use the set_on_off method of OnOffPatch to set the patch to ca_val.
-                ...
+                # Use the set_on_off() method of OnOffPatch to set the patch to ca_val.
+                patch.set_on_off(ca_val)
 
-        # Update the 'rows' widget.
-        ...
 
     def set_switches_from_rule_nbr(self):
         """
@@ -261,10 +272,7 @@ class CA_World(OnOffWorld):
         use the value derived from the switches as the new value of self.rule_nbr.
 
         Once the slider, the switches, and the bin_string of the rule number are consistent,
-        set self.ca_lines[0] as directed by SimEngine.gui_get('justification').
-
-        Copy (the settings on) that line to the bottom row of patches.
-        Note that the lists in self.ca_lines are lists of 0/1. They are not lists of Patches.
+        set self.ca_lines[0] to the line generated by build_initial_line.
         """
         ...
 
@@ -292,6 +300,8 @@ class CA_World(OnOffWorld):
         # (d)
         # Refresh the display from self.ca_lines
         ...
+        # Update the 'rows' widget.
+        ...
 
 
 # ############################################## Define GUI ############################################## #
@@ -308,16 +318,15 @@ ca_left_upper = [[sg.Text('Row justification'),
                  [sg.Text('Initial row:', pad=(None, (20, 0)),
                           tooltip="0's and 1's for the initial row. An empty \n" +
                                   "string will set the initial row to all 0's."),
-                  sg.Input(default_text="1", key='init', size=(20, None), text_color='white',
-                           background_color='steelblue4', justification='center')
-                ],
+                  sg.Input(default_text="1", key='init_line', size=(20, None), text_color='white',
+                           background_color='steelblue4', justification='center')],
 
-                 [sg.CB('Random?', key='Random?', enable_events=True,
+                 [sg.CB('Random?', key='Random?', enable_events=True, pad=((65, 0), None),
                         tooltip="Set the initial row to random 0's and 1's.")],
 
                  HOR_SEP(30, pad=(None, None)),
 
-                 [sg.Text('Rows:'), sg.Text('     0', key='rows')],
+                 [sg.Text('Rows:', pad=(None, (10, 0))), sg.Text('     0', key='rows', pad=(None, (10, 0)))],
 
                  HOR_SEP(30, pad=(None, (0, 10)))
 
