@@ -20,7 +20,7 @@ from typing import List
 
 class CA_World(OnOffWorld):
 
-    ca_display_size = 151
+    ca_display_size = 141
 
     # bin_0_to_7 is ['000' .. '111']
     bin_0_to_7 = [bin_str(n, 3) for n in range(8)]
@@ -69,20 +69,22 @@ class CA_World(OnOffWorld):
         if SimEngine.gui_get('Random?'):
             line = ...
         else:
+            # A line of 0's.
             padding = [0] * (self.ca_display_size)
             if SimEngine.gui_get('init_line') == '':
                 line = padding
             else:
                 line_0 = SimEngine.gui_get('init_line')
                 # Convert line_0 to 0's and 1's
-                line = ...
+                line = [f(c) for c in line_0]
+                # If the rule include 000 -> 1, fill out the new line with 0's.
                 if SimEngine.gui_get('000'):
                     justification = SimEngine.gui_get('justification')
                     line_len = len(line)
                     actual_padding = padding[line_len:]
                     line = ... if justification == 'Right' else \
                            ... if justification == 'Left' else \
-                           ...
+                           ... #  justification == 'Center'
         return line
 
     @staticmethod
@@ -125,7 +127,7 @@ class CA_World(OnOffWorld):
         Returns: The next state of the CA.
         """
         ...
-        return new_line
+        return ...
 
     def get_rule_nbr_from_switches(self):
         """
@@ -221,7 +223,7 @@ class CA_World(OnOffWorld):
             # Which elements of ca_line should be displayed?
             # We display all the elements starting at left_ca_line_index (computed above).
             # Use a slice to identify these elements.
-            ca_line_portion = ...
+            ca_line_portion = ca_line[...]
 
             # For the complete display line and the desired justification,
             # we may need to pad ca_line_portion to the left or right (or both).
@@ -287,12 +289,14 @@ class CA_World(OnOffWorld):
         new_line = ... # The new state derived from self.ca_lines[-1]
 
         # (b)
-        # Extend lines in self.ca_lines at each end as needed. (Don't extend for extra 0's at the ends.)
-        # Can't drop the 0's first because we then lose track of which end was extended.
+        # Extend lines in self.ca_lines at each end as needed.
+        # (Don't extend for extra 0's at the ends.)
+        # Can't do step (c) first because we would lose track of which end was extended.
         ...
 
         # (c)
-        trimmed_new_line = ... # Drop extraneous 0s at the end of new_line
+        # Drop extraneous 0s at the end of new_line
+        ...
         # Add trimmed_new_line to the end of self.ca_lines
         ...
 
@@ -309,27 +313,28 @@ import PySimpleGUI as sg
 """ 
 The following appears at the top-left of the window. 
 """
-ca_left_upper = [[sg.Text('Row justification'),
-                  sg.Combo(values=['Left', 'Center', 'Right'], key='justification', default_value='Right')],
+ca_left_upper = \
+    [[sg.Text('Row justification'),
+      sg.Combo(values=['Left', 'Center', 'Right'], key='justification', default_value='Right')],
 
-                 HOR_SEP(30),
+     HOR_SEP(30),
 
-                 [sg.Text('Initial row:', pad=(None, (20, 0)),
-                          tooltip="0's and 1's for the initial row. An empty \n" +
-                                  "string will set the initial row to all 0's."),
-                  sg.Input(default_text="1", key='init_line', size=(20, None), text_color='white',
-                           background_color='steelblue4', justification='center')],
+     [sg.Text('Initial row:', pad=((0, 10), (20, 10)),
+              tooltip="0's and 1's for the initial row. An empty \n" +
+                      "string will set the initial row to all 0's."),
+      sg.Input(default_text="1", key='init_line', size=(20, None), text_color='white',
+               background_color='steelblue4', justification='center')],
 
-                 [sg.CB('Random?', key='Random?', enable_events=True, pad=((65, 0), None),
-                        tooltip="Set the initial row to random 0's and 1's.")],
+     [sg.CB('Random?', key='Random?', enable_events=True, pad=((75, 0), None),
+            tooltip="Set the initial row to random 0's and 1's.")],
 
-                 HOR_SEP(30, pad=(None, None)),
+     HOR_SEP(30, pad=(None, None)),
 
-                 [sg.Text('Rows:', pad=(None, (10, 0))), sg.Text('     0', key='rows', pad=(None, (10, 0)))],
+     [sg.Text('Rows:', pad=(None, (10, 0))), sg.Text('     0', key='rows', pad=(None, (10, 0)))],
 
-                 HOR_SEP(30, pad=(None, (0, 10)))
+     HOR_SEP(30, pad=(None, (0, 10)))
 
-                 ] + on_off_left_upper
+     ] + on_off_left_upper
 
 
 # The switches are CheckBoxes with keys from CA_World.bin_0_to_7 (in reverse).
