@@ -23,8 +23,9 @@ class OnOffPatch(Patch):
         super().__init__(*args, **kw_args)
         self.is_on = False
 
-    def set_on_off(self, is_on: bool):
-        self.is_on = is_on
+    def set_on_off(self, is_on):
+        is_0_or_space = isinstance(is_on, str) and len(is_on) == 1 and is_on in ' 0'
+        self.is_on = not is_0_or_space and bool(is_on)
         self.set_color(OnOffPatch.on_color if self.is_on else OnOffPatch.off_color)
 
 
