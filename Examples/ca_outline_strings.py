@@ -94,18 +94,27 @@ class CA_World(OnOffWorld):
     @staticmethod
     def generate_new_line_from_current_line(prev_line):
         """
-        The argument is (a copy of) the current line, i.e., copy(self.ca_lines[-1]).
-        We call it prev_line because that's the role it plays in this method.
+        The argument is the current line. We call it prev_line because that's the role it plays in this method.
+
         Generate the new line in these steps.
-        1. Add 0 to both ends of prev_line. (We do that because we want to allow the
+        1. Add '00 to both ends of prev_line. (We do that because we want to allow the
         new line to extend the current line on either end. So start with a default extension.
-        2. Insert an additional 0 at each end of prev_line. That's because we need a triple
-        to generate the symbols at the end of the new line. So, by this time the original
-        line has been extended by [0, 0] on both ends.
-        3. Apply the rules (i.e., the switches) to the result of step 2. This produces a line
-        which is one symbol shorter than the current prev_line on each end. That is, it is
-        one symbol longer on each end than the original prev_line.
-        4. Return that newly generated line. It may have 0 or 1 at each end.
+        In addition, we need a triple to generate the symbols at the end of the new line.) Strings are immutable;
+        string concatenation (+) does not change the original strings.
+
+        2. Apply the rules (i.e., the switches) to the triples extracted from the line resulting from step 1.
+
+            a. Look up the truth value of each triple. Is its switch on or off?
+            b. Convert that boolean first to an int (0 or 1) and then to a character ('0' or '1').
+            These two steps are done in a single list comprehension. The result is new_line_chars: List[str].
+            Each element of new_line_chars is a string of one character, either '0' or '1'.
+
+            c. Use join to combine that list of characters into a new string.
+
+        This produces a line which is one symbol shorter than the current prev_line on each end.
+        That is, it is one symbol longer on each end than the original current line. It may have
+        0 or 1 at each end.
+
         Args:
             prev_line: The current state of the CA.
         Returns: The next state of the CA.
@@ -114,8 +123,14 @@ class CA_World(OnOffWorld):
         # Want to be able to generate one additional value at each end.
         # ==> String-specific <==
         prev_line = '00' + prev_line + '00'
-        new_line = ''.join([str(int(SimEngine.gui_get(prev_line[i:i + 3])))
-                            for i in range(len(prev_line) - 2)])
+
+        # For each triple of characters in the prev_line, look up the setting of the corresponding switch.
+        # (SimEngine.gui_get(prev_line[i:i + 3]))
+        # Convert its Truth value (rule is on/off) to an int and then to a one character str.
+        new_line_chars: List[str] = [... for i in range(len(prev_line) - 2)]
+
+        # Finally, join those strings together into a new string.
+        new_line = ''.join(new_line_chars)
         return new_line
 
     def get_rule_nbr_from_switches(self):

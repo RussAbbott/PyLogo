@@ -36,10 +36,8 @@ class CA_World(OnOffWorld):
         # The function bin_str() is defined in utils.py
 
         # The following two lines do the same thing. Explain how both work.
-        pos_to_switch_a = {2**i: bin_str(i, 3) for i in range(8)}
-        pos_to_switch_b = dict(zip([2**i for i in range(8)], CA_World.bin_0_to_7))
-        assert pos_to_switch_a == pos_to_switch_b
-        self.pos_to_switch = ...  # pos_to_switch_a or pos_to_switch_b
+        # self.pos_to_switch0 = {2**i: bin_str(i, 3) for i in range(8)}
+        self.pos_to_switch = dict(zip([2**i for i in range(8)], CA_World.bin_0_to_7))
 
         # The rule number used for this run, initially set to 110 as the default rule.
         # (You might also try rule 165.)
@@ -53,7 +51,6 @@ class CA_World(OnOffWorld):
         # a state of the CA, i.e., all the cells in the line. self.ca_list contains the entire
         # history of the CA.
         self.ca_lines: List[List[int]] = []
-        # gui.WINDOW['rows'].update(value=len(self.ca_lines))
         SimEngine.gui_set('rows', value=len(self.ca_lines))
 
     def build_initial_line(self):
@@ -126,8 +123,11 @@ class CA_World(OnOffWorld):
             prev_line: The current state of the CA.
         Returns: The next state of the CA.
         """
-        ...
-        return ...
+        # Extend the current line two to the left and right.
+        # Want to be able to generate one additional value at each end.
+        prev_line = '00' + prev_line + '00'
+        new_line = ...
+        return new_line
 
     def get_rule_nbr_from_switches(self):
         """
@@ -257,7 +257,6 @@ class CA_World(OnOffWorld):
         Note that the 2^i position of self.rule_nbr corresponds to self.pos_to_switch[i]. That is,
         self.pos_to_switch[i] returns the key for the switch representing position  2^i.
 
-        Set that switch as follows: gui.WINDOW[self.pos_to_switch[pos]].update(value=new_value).
         Set that switch as follows: SimEngine.gui_set(self.pos_to_switch[pos], value=new_value).
         (new_value will be either True or False, i.e., 1 or 0.)
 
