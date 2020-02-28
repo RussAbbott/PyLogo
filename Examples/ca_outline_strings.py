@@ -309,10 +309,12 @@ class CA_World(OnOffWorld):
         self.ca_lines.append(trimmed_new_line)
 
         # (d)
+
         # Refresh the display from self.ca_lines
         self.set_display_from_lines()
+        
         # Update the 'rows' widget.
-        SimEngine.gui_set('rows', ...)
+        SimEngine.gui_set('rows', value=...)
 
 
 # ############################################## Define GUI ############################################## #
