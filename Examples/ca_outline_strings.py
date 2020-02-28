@@ -182,7 +182,7 @@ class CA_World(OnOffWorld):
         left_padding_needed = 0 if ca_line_width >= display_width or justification == 'Left' else \
                               ...
 
-        # Use [0]*n to get a list of n 0s to use as left padding.
+        # Use '0'*n to get a string of n 0s to use as left padding.
         # ==> String-specific <==
         left_padding = '0'*left_padding_needed
 
