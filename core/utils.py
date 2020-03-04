@@ -142,6 +142,9 @@ def normalize_180(angle):
     return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
 
 
+def normalize_dxdy(dxdy):
+    return dxdy/max(abs(dxdy.x), abs(dxdy.y))
+
 def rgb_to_hex(rgb):
     (r, g, b) = rgb[:3]
     return f"#{r:02x}{g:02x}{b:02x}"

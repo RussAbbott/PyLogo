@@ -17,7 +17,7 @@ def link_exists(agent_1, agent_2, directed=False):
     Determine whether a directed/undirected link between agent_1 and agent_2 already exists in World.links
     """
     hash_obj = hash_object(agent_1, agent_2, directed)
-    return any({hash_obj == ln.hash_object for ln in World.links})
+    return any({hash_obj == lnk.hash_object for lnk in World.links})
 
 
 class Link:
@@ -48,3 +48,9 @@ class Link:
 
     def draw(self):
         gui.draw_line(self.agent_1.rect.center, self.agent_2.rect.center, line_color=self.color)
+
+    def includes(self, agent):
+        return agent in (self.agent_1, self.agent_2)
+
+    def is_linked_to(self, other, directed=False):
+        return link_exists(self, other, directed)

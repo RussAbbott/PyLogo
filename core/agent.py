@@ -10,12 +10,13 @@ from pygame import Surface
 import pygame.transform as pgt
 
 import core.gui as gui
-from core.gui import HALF_PATCH_SIZE, PATCH_SIZE
+from core.gui import HALF_PATCH_SIZE, PATCH_SIZE, SHAPES
 import core.pairs as pairs
-from core.pairs import Pixel_xy, RowCol, Velocity
+from core.pairs import XY, Pixel_xy, RowCol, Velocity
 import core.utils as utils
 from core.world_patch_block import Block, Patch, World
 
+import math
 from random import choice, randint
 from statistics import mean
 
@@ -38,10 +39,28 @@ NETLOGO_PRIMARY_COLORS = [(color_name, Color(color_name))
                           for color_name in ['gray', 'red', 'orange', 'brown', 'yellow', 'green', 'limegreen',
                                              'turquoise', 'cyan', 'skyblue3', 'blue', 'violet', 'magenta', 'pink']]
 
-# Since it's used as a default value, can't be a list. A tuple works just as well.
-# Only one shape defined so far.
-SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4))}
+SQRT_2 = sqrt(2)
 
+
+# def polygon(sides):
+#     sq2 = SQRT_2/2
+#     points = []
+#     arc = 2*math.pi/sides
+#     for i in range(sides):
+#         angle = i*arc + math.pi/4
+#         xy = (XY((math.cos(angle), math.sin(angle))) + XY((0.5, 0.5))).round(2)
+#         points.append(xy)
+#     print(sides, points)
+#     return points
+
+
+# # Since it's used as a default value, can't be a list. A tuple works just as well.
+# # Only one shape defined so far.
+# SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
+#           'square': ((1, 1), (1, 0), (0, 0), (0, 1)),
+#           'x': ((1, 1), (0.5, 0.5), (0, 1), (0.5, 0.5), (0, 0), (0.5, 0.5), (1, 0), (0.5, 0.5)),
+#           }
+#
 
 class Agent(Block):
 
@@ -51,9 +70,9 @@ class Agent(Block):
 
     id = 0
 
-    SQRT_2 = sqrt(2)
+    # SQRT_2 = sqrt(2)
 
-    def __init__(self, center_pixel=None, color=None, scale=1.4, shape=SHAPES['netlogo_figure']):
+    def __init__(self, center_pixel=None, color=None, scale=1.4, shape_name='netlogo_figure'):
         # Can't make this a default value because pairs.CENTER_PIXEL() isn't defined
         # when the default values are compiled
         if center_pixel is None:
@@ -66,7 +85,8 @@ class Agent(Block):
         super().__init__(center_pixel, color)
 
         self.scale = scale
-        self.shape = shape
+
+        self.shape_name = shape_name
         self.base_image = self.create_base_image()
 
         self.id = Agent.id
@@ -123,15 +143,17 @@ class Agent(Block):
     def create_base_image(self):
         base_image = self.create_blank_base_image()
 
-        # Instead of using pygame's smoothscale to scale the image, scale the polygon instead.
-        factor = self.scale*PATCH_SIZE
-        scaled_shape = [(v[0]*factor,  v[1]*factor) for v in self.shape]
-        pg.draw.polygon(base_image, self.color, scaled_shape)
+        factor = self.scale * PATCH_SIZE
+        if self.shape_name in SHAPES:
+            # Instead of using pygame's smoothscale to scale the image, scale the polygon instead.
+            scaled_shape = [(v[0]*factor,  v[1]*factor) for v in SHAPES[self.shape_name]]
+            pg.draw.polygon(base_image, self.color, scaled_shape, 0)
         return base_image
 
     def create_blank_base_image(self):
         # Give the agent a larger Surface (by sqrt(2)) to work with since it may rotate.
-        blank_base_image = Surface((self.rect.w * Agent.SQRT_2, self.rect.h * Agent.SQRT_2))
+        surface_size = XY((self.rect.width, self.rect.height))*SQRT_2
+        blank_base_image = Surface(surface_size)
         # This sets the rectangle to be transparent.
         # Otherwise it would be black and would cover nearby agents.
         # Even though it's a method of Surface, it can also take a Surface parameter.
@@ -151,11 +173,13 @@ class Agent(Block):
         dist = (self.center_pixel).distance_to(other.center_pixel, wrap)
         return dist
 
-    def draw(self):
-        self.image = pgt.rotate(self.base_image, -self.heading)
-        self.rect = self.image.get_rect(center=self.center_pixel)
-        super().draw()
-        
+    def draw(self, shape_name=None):
+        # No point in rotating circles or nodes
+        if self.shape_name in SHAPES:
+            self.image = pgt.rotate(self.base_image, -self.heading)
+            self.rect = self.image.get_rect(center=self.center_pixel)
+        super().draw(shape_name=self.shape_name)
+
     def face_xy(self, xy: Pixel_xy):
         new_heading = (self.center_pixel).heading_toward(xy)
         self.set_heading(new_heading)

@@ -45,11 +45,17 @@ class SimEngine:
 
     @staticmethod
     def gui_get(key):
-        value = SimEngine.values.get(key, None)
+        """
+        Widgets typically have a 'disabled' property. The following makes
+        it possibleto use 'enabled' as the negation of 'disabled'.
+        """
+        flip = key == 'enabled'
+        value = SimEngine.values.get(key, None) if not flip else not SimEngine.values.get('disabled', None)
         return int(value) if isinstance(value, float) and value == int(value) else value
 
     @staticmethod
     def gui_set(key, **kwargs):
+        # Replacement of 'enabled' with 'disabled' is done in gui.gui-set.
         gui.gui_set(key, **kwargs)
 
     def model_loop(self):
@@ -122,9 +128,7 @@ class SimEngine:
                 self.world.mouse_click(SimEngine.values['-GRAPH-'])
 
             elif SimEngine.event == self.simple_gui.SETUP:
-                # gui.WINDOW[self.simple_gui.GOSTOP].update(disabled=False)
                 SimEngine.gui_set(self.simple_gui.GOSTOP, disabled=False)
-                # gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
                 SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=False)
                 self.world.reset_all()
                 self.world.setup()
@@ -134,16 +138,11 @@ class SimEngine:
                 self.world.step()
 
             elif SimEngine.event == self.simple_gui.GOSTOP:
-                # gui.WINDOW[self.simple_gui.GOSTOP].update(text='stop', button_color=('white', 'red'))
                 SimEngine.gui_set(self.simple_gui.GOSTOP, text='stop', button_color=('white', 'red'))
-                # gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=True)
                 SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=True)
-                # gui.WINDOW[self.simple_gui.SETUP].update(disabled=True)
                 SimEngine.gui_set(self.simple_gui.SETUP, disabled=True)
                 returned_value = self.model_loop()
-                # gui.WINDOW['GoStop'].update(text='go', button_color=('white', 'green'))
                 SimEngine.gui_set(self.simple_gui.GOSTOP, text='go', button_color=('white', 'green'))
-                # gui.WINDOW[self.simple_gui.SETUP].update(disabled=False)
                 SimEngine.gui_set(self.simple_gui.SETUP, disabled=False)
                 self.world.final_thoughts()
                 if returned_value == self.simple_gui.EXIT:

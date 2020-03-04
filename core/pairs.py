@@ -16,7 +16,7 @@ class XY(tuple):
         yy = self[1] + xy[1]
         return self.restore_type(xx, yy)
 
-    def __div__(self, scalar):
+    def __truediv__(self, scalar):
         return self * (1/scalar)
 
     def __mul__(self, scalar):
