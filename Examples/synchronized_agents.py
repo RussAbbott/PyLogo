@@ -1,4 +1,5 @@
 
+from core.gui import KNOWN_FIGURES
 from core.pairs import center_pixel
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
@@ -69,12 +70,11 @@ class Synchronized_Agent_World(World):
 
     def setup(self):
         nbr_agents = SimEngine.gui_get('nbr_agents')
-        self.create_ordered_agents(nbr_agents)
+        shape_name = SimEngine.gui_get('shape')
+        self.create_ordered_agents(nbr_agents, shape_name=shape_name,  radius=100)
         self.reference_agent = list(World.agents)[0]
         twitchy_turn = randint(0, 360)
         for agent in World.agents:
-            agent.speed = 1
-            agent.forward(100)
             self.current_figure = SimEngine.gui_get('figure')
             self.breathing_phase = 'inhale'
             if self.current_figure in ['clockwise', 'counter-clockwise']:
@@ -105,9 +105,16 @@ class Synchronized_Agent_World(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_left_upper = [[sg.Text('nbr of agents'),
-                   sg.Slider(key='nbr_agents', range=(1, 100), default_value=18, size=(8, 20),
-                             orientation='horizontal', pad=((0, 0), (0, 20)))],
+gui_left_upper = [[
+                   sg.Combo(KNOWN_FIGURES, key='shape',
+                            default_value='netlogo_figure', pad=((0, 9), (0, 0)),
+                            tooltip='Shape of element'),
+                   sg.Slider(key='nbr_agents', range=(1, 100), default_value=18, size=(10, 20),
+                             orientation='horizontal', pad=((0, 0), (0, 20)),
+                             tooltip='Number of elements'),
+                   ],
+                    # sg.Slider(range=(3, 10), key='sides', default_value=5, size=(8, 20),
+                    #           orientation='horizontal', pad=((0, 0), (0, 20)))],
 
                   [sg.Text('Figure to trace'),
                    sg.Combo(['breathe', 'clockwise', 'counter-clockwise', 'twitchy'], key='figure',

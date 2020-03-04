@@ -185,11 +185,11 @@ class Flocking_World(World):
 
     def step(self):
         World.links = set()
-        showing_flockmates = SimEngine.gui_get('Show flockmates?')
-        # World.agents is the set of agents kept by the world
+        show_flockmates = SimEngine.gui_get('Show flockmate links?')
+        # World.agents is the set of all agents.
         for agent in World.agents:
             # agent.flock() resets agent's heading. Agent doesn't move.
-            agent.flock(showing_flockmates)
+            agent.flock(show_flockmates)
 
             # Print this agent's flockmate links if curious.
             # print(f'{agent}: {[str(lnk) for lnk in agent.all_links()]}')
@@ -211,7 +211,7 @@ gui_left_upper = [
                            tooltip='The number of patch-lengths that define the current flockmates'),
                    sg.Slider(key='vision', range=(0, 20), resolution=0.5, default_value=7,  # NetLogo=5
                              orientation='horizontal', size=(10, 20),
-                             tooltip='The number of patch-lengths that define the current flockmates')],
+                             tooltip="The radius, in patch-lengths, that defines an agent's flockmates")],
 
                   [sg.Text('speed', pad=((0, 5), (20, 0)),
                            tooltip='The speed of the agents'),
@@ -231,8 +231,7 @@ gui_left_upper = [
                                    'to move away from its nearest neighbor'),
                    sg.Slider(key='max-sep-turn', range=(0, 20), resolution=0.5, default_value=3,  # NetLogo=1.5,
                              orientation='horizontal', size=(10, 20),
-                             tooltip='The most degrees (in angles) an agent can turn '
-                                     'to move away from its nearest neighbor')],
+                             tooltip='The most (in degrees) an agent can turn to move away from its nearest neighbor')],
 
                   HOR_SEP(30, pad=((0, 0), (0, 0))),
 
@@ -240,17 +239,17 @@ gui_left_upper = [
                            tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates'),
                    sg.Slider(key='max-cohere-turn', range=(0, 20), resolution=0.5, default_value=3,
                              orientation='horizontal', size=(10, 20),
-                             tooltip='The most degrees (in angles) an agent can turn to stay with its flockmates')],
+                             tooltip='The most (in degrees) an agent can turn to stay with its flockmates')],
 
                   [sg.Text('max-align-turn', pad=((0, 5), (20, 0)),
                            tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates'),
                    sg.Slider(key='max-align-turn', range=(0, 20), resolution=0.5, default_value=5,
                              orientation='horizontal', size=(10, 20),
-                             tooltip='The most degrees (in angles) an agent can turn when aligning with flockmates')],
+                             tooltip='The most (in degrees) an agent can turn to align with its flockmates')],
 
                   HOR_SEP(30, pad=((0, 0), (0, 0))),
 
-                  [sg.Checkbox('Show flockmates?', key='Show flockmates?', default=False,
+                  [sg.Checkbox('Show inks between flockmakes?', key='Show flockmate links?', default=False,
                                tooltip='Show links between flockmates')]
 
                   ]
