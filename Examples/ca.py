@@ -61,7 +61,7 @@ class CA_World(OnOffWorld):
         It is a random line if SimEngine.gui_get('Random?').
         It is a line (of length ca_display_size) of 0's if SimEngine.gui_get('init_line') == ''.
         Otherwise it is the string in SimEngine.gui_get('init_line') converted into 0's and 1's.
-        (' ' and '0' are converted to 0; everything else is converted to 1.) 
+        (' ' and '0' are converted to 0; everything else is converted to 1.)
         However, if the rule includes 000 -> 1,pad the line with 0's on both ends to fill the display.
         How much to put on each end depends on the user-specific initial line and the requested justification.
         """
@@ -250,7 +250,7 @@ class CA_World(OnOffWorld):
                               display_width - ca_line_width     # if justification == 'Right'
 
         # Use [0]*n to get a list of n 0s to use as left padding.
-        left_padding = self.padding_element*left_padding_needed
+        left_padding = self.padding_element * left_padding_needed
 
         # Which symbols of the ca_line are to be displayed?
         # More to the point, what is index of the first symbol of the line to be displayed?
@@ -307,7 +307,6 @@ class CA_World(OnOffWorld):
                 # Use the set_on_off() method of OnOffPatch to set the patch based on ca_val.
                 patch.set_on_off(int(ca_val))
 
-
     def set_switches_from_rule_nbr(self):
         """
         Update the settings of the switches based on self.rule_nbr.
@@ -341,7 +340,7 @@ class CA_World(OnOffWorld):
 
         for patch in CA_World.patches:
             patch.set_on_off(False)
-            
+
         initial_line = self.build_initial_line()
 
         self.ca_lines = [initial_line]
@@ -378,7 +377,7 @@ class CA_World(OnOffWorld):
             trimmed_new_line = self.drop_extraneous_0s_from_ends_of_new_line(new_line)
         else:  # Strings
             start = 0 if new_line[0] == '1' else 1
-            end = len(new_line) if new_line[-1] == '1' else len(new_line)-1
+            end = len(new_line) if new_line[-1] == '1' else len(new_line) - 1
             trimmed_new_line: str = new_line[start:end]
 
         # Add trimmed_new_line to the end of self.ca_lines
@@ -421,7 +420,6 @@ ca_left_upper = [[sg.Text('Row justification'),
                  HOR_SEP(30, pad=(None, (0, 10)))
 
                  ] + on_off_left_upper
-
 
 # The switches are CheckBoxes with keys from CA_World.bin_0_to_7 (in reverse).
 # These are the actual GUI widgets, which we access via their keys.
