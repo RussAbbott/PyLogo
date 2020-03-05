@@ -14,7 +14,7 @@ from math import copysign, sqrt
 from random import choice, randint, sample, uniform
 
 
-class Force_Layout_Agent(Agent):
+class Force_Layout_Node(Agent):
 
     def __init__(self):
         shape_name = SimEngine.gui_get('shape')
@@ -180,21 +180,21 @@ force_upper_left = [
                      sg.Text('Node shape'),
                      sg.Combo(KNOWN_FIGURES, key='shape', default_value='node', tooltip='Node shape')],
 
-                    HOR_SEP(pad=(None, (0,0))),
+                    HOR_SEP(pad=(None, (0, 0))),
 
                     [
                      sg.Button('Create node', tooltip='Create a node'),
                      sg.Button('Delete random node', tooltip='Delete one random node')
                      ],
 
-                    HOR_SEP(pad=(None, (0,0))),
+                    HOR_SEP(pad=(None, (0, 0))),
 
                     [
                      sg.Button('Create random link', tooltip='Create one node'),
                      sg.Button('Delete random link', tooltip='Delete one random node')
                      ],
 
-                    HOR_SEP(pad=(None, (0,0))),
+                    HOR_SEP(pad=(None, (0, 0))),
 
                     [sg.Text('Repulsion exponent', pad=((0, 10), (20, 0)),
                              tooltip='Negative means raise to the power and divide (like gravity).\n'
@@ -208,7 +208,7 @@ force_upper_left = [
                              tooltip='If > distance unit, larger magnitude means \n'
                                      'increase force more with distance (like a spring)\n'
                                      'If < distance unit, force becomes repulsive (also like a spring)'),
-                     sg.Slider((0, 10), default_value=1, orientation='horizontal', key='att_exponent',
+                     sg.Slider((0, 10), default_value=2, orientation='horizontal', key='att_exponent',
                                pad=((0, 0), (0, 0)), size=(15, 20),
                                tooltip='If distance > distance unit, larger magnitude means \n'
                                        'increase force more with distance (like a spring)\n'
@@ -236,4 +236,4 @@ force_upper_left = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Force_Layout_World, 'Force test', force_upper_left, agent_class=Force_Layout_Agent)
+    PyLogo(Force_Layout_World, 'Force test', force_upper_left, agent_class=Force_Layout_Node)
