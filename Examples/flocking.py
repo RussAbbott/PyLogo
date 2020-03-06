@@ -249,7 +249,7 @@ gui_left_upper = [
 
                   HOR_SEP(30, pad=((0, 0), (0, 0))),
 
-                  [sg.Checkbox('Show links between flockmakes?', key='Show flockmate links?', default=False,
+                  [sg.Checkbox('Show links between flockmates?', key='Show flockmate links?', default=False,
                                tooltip='Show links between flockmates')]
 
                   ]
@@ -258,4 +258,4 @@ gui_left_upper = [
 if __name__ == "__main__":
     from core.agent import PyLogo
     PyLogo(Flocking_World, 'Flocking', gui_left_upper, agent_class=Flocking_Agent,
-           patch_size=9, board_rows_cols=(65, 71))
+           patch_size=9, board_rows_cols=(65, 71), bounce=True)
