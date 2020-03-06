@@ -64,7 +64,9 @@ class Force_Layout_Node(Agent):
                   f'normalized_force {tuple(normalized_force.round(2))}; \n\n'
                   )
 
-        self.move_by_dxdy(normalized_force*10)
+        # self.move_by_dxdy(normalized_force*10)
+        self.set_velocity(normalized_force*10)
+        self.forward()
 
     def delete(self):
         World.agents.remove(self)
@@ -176,7 +178,7 @@ import PySimpleGUI as sg
 force_upper_left = [
                     [
                      sg.Text('Node shape'),
-                     sg.Combo(KNOWN_FIGURES, key='shape', default_value='node', tooltip='Node shape')],
+                     sg.Combo(KNOWN_FIGURES, key='shape', default_value='netlogo_figure', tooltip='Node shape')],
 
                     HOR_SEP(pad=(None, (0, 0))),
 
@@ -214,8 +216,8 @@ force_upper_left = [
 
                     [sg.Text('Distance unit/ideal link length', pad=((0, 10), (20, 0)),
                              tooltip='The fraction of the screen diagonal used as one unit.'),
-                     sg.Slider((6, 18), default_value=10, orientation='horizontal', key='dist_unit',
-                               resolution=2, pad=((0, 0), (0, 0)), size=(10, 20),
+                     sg.Slider((3, 16), default_value=10, orientation='horizontal', key='dist_unit',
+                               resolution=1, pad=((0, 0), (0, 0)), size=(10, 20),
                                tooltip='The fraction of the screen diagonal used as one unit.')],
 
                     HOR_SEP(),
@@ -234,4 +236,4 @@ force_upper_left = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Force_Layout_World, 'Force test', force_upper_left, agent_class=Force_Layout_Node)
+    PyLogo(Force_Layout_World, 'Force test', force_upper_left, agent_class=Force_Layout_Node, bounce=True)
