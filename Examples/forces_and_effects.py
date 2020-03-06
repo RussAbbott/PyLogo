@@ -110,11 +110,11 @@ class Force_Layout_World(World):
     @staticmethod
     def create_link():
         link_created = False
-        agent_set_1 = copy(World.agents)
+        agent_set_1 = sample(World.agents, len(World.agents))
         while not link_created:
             # pop selects a random element from a set and removes and returns it.
             agent_1 = agent_set_1.pop()
-            agent_set_2 = copy(agent_set_1)
+            agent_set_2 = sample(agent_set_1, len(agent_set_1))  
             while agent_set_2:
                 agent_2 = agent_set_2.pop()
                 if not link_exists(agent_1, agent_2):
