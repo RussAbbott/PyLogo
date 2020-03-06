@@ -165,12 +165,17 @@ def center_pixel():
     return cp
 
 
-def heading_to_dxdy(heading) -> Velocity:
-    return _heading_to_dxdy_int(heading)
+def heading_and_speed_to_velocity(heading, speed) -> Velocity:
+    unit_dxdy = heading_to_unit_dxdy(heading)
+    velocity = unit_dxdy * speed
+    return velocity
 
+# def heading_to_unit_dxdy(heading) -> Velocity:
+#     return _heading_to_dxdy_int(heading)
+#
 
 @lru_cache(maxsize=512)
-def _heading_to_dxdy_int(heading) -> Velocity:
+def heading_to_unit_dxdy(heading) -> Velocity:
     """ Convert a heading to a (dx, dy) pair as a unit velocity """
     angle = utils.heading_to_angle(heading)
     dx = utils.cos(angle)

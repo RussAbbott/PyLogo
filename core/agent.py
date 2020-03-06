@@ -12,7 +12,7 @@ import pygame.transform as pgt
 import core.gui as gui
 from core.gui import HALF_PATCH_SIZE, PATCH_SIZE, SHAPES
 import core.pairs as pairs
-from core.pairs import XY, Pixel_xy, RowCol, Velocity
+from core.pairs import heading_and_speed_to_velocity, Pixel_xy, RowCol, Velocity, XY
 import core.utils as utils
 from core.world_patch_block import Block, Patch, World
 
@@ -94,9 +94,12 @@ class Agent(Block):
         self.label = None
         World.agents.add(self)
         self.current_patch().add_agent(self)
+
+        # Agents are created with a random heading and a velocity of 0.
+        # In NetLogo, agents do not have a speed attribute. They have a heading attribute.
+        # They are able to move by a given amount (forward(amount)) in the heading direction.
+        # After each forward() action, the agent is no longer moving. (But it retains its heading.)
         self.heading = randint(0, 359)
-        self.speed = 1
-        # To keep PyCharm happy.
         self.velocity = Velocity.velocity_00
 
     def __str__(self):
@@ -184,12 +187,13 @@ class Agent(Block):
         new_heading = (self.center_pixel).heading_toward(xy)
         self.set_heading(new_heading)
 
-    def forward(self, speed=None):
-        if speed is None:
-            speed = self.speed
-        dxdy = pairs.heading_to_dxdy(self.heading) * speed
+    def forward(self, speed=1):
+        # if speed is None:
+        #     # speed = self.speed
+        #     speed = 1
+        # dxdy = pairs.heading_to_unit_dxdy(self.heading) * speed
         # self.move_by_dxdy(dxdy)
-        self.velocity = dxdy
+        self.velocity = heading_and_speed_to_velocity(self.heading, speed)
         self.move_by_velocity()
 
     def heading_toward(self, target):
@@ -205,17 +209,25 @@ class Agent(Block):
         """
         Move to self.center_pixel + (dx, dy)
         """
-        if SimEngine.gui_get('Bounce?'):
-            new_dxdy = self.bounce_off_screen_edge(dxdy)
-            if dxdy is self.velocity:
-                self.set_velocity(new_dxdy)
-            dxdy = new_dxdy
+        # if SimEngine.gui_get('Bounce?'):
+        #     # dxdy = self.bounce_off_screen_edge(dxdy)
+        #     new_dxdy = self.bounce_off_screen_edge(dxdy)
+        #     if new_dxdy != dxdy:
+        #         print(dxdy, new_dxdy)
+        #     if dxdy is self.velocity:
+        #         self.set_velocity(new_dxdy)
+        #     dxdy = new_dxdy
         new_center_pixel_unwrapped = self.center_pixel + dxdy
         # Wrap around the grid of pixels.
         new_center_pixel_wrapped = new_center_pixel_unwrapped.wrap()
         self.move_to_xy(new_center_pixel_wrapped)
 
     def move_by_velocity(self):
+        if SimEngine.gui_get('Bounce?'):
+            new_velocity = self.bounce_off_screen_edge(self.velocity)
+            if self.velocity != new_velocity:
+                self.set_velocity(new_velocity)
+            # self.velocity = self.bounce_off_screen_edge(self.velocity)
         self.move_by_dxdy(self.velocity)
 
     def move_to_patch(self, patch):
