@@ -249,7 +249,7 @@ gui_left_upper = [
 
                   HOR_SEP(30, pad=((0, 0), (0, 0))),
 
-                  [sg.Checkbox('Show links between flockmates?', key='Show flockmate links?', default=False,
+                  [sg.Checkbox('Show links between flockmates?', key='Show flockmate links?', default=True,
                                tooltip='Show links between flockmates')]
 
                   ]
