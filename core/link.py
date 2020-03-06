@@ -55,5 +55,5 @@ class Link:
     def includes(self, agent):
         return agent in (self.agent_1, self.agent_2)
 
-    def is_linked_to(self, other, directed=False):
+    def is_linked_with(self, other, directed=False):
         return link_exists(self, other, directed)
