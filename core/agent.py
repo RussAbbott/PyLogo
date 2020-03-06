@@ -193,7 +193,8 @@ class Agent(Block):
         #     speed = 1
         # dxdy = pairs.heading_to_unit_dxdy(self.heading) * speed
         # self.move_by_dxdy(dxdy)
-        self.velocity = heading_and_speed_to_velocity(self.heading, speed)
+        velocity = heading_and_speed_to_velocity(self.heading, speed)
+        self.set_velocity(velocity)
         self.move_by_velocity()
 
     def heading_toward(self, target):
@@ -227,7 +228,6 @@ class Agent(Block):
             new_velocity = self.bounce_off_screen_edge(self.velocity)
             if self.velocity != new_velocity:
                 self.set_velocity(new_velocity)
-            # self.velocity = self.bounce_off_screen_edge(self.velocity)
         self.move_by_dxdy(self.velocity)
 
     def move_to_patch(self, patch):
