@@ -188,7 +188,9 @@ class Agent(Block):
         if speed is None:
             speed = self.speed
         dxdy = pairs.heading_to_dxdy(self.heading) * speed
-        self.move_by_dxdy(dxdy)
+        # self.move_by_dxdy(dxdy)
+        self.velocity = dxdy
+        self.move_by_velocity()
 
     def heading_toward(self, target):
         """ The heading required to face the target """
