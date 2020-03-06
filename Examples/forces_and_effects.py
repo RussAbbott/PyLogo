@@ -1,24 +1,22 @@
 
+from copy import copy
+from math import sqrt
+from random import randint, sample, uniform
+
 from core.agent import Agent
-from core.pairs import Pixel_xy
-from core.gui import HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH, SHAPES
+from core.gui import HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 from core.link import Link, link_exists
+from core.pairs import Pixel_xy
 from core.sim_engine import SimEngine
 from core.utils import normalize_dxdy
 from core.world_patch_block import World
 
-from copy import copy
-
-from math import copysign, sqrt
-
-from random import choice, randint, sample, uniform
-
 
 class Force_Layout_Node(Agent):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         shape_name = SimEngine.gui_get('shape')
-        super().__init__(shape_name=shape_name)
+        super().__init__(shape_name=shape_name, **kwargs)
         self.forward(randint(50, 300))
         # If there are any (other) agents, create links to them with probability 0.25.
         agents = World.agents - {self}
