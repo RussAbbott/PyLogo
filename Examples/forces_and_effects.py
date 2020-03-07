@@ -3,7 +3,10 @@ from copy import copy
 from math import sqrt
 from random import randint, sample, uniform
 
-from core.agent import Agent
+from pygame.color import Color
+from pygame.colordict import THECOLORS
+
+from core.agent import Agent, PYGAME_COLORS
 from core.gui import HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 from core.link import Link, link_exists
 from core.pairs import Pixel_xy
@@ -16,7 +19,9 @@ class Force_Layout_Node(Agent):
 
     def __init__(self, **kwargs):
         shape_name = SimEngine.gui_get('shape')
-        super().__init__(shape_name=shape_name, **kwargs)
+        color = SimEngine.gui_get('color')
+        color = Color(color) if color != 'Random' else None
+        super().__init__(shape_name=shape_name, color=color, **kwargs)
         self.forward(randint(50, 300))
         # If there are any (other) agents, create links to them with probability 0.25.
         agents = World.agents - {self}
@@ -64,7 +69,6 @@ class Force_Layout_Node(Agent):
                   f'normalized_force {tuple(normalized_force.round(2))}; \n\n'
                   )
 
-        # self.move_by_dxdy(normalized_force*10)
         self.set_velocity(normalized_force*10)
         self.forward()
 
@@ -78,15 +82,17 @@ class Force_Layout_Node(Agent):
         d = this.distance_to(other, wrap=False)
         if repulsive:
             dist = max(1, this.distance_to(other, wrap=False) / screen_diagonal_div_10)
+            rep_coefficient = SimEngine.gui_get('rep_coef')
             rep_exponent = SimEngine.gui_get('rep_exponent')
-            return direction * dist**rep_exponent
+            return direction * (10**rep_coefficient)/10 * dist**rep_exponent
         else:  # attraction
             dist = max(1, max(d, screen_diagonal_div_10) / screen_diagonal_div_10)
+            att_coef = SimEngine.gui_get('att_coef')
             att_exponent = SimEngine.gui_get('att_exponent')
             force = direction*dist**att_exponent
             if d < screen_diagonal_div_10:
                 force = force*(-1)
-            return force
+            return int(round((10**att_coef)/10)) * force
 
     def make_links(self, agents):
         """
@@ -164,8 +170,6 @@ class Force_Layout_World(World):
             self.agent_class()
         self.disable_enable_buttons()
 
-        # SimEngine.gui_set('Delete random node', disabled=not bool(World.agents))
-
     def step(self):
         for agent in self.agents:
             agent.adjust_distances(self.max_motion)
@@ -175,26 +179,40 @@ class Force_Layout_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
-force_upper_left = [
-                    [
-                     sg.Text('Node shape'),
-                     sg.Combo(KNOWN_FIGURES, key='shape', default_value='netlogo_figure', tooltip='Node shape')],
+force_right_upper = [
+                     [
+                      sg.Col([
+                              [sg.Button('Create node', tooltip='Create a node'),
+                               sg.Button('Delete random node', tooltip='Delete one random node')]]),
 
-                    HOR_SEP(pad=(None, (0, 0))),
+                      sg.Col([
+                              [sg.Text('Node shape', pad=((30, 0), None)),
+                               sg.Combo(KNOWN_FIGURES, key='shape', default_value='netlogo_figure',
+                                        tooltip='Node shape')],
 
-                    [
-                     sg.Button('Create node', tooltip='Create a node'),
-                     sg.Button('Delete random node', tooltip='Delete one random node')
-                     ],
 
-                    HOR_SEP(pad=(None, (0, 0))),
+                              [sg.Text('Node color', pad=((30, 0), None)),
+                               sg.Combo(['Random'] + [color[0] for color in PYGAME_COLORS], key='color',
+                                        default_value='Random',  tooltip='Node color')]])
 
+                      ]
+
+                    ]
+
+force_left_upper = [
                     [
                      sg.Button('Create random link', tooltip='Create one node'),
                      sg.Button('Delete random link', tooltip='Delete one random node')
                      ],
 
                     HOR_SEP(pad=(None, (0, 0))),
+
+                    [sg.Text('Repulsion coefficient', pad=((0, 10), (20, 0)),
+                             tooltip='Negative means raise to the power and divide (like gravity).\n'
+                                     'Larger magnitude means distince reduces repulsive force more.'),
+                     sg.Slider((1, 5), default_value=1, orientation='horizontal', key='rep_coef',
+                               pad=((0, 0), (0, 0)), size=(15, 20),
+                               tooltip='Larger is stronger.')],
 
                     [sg.Text('Repulsion exponent', pad=((0, 10), (20, 0)),
                              tooltip='Negative means raise to the power and divide (like gravity).\n'
@@ -203,6 +221,16 @@ force_upper_left = [
                                pad=((0, 0), (0, 0)), size=(15, 20),
                                tooltip='Negative means raise to the power and divide (like gravity).\n'
                                        'Larger magnitude means distince reduces repulsive force more.')],
+
+                    [sg.Text('Attraction coefficient', pad=((0, 10), (20, 0)),
+                             tooltip='If > distance unit, larger magnitude means \n'
+                                     'increase force more with distance (like a spring)\n'
+                                     'If < distance unit, force becomes repulsive (also like a spring)'),
+                     sg.Slider((1, 6), default_value=1, orientation='horizontal', key='att_coef',
+                               pad=((0, 0), (0, 0)), size=(15, 20),
+                               tooltip='If distance > distance unit, larger magnitude means \n'
+                                       'increase force more with distance (like a spring)\n'
+                                       'If distance < distance unit, force becomes repulsive (also like a spring)')],
 
                     [sg.Text('Attraction exponent', pad=((0, 10), (20, 0)),
                              tooltip='If > distance unit, larger magnitude means \n'
@@ -236,4 +264,5 @@ force_upper_left = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Force_Layout_World, 'Force test', force_upper_left, agent_class=Force_Layout_Node, bounce=True)
+    PyLogo(Force_Layout_World, 'Force test', gui_left_upper=force_left_upper, gui_right_upper=force_right_upper,
+           agent_class=Force_Layout_Node,  bounce=True)
