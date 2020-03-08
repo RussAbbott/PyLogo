@@ -331,9 +331,10 @@ force_right_upper = [
                      [
                       sg.Col([
                               [sg.Button('Create node', tooltip='Create a node'),
-                               sg.Button('Delete random node', tooltip='Delete one random node')]
-                              ],
-                             pad=((80, 20), None)),
+                               sg.Button('Delete random node', tooltip='Delete one random node')],
+
+                              [sg.Text('Click two nodes for shortest path')]],
+                              pad=((60, 20), None)),
 
                       sg.Col([
                               [sg.Text('Node shape'),
