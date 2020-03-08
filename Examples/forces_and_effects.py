@@ -129,7 +129,7 @@ class Force_Layout_World(World):
         # pixels per step
         self.max_motion = 5
         super().__init__(patch_class, agent_class)
-        self.shortest_path_links = []
+        self.shortest_path_links = None
         self.disable_enable_buttons()
 
     @staticmethod
@@ -173,12 +173,15 @@ class Force_Layout_World(World):
             agent.delete()
         elif event == 'Create random link':
             self.create_link()
-        elif event in ['Delete random link', 'Delete shortest-path link']:
-            link_pool = World.links if event == 'Delete random link' else self.shortest_path_links
+        elif event == 'Delete random link':
+            World.links.pop()
+        elif event == 'Delete shortest-path link':
+            # Delete one of the middle links if there are any.
+            middle_links = self.shortest_path_links[1:-1]
+            link_pool = middle_links if middle_links else self.shortest_path_links
             lnk = sample(link_pool, 1)[0]
             World.links.remove(lnk)
-            if event == 'Delete shortest-path link':
-                self.shortest_path_links = []
+            self.shortest_path_links = None
 
         self.disable_enable_buttons()
         # SimEngine.gui_set('Delete random node', disabled=not bool(World.agents))
