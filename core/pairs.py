@@ -67,7 +67,7 @@ class Pixel_xy(XY):
         return f'Pixel_xy{self.x, self.y}'
 
     def closest_block(self, blocks, wrap=True):
-        closest =  min(blocks, key=lambda block: self.distance_to(block.center_pixel.x, wrap))
+        closest = min(blocks, key=lambda block: self.distance_to(block.center_pixel.x, wrap))
         return closest
 
     def distance_to(self, other, wrap):
