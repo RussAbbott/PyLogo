@@ -1,13 +1,16 @@
 
 from copy import copy
 from math import sqrt
-from random import randint, sample, uniform
+from random import choice, randint, sample, uniform
+from typing import Tuple
 
 from pygame.color import Color
 from pygame.colordict import THECOLORS
+from pygame.draw import circle
 
 from core.agent import Agent, PYGAME_COLORS
-from core.gui import HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
+import core.gui as gui
+from core.gui import BLOCK_SPACING, HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 from core.link import Link, link_exists
 from core.pairs import Pixel_xy
 from core.sim_engine import SimEngine
@@ -27,6 +30,9 @@ class Force_Layout_Node(Agent):
         agents = World.agents - {self}
         if agents:
             self.make_links(agents)
+
+    def __str__(self):
+        return f'FLN-{self.id}'
 
     def adjust_distances(self, max_motion):
         dist_unit = SimEngine.gui_get(('dist_unit'))
@@ -76,6 +82,12 @@ class Force_Layout_Node(Agent):
         World.agents.remove(self)
         World.links -= {lnk for lnk in World.links if lnk.includes(self)}
 
+    def draw(self, shape_name=None):
+        super().draw(shape_name=shape_name)
+        if self.highlight:
+            radius = round((BLOCK_SPACING() / 2) * self.scale * 1.5)
+            circle(gui.SCREEN, Color('red'), self.rect.center, radius, 1)
+
     @staticmethod
     def force_as_dxdy(this, other, screen_diagonal_div_10, repulsive=True):
         direction = normalize_dxdy((this - other) if repulsive else (other - this))
@@ -93,6 +105,10 @@ class Force_Layout_Node(Agent):
             if d < screen_diagonal_div_10:
                 force = force*(-1)
             return int(round((10**att_coef)/10)) * force
+
+    def lnk_nbrs(self):
+        lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
+        return lns
 
     def make_links(self, agents):
         """
@@ -139,7 +155,6 @@ class Force_Layout_World(World):
         SimEngine.gui_set('Delete random link', enabled=bool(World.links))
         SimEngine.gui_set('Create random link', enabled=len(World.links) < len(World.agents)*(len(World.agents)-1)/2)
 
-
     def handle_event(self, event):
         """
         This is called when a GUI widget is changed and the change isn't handled by the system.
@@ -163,6 +178,18 @@ class Force_Layout_World(World):
         self.disable_enable_buttons()
         # SimEngine.gui_set('Delete random node', disabled=not bool(World.agents))
 
+    def mouse_click(self, xy: Tuple[int, int]):
+        """ Toggle clicked patch's aliveness. """
+        patch = self.pixel_tuple_to_patch(xy)
+        if len(patch.agents) == 1:
+            node = choice(list(patch.agents))
+        else:
+            patches = patch.neighbors_24()
+            nodes = {node for node in patch.agents for patch in patches}
+            node = choice(nodes) if len(nodes) == 1 else None
+        if node:
+            node.highlight = not node.highlight
+
     def setup(self):
         # SimEngine.gui_set('Create node', disabled=False)
         nbr_nodes = SimEngine.gui_get('nbr_nodes')
@@ -170,9 +197,39 @@ class Force_Layout_World(World):
             self.agent_class()
         self.disable_enable_buttons()
 
+    @staticmethod
+    def shortest_path(node1, node2):
+        visited = {node1}
+        frontier = [[(None, node1)]]
+        while frontier:
+            current_path = frontier.pop(0)
+            lnk_nbrs = [lnk_nbr for lnk_nbr in current_path[-1][1].lnk_nbrs() if lnk_nbr[1] not in visited]
+            lnks_to_node_2 = [lnk_nbr for lnk_nbr in lnk_nbrs if lnk_nbr[1] == node2]
+            # If lnks_to_node_2 is non-empty it will have one element: (lnk, node_2)
+            if lnks_to_node_2:
+                path = current_path + lnks_to_node_2
+                # Extract the links, but drop the None at the beginning.
+                lnks = [lnk_nbr[0] for lnk_nbr in path[1:]]
+                for lnk in lnks:
+                    lnk.color = Color('red')
+                    lnk.width = 2
+                return lnks
+            visited |= {lnk_nbr[1] for lnk_nbr in lnk_nbrs}
+            extended_paths = [current_path + [lnk_nbr] for lnk_nbr in lnk_nbrs]
+            frontier += extended_paths
+        return None
+
     def step(self):
-        for agent in self.agents:
-            agent.adjust_distances(self.max_motion)
+        for node in self.agents:
+            node.adjust_distances(self.max_motion)
+
+        for lnk in World.links:
+            lnk.color = lnk.default_color
+            lnk.width = 1
+        highlighted_nodes = [node for node in self.agents if node.highlight]
+        if len(highlighted_nodes) == 2:
+            self.shortest_path(*highlighted_nodes)
+
         self.disable_enable_buttons()
 
 
@@ -183,15 +240,17 @@ force_right_upper = [
                      [
                       sg.Col([
                               [sg.Button('Create node', tooltip='Create a node'),
-                               sg.Button('Delete random node', tooltip='Delete one random node')]]),
+                               sg.Button('Delete random node', tooltip='Delete one random node')]
+                              ],
+                             pad=((0, 125), None)),
 
                       sg.Col([
-                              [sg.Text('Node shape', pad=((30, 0), None)),
+                              [sg.Text('Node shape'),
                                sg.Combo(KNOWN_FIGURES, key='shape', default_value='netlogo_figure',
                                         tooltip='Node shape')],
 
 
-                              [sg.Text('Node color', pad=((30, 0), None)),
+                              [sg.Text('Node color'),
                                sg.Combo(['Random'] + [color[0] for color in PYGAME_COLORS], key='color',
                                         default_value='Random',  tooltip='Node color')]])
 
@@ -201,11 +260,11 @@ force_right_upper = [
 
 force_left_upper = [
                     [
-                     sg.Button('Create random link', tooltip='Create one node'),
-                     sg.Button('Delete random link', tooltip='Delete one random node')
+                     sg.Button('Create random link', tooltip='Create one node', pad=((50, 10), (5, 0))),
+                     sg.Button('Delete random link', tooltip='Delete one random node', pad=((0, 0), (5, 0)))
                      ],
 
-                    HOR_SEP(pad=(None, (0, 0))),
+                    HOR_SEP(pad=((50, 0), (0, 0))),
 
                     [sg.Text('Repulsion coefficient', pad=((0, 10), (20, 0)),
                              tooltip='Negative means raise to the power and divide (like gravity).\n'
@@ -248,7 +307,7 @@ force_left_upper = [
                                resolution=1, pad=((0, 0), (0, 0)), size=(10, 20),
                                tooltip='The fraction of the screen diagonal used as one unit.')],
 
-                    HOR_SEP(),
+                    HOR_SEP(pad=((50, 0), (0, 0))),
 
                     [sg.Text('Click "Setup and then "Go" for force computation.', pad=((0, 0), (0, 0)))],
                     [sg.Text('Nbr of nodes', pad=((0, 10), (20, 0))),
