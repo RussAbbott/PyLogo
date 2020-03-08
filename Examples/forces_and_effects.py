@@ -186,7 +186,7 @@ class Force_Layout_World(World):
         else:
             patches = patch.neighbors_24()
             nodes = {node for patch in patches for node in patch.agents}
-            node = nodes.pop() if len(nodes) == 1 else None
+            node = nodes.pop() if len(nodes) >= 1 else None
         if node:
             node.highlight = not node.highlight
 
@@ -200,10 +200,21 @@ class Force_Layout_World(World):
     @staticmethod
     def shortest_path(node1, node2):
         visited = {node1}
+        # A path is a sequence of tuples (link, node) where the link
+        # attaches to the node preceding it and in its tuple.
+        # The first tuple in a path starts with a None link since
+        # there is no preceding node.
+
+        # The frontier is a list of paths, shortest first.
         frontier = [[(None, node1)]]
         while frontier:
             current_path = frontier.pop(0)
+            # The lnk_nbrs are tuples as in the paths. For a given node
+            # they are all the nodes links along with the nodes linked to.
+            # This is asking for the lnk_nbrs of the last node in the current path,
+            # i.e., all the ways the current path can be continued.
             lnk_nbrs = [lnk_nbr for lnk_nbr in current_path[-1][1].lnk_nbrs() if lnk_nbr[1] not in visited]
+            # Do any of these continuations reach the target, node_2? If so, we've found the shortest path.
             lnks_to_node_2 = [lnk_nbr for lnk_nbr in lnk_nbrs if lnk_nbr[1] == node2]
             # If lnks_to_node_2 is non-empty it will have one element: (lnk, node_2)
             if lnks_to_node_2:
@@ -214,22 +225,31 @@ class Force_Layout_World(World):
                     lnk.color = Color('red')
                     lnk.width = 2
                 return lnks
+            # Not done. Add the newly reached nodes to visted.
             visited |= {lnk_nbr[1] for lnk_nbr in lnk_nbrs}
+            # For each lnk_nbr construct an extended version of the current path.
             extended_paths = [current_path + [lnk_nbr] for lnk_nbr in lnk_nbrs]
+            # Add all those extended paths to the frontier.
             frontier += extended_paths
+
+        # If we get out of the loop because the frontier is empty, there is no path from node_1 to node_2.
         return None
 
     def step(self):
         for node in self.agents:
             node.adjust_distances(self.max_motion)
 
+        # Put all the links back to normal.
         for lnk in World.links:
             lnk.color = lnk.default_color
             lnk.width = 1
-        highlighted_nodes = [node for node in self.agents if node.highlight]
-        if len(highlighted_nodes) == 2:
-            self.shortest_path(*highlighted_nodes)
 
+        selected_nodes = [node for node in self.agents if node.highlight]
+        # If there are two selected nodes, find the shortest path between them.
+        if len(selected_nodes) == 2:
+            self.shortest_path(*selected_nodes)
+
+        # Update which buttons are enabled.
         self.disable_enable_buttons()
 
 
