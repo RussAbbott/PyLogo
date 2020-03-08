@@ -33,12 +33,23 @@ PATCH_COLS = 51
 
 
 # Since it's used as a default value, can't be a list. A tuple works just as well.
-# Only one shape defined so far.
 SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
           'square': ((1, 1), (1, 0), (0, 0), (0, 1)),
           'star': ((1, 1), (0, 0), (0.5, 0.5), (0, 1), (1, 0), (0.5, 0.5), (0, 0.5), (1, 0.5), (0.5, 0.5),
                    (0.5, 0), (0.5, 1), (0.5, 0.5)),
           }
+
+
+def polygon(sides):
+    points = []
+    arc = 2*math.pi/sides
+    for i in range(sides):
+        angle = i*arc + math.pi/4
+        xy = (XY((math.cos(angle), math.sin(angle))) + XY((0.5, 0.5))).round(2)
+        points.append(xy)
+    # print(sides, points)
+    return points
+
 
 KNOWN_FIGURES = sorted(list(SHAPES.keys()) + ['circle', 'node'])
 
@@ -118,7 +129,7 @@ def draw(agent, shape_name):
         print(f"Don't know how to draw a {shape_name}.")
 
 
-def draw_line(start_pixel, end_pixel, line_color: Color = Color('white'), width: int = 1):
+def draw_line(start_pixel, end_pixel, line_color: Color = Color('white'), width=1):
     line(gui.SCREEN, line_color, start_pixel, end_pixel, width)
 
 

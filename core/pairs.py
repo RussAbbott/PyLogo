@@ -66,6 +66,10 @@ class Pixel_xy(XY):
     def __str__(self):
         return f'Pixel_xy{self.x, self.y}'
 
+    def closest_block(self, blocks, wrap=True):
+        closest =  min(blocks, key=lambda block: self.distance_to(block.center_pixel.x, wrap))
+        return closest
+
     def distance_to(self, other, wrap):
         # Try all ways to get there including wrapping around.
         # wrap = not World.THE_WORLD.get_gui_value('bounce')
@@ -146,7 +150,9 @@ class Velocity(XY):
     def __str__(self):
         return f'Velocity{self.dx, self.dy}'
 
-    # The @property decorator allows you to call the function without parentheses: v = Velocity(3, 4); v.dx -> 3
+    # The @property decorator allows you to call the function without parentheses:
+    # v = Velocity(3, 4)
+    # v.dx => 3
     @property
     def dx(self):
         return self.x
@@ -170,9 +176,6 @@ def heading_and_speed_to_velocity(heading, speed) -> Velocity:
     velocity = unit_dxdy * speed
     return velocity
 
-# def heading_to_unit_dxdy(heading) -> Velocity:
-#     return _heading_to_dxdy_int(heading)
-#
 
 @lru_cache(maxsize=512)
 def heading_to_unit_dxdy(heading) -> Velocity:

@@ -28,7 +28,7 @@ def is_acceptable_color(rgb):
     """
     sum_rgb = sum(rgb)
     avg_rgb = sum_rgb/3
-    return sum_rgb >= 150 and sum(abs(avg_rgb-x) for x in rgb) > 100
+    return avg_rgb >= 160 and sum(abs(avg_rgb-x) for x in rgb) > 100
 
 
 # These are colors defined by pygame that satisfy is_acceptable_color() above.
@@ -41,26 +41,6 @@ NETLOGO_PRIMARY_COLORS = [(color_name, Color(color_name))
 
 SQRT_2 = sqrt(2)
 
-
-# def polygon(sides):
-#     sq2 = SQRT_2/2
-#     points = []
-#     arc = 2*math.pi/sides
-#     for i in range(sides):
-#         angle = i*arc + math.pi/4
-#         xy = (XY((math.cos(angle), math.sin(angle))) + XY((0.5, 0.5))).round(2)
-#         points.append(xy)
-#     print(sides, points)
-#     return points
-
-
-# # Since it's used as a default value, can't be a list. A tuple works just as well.
-# # Only one shape defined so far.
-# SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
-#           'square': ((1, 1), (1, 0), (0, 0), (0, 1)),
-#           'x': ((1, 1), (0.5, 0.5), (0, 1), (0.5, 0.5), (0, 0), (0.5, 0.5), (1, 0), (0.5, 0.5)),
-#           }
-#
 
 class Agent(Block):
 
@@ -177,7 +157,7 @@ class Agent(Block):
         return dist
 
     def draw(self, shape_name=None):
-        # No point in rotating circles or nodes
+        # No point in rotating circles or nodes. Only rotate SHAPES.
         if self.shape_name in SHAPES:
             self.image = pgt.rotate(self.base_image, -self.heading)
             self.rect = self.image.get_rect(center=self.center_pixel)
@@ -188,11 +168,6 @@ class Agent(Block):
         self.set_heading(new_heading)
 
     def forward(self, speed=1):
-        # if speed is None:
-        #     # speed = self.speed
-        #     speed = 1
-        # dxdy = pairs.heading_to_unit_dxdy(self.heading) * speed
-        # self.move_by_dxdy(dxdy)
         velocity = heading_and_speed_to_velocity(self.heading, speed)
         self.set_velocity(velocity)
         self.move_by_velocity()
@@ -210,14 +185,6 @@ class Agent(Block):
         """
         Move to self.center_pixel + (dx, dy)
         """
-        # if SimEngine.gui_get('Bounce?'):
-        #     # dxdy = self.bounce_off_screen_edge(dxdy)
-        #     new_dxdy = self.bounce_off_screen_edge(dxdy)
-        #     if new_dxdy != dxdy:
-        #         print(dxdy, new_dxdy)
-        #     if dxdy is self.velocity:
-        #         self.set_velocity(new_dxdy)
-        #     dxdy = new_dxdy
         new_center_pixel_unwrapped = self.center_pixel + dxdy
         # Wrap around the grid of pixels.
         new_center_pixel_wrapped = new_center_pixel_unwrapped.wrap()

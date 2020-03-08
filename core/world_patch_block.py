@@ -41,6 +41,7 @@ class Block(Sprite):
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = self.base_color = color
         self.label = None
+        self.highlight = None
 
     def distance_to_xy(self, xy: Pixel_xy):
         x_dist = self.center_pixel.x - xy.x
@@ -77,6 +78,7 @@ class Patch(Block):
         self.agents = None
         self._neighbors_4 = None
         self._neighbors_8 = None
+        self._neighbors_24 = None
 
     def __str__(self):
         class_name = get_class_name(self)
@@ -106,9 +108,21 @@ class Patch(Block):
 
     def neighbors_8(self):
         if self._neighbors_8 is None:
-            all_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
-            self._neighbors_8 = self.neighbors(all_deltas)
+            eight_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
+            self._neighbors_8 = self.neighbors(eight_deltas)
         return self._neighbors_8
+
+    def neighbors_24(self):
+        if self._neighbors_24 is None:
+            twenty_four_deltas = ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1),
+                                  (-2, -2), (-1, -2), (0, -2), (1, -2), (2, -2),
+                                  (-2, -1), (2, -1),
+                                  (-2, 0), (2, 0),
+                                  (-2, 1), (2, 1),
+                                  (-2, 2), (-1, 2), (0, 2), (1, 2), (2, 2),
+                                  )
+            self._neighbors_24 = self.neighbors(twenty_four_deltas)
+        return self._neighbors_24
 
     def neighbors(self, deltas):
         """
