@@ -50,6 +50,8 @@ class SimEngine:
         it possibleto use 'enabled' as the negation of 'disabled'.
         """
         flip = key == 'enabled'
+        if not SimEngine.values:
+            (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
         value = SimEngine.values.get(key, None) if not flip else not SimEngine.values.get('disabled', None)
         return int(value) if isinstance(value, float) and value == int(value) else value
 
@@ -71,6 +73,9 @@ class SimEngine:
                 self.fps = fps
 
             self.set_grab_anywhere(self.gui_get('Grab'))
+
+            if SimEngine.event == self.simple_gui.GRAPH:
+                self.world.mouse_click(SimEngine.values['-GRAPH-'])
 
             if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
