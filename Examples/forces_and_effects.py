@@ -263,10 +263,12 @@ import PySimpleGUI as sg
 
 force_left_upper = [
                     [
-                     sg.Button('Create random link', tooltip='Create one node', pad=((0, 10), (5, 0))),
-                     sg.Col([[sg.Button('Delete random link', tooltip='Delete one random node', pad=((10, 10), (5, 0)))],
-                     [sg.Button('Delete shortest-path link', tooltip='Delete a link on the shortest path',
-                               pad=((0, 0), (5, 0)))]])
+                     sg.Button('Create random link', tooltip='Create a random link', pad=((0, 10), (5, 0))),
+                     sg.Col([[sg.Button('Delete random link', tooltip='Delete a random link',
+                                        pad=((10, 10), (5, 0)))],
+                             [sg.Button('Delete shortest-path link',
+                                        tooltip='Delete a random link on the shortest path',
+                                        pad=((0, 0), (5, 0)))]])
                      ],
 
                     HOR_SEP(pad=((50, 0), (0, 0))),
