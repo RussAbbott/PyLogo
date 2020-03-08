@@ -129,6 +129,7 @@ class Force_Layout_World(World):
         # pixels per step
         self.max_motion = 5
         super().__init__(patch_class, agent_class)
+        self.shortest_path_links = []
         self.disable_enable_buttons()
 
     @staticmethod
@@ -146,14 +147,15 @@ class Force_Layout_World(World):
                     link_created = True
                     break
 
-    @staticmethod
-    def disable_enable_buttons():
+    def disable_enable_buttons(self):
         # 'enabled' is a pseudo attribute. gui.gui_set replaces it with 'disabled' and negates the value.
 
         SimEngine.gui_set('Delete random node', enabled=bool(World.agents))
 
         SimEngine.gui_set('Delete random link', enabled=bool(World.links))
         SimEngine.gui_set('Create random link', enabled=len(World.links) < len(World.agents)*(len(World.agents)-1)/2)
+
+        SimEngine.gui_set('Delete shortest-path link', enabled=self.shortest_path_links)
 
     def handle_event(self, event):
         """
@@ -171,9 +173,12 @@ class Force_Layout_World(World):
             agent.delete()
         elif event == 'Create random link':
             self.create_link()
-        elif event == 'Delete random link':
-            lnk = sample(World.links, 1)[0]
+        elif event in ['Delete random link', 'Delete shortest-path link']:
+            link_pool = World.links if event == 'Delete random link' else self.shortest_path_links
+            lnk = sample(link_pool, 1)[0]
             World.links.remove(lnk)
+            if event == 'Delete shortest-path link':
+                self.shortest_path_links = []
 
         self.disable_enable_buttons()
         # SimEngine.gui_set('Delete random node', disabled=not bool(World.agents))
@@ -186,7 +191,7 @@ class Force_Layout_World(World):
         else:
             patches = patch.neighbors_24()
             nodes = {node for patch in patches for node in patch.agents}
-            node = nodes.pop() if len(nodes) >= 1 else None
+            node = nodes.pop() if nodes else Pixel_xy(xy).closest_block(World.agents)
         if node:
             node.highlight = not node.highlight
 
@@ -247,7 +252,7 @@ class Force_Layout_World(World):
         selected_nodes = [node for node in self.agents if node.highlight]
         # If there are two selected nodes, find the shortest path between them.
         if len(selected_nodes) == 2:
-            self.shortest_path(*selected_nodes)
+            self.shortest_path_links = self.shortest_path(*selected_nodes)
 
         # Update which buttons are enabled.
         self.disable_enable_buttons()
@@ -256,32 +261,12 @@ class Force_Layout_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
-force_right_upper = [
-                     [
-                      sg.Col([
-                              [sg.Button('Create node', tooltip='Create a node'),
-                               sg.Button('Delete random node', tooltip='Delete one random node')]
-                              ],
-                             pad=((0, 125), None)),
-
-                      sg.Col([
-                              [sg.Text('Node shape'),
-                               sg.Combo(KNOWN_FIGURES, key='shape', default_value='netlogo_figure',
-                                        tooltip='Node shape')],
-
-
-                              [sg.Text('Node color'),
-                               sg.Combo(['Random'] + [color[0] for color in PYGAME_COLORS], key='color',
-                                        default_value='Random',  tooltip='Node color')]])
-
-                      ]
-
-                    ]
-
 force_left_upper = [
                     [
-                     sg.Button('Create random link', tooltip='Create one node', pad=((50, 10), (5, 0))),
-                     sg.Button('Delete random link', tooltip='Delete one random node', pad=((0, 0), (5, 0)))
+                     sg.Button('Create random link', tooltip='Create one node', pad=((0, 10), (5, 0))),
+                     sg.Col([[sg.Button('Delete random link', tooltip='Delete one random node', pad=((10, 10), (5, 0)))],
+                     [sg.Button('Delete shortest-path link', tooltip='Delete a link on the shortest path',
+                               pad=((0, 0), (5, 0)))]])
                      ],
 
                     HOR_SEP(pad=((50, 0), (0, 0))),
@@ -338,6 +323,31 @@ force_left_upper = [
                     [sg.Checkbox('Print force values', key='Print force values', default=False,
                                  pad=((0, 0), (20, 0)))]
                     ]
+
+
+force_right_upper = [
+                     [
+                      sg.Col([
+                              [sg.Button('Create node', tooltip='Create a node'),
+                               sg.Button('Delete random node', tooltip='Delete one random node')]
+                              ],
+                             pad=((80, 20), None)),
+
+                      sg.Col([
+                              [sg.Text('Node shape'),
+                               sg.Combo(KNOWN_FIGURES, key='shape', default_value='netlogo_figure',
+                                        tooltip='Node shape')],
+
+
+                              [sg.Text('Node color'),
+                               sg.Combo(['Random'] + [color[0] for color in PYGAME_COLORS], key='color',
+                                        default_value='Random',  tooltip='Node color')]])
+
+                      ]
+
+                    ]
+
+
 
 
 
