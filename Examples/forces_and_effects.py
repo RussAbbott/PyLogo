@@ -185,8 +185,8 @@ class Force_Layout_World(World):
             node = choice(list(patch.agents))
         else:
             patches = patch.neighbors_24()
-            nodes = {node for node in patch.agents for patch in patches}
-            node = choice(nodes) if len(nodes) == 1 else None
+            nodes = {node for patch in patches for node in patch.agents}
+            node = nodes.pop() if len(nodes) == 1 else None
         if node:
             node.highlight = not node.highlight
 
