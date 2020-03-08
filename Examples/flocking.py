@@ -191,11 +191,8 @@ class Flocking_World(World):
             # agent.flock() resets agent's heading. Agent doesn't move.
             agent.flock(show_flockmates)
 
-            # Print this agent's flockmate links if curious.
-            # print(f'{agent}: {[str(lnk) for lnk in agent.all_links()]}')
-
             # Here's where the agent actually moves.
-            # The move depends on the speed and the heading.
+            # The move depends on the heading, which was just set in agent.flock(), and the speed.
             speed = SimEngine.gui_get('speed')
             agent.forward(speed)
 
