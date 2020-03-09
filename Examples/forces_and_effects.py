@@ -12,7 +12,7 @@ from core.agent import Agent, PYGAME_COLORS
 import core.gui as gui
 from core.gui import BLOCK_SPACING, HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 from core.link import Link, link_exists
-from core.pairs import Pixel_xy
+from core.pairs import Pixel_xy, Velocity
 from core.sim_engine import SimEngine
 from core.utils import normalize_dxdy
 from core.world_patch_block import World
@@ -30,41 +30,44 @@ class Force_Layout_Node(Agent):
         agents = World.agents - {self}
         if agents:
             self.make_links(agents)
+        # Has the node been selected for shortest path?
+        self.highlighted = False
 
     def __str__(self):
         return f'FLN-{self.id}'
 
-    def adjust_distances(self, max_motion):
+    def adjust_distances(self, velocity_adjustment):
         dist_unit = SimEngine.gui_get(('dist_unit'))
-        screen_diagonal_div_10 = sqrt(SCREEN_PIXEL_WIDTH()**2 + SCREEN_PIXEL_HEIGHT()**2)/dist_unit
+        screen_distance_unit = sqrt(SCREEN_PIXEL_WIDTH()**2 + SCREEN_PIXEL_HEIGHT()**2)/dist_unit
 
-        repulsive_force = Pixel_xy((0, 0))
+        repulsive_force: Velocity = Velocity((0, 0))
 
         for agent in (World.agents - {self}):
-            repulsive_force += self.force_as_dxdy(self.center_pixel, agent.center_pixel, screen_diagonal_div_10,
-                                                  repulsive=True)
+            repulsive_force += self.force_as_dxdy(self.center_pixel, agent.center_pixel, screen_distance_unit,
+                                                    repulsive=True)
 
         # Also consider repulsive force from walls.
-        repulsive_wall_force = Pixel_xy((0, 0))
+        repulsive_wall_force: Velocity = Velocity((0, 0))
 
         horizontal_walls = [Pixel_xy((0, 0)), Pixel_xy((SCREEN_PIXEL_WIDTH(), 0))]
         x_pixel = Pixel_xy((self.center_pixel.x, 0))
         for h_wall_pixel in horizontal_walls:
-            repulsive_wall_force += self.force_as_dxdy(x_pixel, h_wall_pixel, screen_diagonal_div_10, repulsive=True)
+            repulsive_wall_force += self.force_as_dxdy(x_pixel, h_wall_pixel, screen_distance_unit, repulsive=True)
 
         vertical_walls = [Pixel_xy((0, 0)), Pixel_xy((0, SCREEN_PIXEL_HEIGHT()))]
         y_pixel = Pixel_xy((0, self.center_pixel.y))
         for v_wall_pixel in vertical_walls:
-            repulsive_wall_force += self.force_as_dxdy(y_pixel, v_wall_pixel, screen_diagonal_div_10, repulsive=True)
+            repulsive_wall_force += self.force_as_dxdy(y_pixel, v_wall_pixel, screen_distance_unit, repulsive=True)
 
-        attractive_force = Pixel_xy((0, 0))
+        attractive_force: Velocity = Velocity((0, 0))
         for agent in (World.agents - {self}):
             if link_exists(self, agent):
-                attractive_force += self.force_as_dxdy(self.center_pixel, agent.center_pixel, screen_diagonal_div_10,
-                                                       repulsive=False)
+                attractive_force += self.force_as_dxdy(self.center_pixel, agent.center_pixel, screen_distance_unit,
+                                                         repulsive=False)
 
         net_force = repulsive_force + repulsive_wall_force + attractive_force
-        normalized_force = net_force/max([net_force.x, net_force.y, max_motion])
+        normalized_force: Velocity = net_force/max([net_force.x, net_force.y, velocity_adjustment])
+        normalized_force *= 10
 
         if SimEngine.gui_get('Print force values'):
             print(f'{self}. \n'
@@ -75,7 +78,7 @@ class Force_Layout_Node(Agent):
                   f'normalized_force {tuple(normalized_force.round(2))}; \n\n'
                   )
 
-        self.set_velocity(normalized_force*10)
+        self.set_velocity(normalized_force)
         self.forward()
 
     def delete(self):
@@ -84,29 +87,34 @@ class Force_Layout_Node(Agent):
 
     def draw(self, shape_name=None):
         super().draw(shape_name=shape_name)
-        if self.highlight:
+        if self.highlighted:
             radius = round((BLOCK_SPACING() / 2) * self.scale * 1.5)
             circle(gui.SCREEN, Color('red'), self.rect.center, radius, 1)
 
     @staticmethod
-    def force_as_dxdy(this, other, screen_diagonal_div_10, repulsive=True):
-        direction = normalize_dxdy((this - other) if repulsive else (other - this))
-        d = this.distance_to(other, wrap=False)
+    def force_as_dxdy(pixel_a: Pixel_xy, pixel_b: Pixel_xy, screen_distance_unit, repulsive):
+        """
+        Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
+        """
+        direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
+        d = pixel_a.distance_to(pixel_b, wrap=False)
         if repulsive:
-            dist = max(1, this.distance_to(other, wrap=False) / screen_diagonal_div_10)
+            dist = max(1, pixel_a.distance_to(pixel_b, wrap=False) / screen_distance_unit)
             rep_coefficient = SimEngine.gui_get('rep_coef')
             rep_exponent = SimEngine.gui_get('rep_exponent')
-            return direction * (10**rep_coefficient)/10 * dist**rep_exponent
+            force = direction * (10**rep_coefficient)/10 * dist**rep_exponent
+            return force
         else:  # attraction
-            dist = max(1, max(d, screen_diagonal_div_10) / screen_diagonal_div_10)
-            att_coef = SimEngine.gui_get('att_coef')
+            dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
             att_exponent = SimEngine.gui_get('att_exponent')
             force = direction*dist**att_exponent
-            if d < screen_diagonal_div_10:
+            # If the link is too short, push away instead of attracting.
+            if d < screen_distance_unit:
                 force = force*(-1)
-            return int(round((10**att_coef)/10)) * force
+            att_coefficient = SimEngine.gui_get('att_coef')
+            return 10**(att_coefficient-1) * force
 
-    def lnk_nbrs(self):
+    def neighbors(self):
         lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
         return lns
 
@@ -126,10 +134,10 @@ class Force_Layout_Node(Agent):
 class Force_Layout_World(World):
 
     def __init__(self, patch_class, agent_class):
-        # pixels per step
-        self.max_motion = 5
+        self.velocity_adjustment = 1
         super().__init__(patch_class, agent_class)
         self.shortest_path_links = None
+        self.selected_nodes = set()
         self.disable_enable_buttons()
 
     @staticmethod
@@ -146,6 +154,27 @@ class Force_Layout_World(World):
                     Link(agent_1, agent_2)
                     link_created = True
                     break
+
+    def delete_a_shortest_path_link(self):
+        # Look for a link to delete so that there is still some path.
+        link_deleted = False
+        for lnk in self.shortest_path_links:
+            World.links.remove(lnk)
+            # self.shortest_path() will return either a shortest path or None.
+            # If it returns a shortest path, the link we deleted is ok to delete.
+            if self.shortest_path():
+                link_deleted = True
+                break
+            else:
+                # Deleting lnk prevents any path. Put it back and try another one.
+                World.links.add(lnk)
+        # At this point we have either found and deleted a link or not.
+        # If we have found a link to delete, i.e., link_deleted is True, we're done.
+        # Otherwise delete a random link in the shortest path.
+        if not link_deleted:
+            # Select a random link and delete it.
+            lnk = choice(self.shortest_path_links)
+            World.links.remove(lnk)
 
     def disable_enable_buttons(self):
         # 'enabled' is a pseudo attribute. gui.gui_set replaces it with 'disabled' and negates the value.
@@ -165,7 +194,7 @@ class Force_Layout_World(World):
         # Handle color change requests.
         super().handle_event(event)
 
-        # Handle rule nbr change events, either switches or rule_nbr slider
+        # Handle link/node creation/deletion request events.
         if event == 'Create node':
             self.agent_class()
         elif event == 'Delete random node':
@@ -176,15 +205,9 @@ class Force_Layout_World(World):
         elif event == 'Delete random link':
             World.links.pop()
         elif event == 'Delete shortest-path link':
-            # Delete one of the middle links if there are any.
-            middle_links = self.shortest_path_links[1:-1]
-            link_pool = middle_links if middle_links else self.shortest_path_links
-            lnk = sample(link_pool, 1)[0]
-            World.links.remove(lnk)
-            self.shortest_path_links = None
+            self.delete_a_shortest_path_link()
 
         self.disable_enable_buttons()
-        # SimEngine.gui_set('Delete random node', disabled=not bool(World.agents))
 
     def mouse_click(self, xy: Tuple[int, int]):
         """ Toggle clicked patch's aliveness. """
@@ -196,7 +219,7 @@ class Force_Layout_World(World):
             nodes = {node for patch in patches for node in patch.agents}
             node = nodes.pop() if nodes else Pixel_xy(xy).closest_block(World.agents)
         if node:
-            node.highlight = not node.highlight
+            node.highlighted = not node.highlighted
 
     def setup(self):
         # SimEngine.gui_set('Create node', disabled=False)
@@ -205,8 +228,8 @@ class Force_Layout_World(World):
             self.agent_class()
         self.disable_enable_buttons()
 
-    @staticmethod
-    def shortest_path(node1, node2):
+    def shortest_path(self):
+        (node1, node2) = self.selected_nodes
         visited = {node1}
         # A path is a sequence of tuples (link, node) where the link
         # attaches to the node preceding it and in its tuple.
@@ -217,26 +240,26 @@ class Force_Layout_World(World):
         frontier = [[(None, node1)]]
         while frontier:
             current_path = frontier.pop(0)
-            # The lnk_nbrs are tuples as in the paths. For a given node
+            # The neighbors are tuples as in the paths. For a given node
             # they are all the nodes links along with the nodes linked to.
-            # This is asking for the lnk_nbrs of the last node in the current path,
+            # This is asking for the neighbors of the last node in the current path,
             # i.e., all the ways the current path can be continued.
-            lnk_nbrs = [lnk_nbr for lnk_nbr in current_path[-1][1].lnk_nbrs() if lnk_nbr[1] not in visited]
+            neighbors = [neighbor for neighbor in current_path[-1][1].neighbors() if neighbor[1] not in visited]
             # Do any of these continuations reach the target, node_2? If so, we've found the shortest path.
-            lnks_to_node_2 = [lnk_nbr for lnk_nbr in lnk_nbrs if lnk_nbr[1] == node2]
+            lnks_to_node_2 = [neighbor for neighbor in neighbors if neighbor[1] == node2]
             # If lnks_to_node_2 is non-empty it will have one element: (lnk, node_2)
             if lnks_to_node_2:
                 path = current_path + lnks_to_node_2
                 # Extract the links, but drop the None at the beginning.
-                lnks = [lnk_nbr[0] for lnk_nbr in path[1:]]
-                for lnk in lnks:
-                    lnk.color = Color('red')
-                    lnk.width = 2
+                lnks = [neighbor[0] for neighbor in path[1:]]
+                # for lnk in lnks:
+                #     lnk.color = Color('red')
+                #     lnk.width = 2
                 return lnks
             # Not done. Add the newly reached nodes to visted.
-            visited |= {lnk_nbr[1] for lnk_nbr in lnk_nbrs}
+            visited |= {neighbor[1] for neighbor in neighbors}
             # For each lnk_nbr construct an extended version of the current path.
-            extended_paths = [current_path + [lnk_nbr] for lnk_nbr in lnk_nbrs]
+            extended_paths = [current_path + [neighbor] for neighbor in neighbors]
             # Add all those extended paths to the frontier.
             frontier += extended_paths
 
@@ -245,17 +268,23 @@ class Force_Layout_World(World):
 
     def step(self):
         for node in self.agents:
-            node.adjust_distances(self.max_motion)
+            node.adjust_distances(self.velocity_adjustment)
 
-        # Put all the links back to normal.
+        # Set all the links back to normal.
         for lnk in World.links:
             lnk.color = lnk.default_color
             lnk.width = 1
 
-        selected_nodes = [node for node in self.agents if node.highlight]
-        # If there are two selected nodes, find the shortest path between them.
-        if len(selected_nodes) == 2:
-            self.shortest_path_links = self.shortest_path(*selected_nodes)
+        self.selected_nodes = [node for node in self.agents if node.highlighted]
+        # If there are exactly two selected nodes, find the shortest path between them.
+        if len(self.selected_nodes) == 2:
+            self.shortest_path_links = self.shortest_path()
+            # self.shortest_path_links will be either a list of links or None
+            # If there is a path, highlight it.
+            if self.shortest_path_links:
+                for lnk in self.shortest_path_links:
+                    lnk.color = Color('red')
+                    lnk.width = 2
 
         # Update which buttons are enabled.
         self.disable_enable_buttons()
