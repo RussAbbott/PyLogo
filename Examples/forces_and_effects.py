@@ -230,6 +230,9 @@ class Force_Layout_World(World):
 
     def shortest_path(self):
         (node1, node2) = self.selected_nodes
+        # Start with the node with the smaller number of neighbors.
+        if len(node1.neighbors()) > len(node2.neighbors()):
+            (node1, node2) = (node2, node1)
         visited = {node1}
         # A path is a sequence of tuples (link, node) where the link
         # attaches to the node preceding it and in its tuple.
@@ -242,9 +245,11 @@ class Force_Layout_World(World):
             current_path = frontier.pop(0)
             # The neighbors are tuples as in the paths. For a given node
             # they are all the nodes links along with the nodes linked to.
-            # This is asking for the neighbors of the last node in the current path,
-            # i.e., all the ways the current path can be continued.
-            neighbors = [neighbor for neighbor in current_path[-1][1].neighbors() if neighbor[1] not in visited]
+            # This is asking for the last node in the current path,
+            last_node = current_path[-1][1]
+            # This gets all the non-visited neighbors of the last node.
+            # Each neighbor is a (link, node) pair.
+            neighbors = [neighbor for neighbor in last_node.neighbors() if neighbor[1] not in visited]
             # Do any of these continuations reach the target, node_2? If so, we've found the shortest path.
             lnks_to_node_2 = [neighbor for neighbor in neighbors if neighbor[1] == node2]
             # If lnks_to_node_2 is non-empty it will have one element: (lnk, node_2)
@@ -252,13 +257,10 @@ class Force_Layout_World(World):
                 path = current_path + lnks_to_node_2
                 # Extract the links, but drop the None at the beginning.
                 lnks = [neighbor[0] for neighbor in path[1:]]
-                # for lnk in lnks:
-                #     lnk.color = Color('red')
-                #     lnk.width = 2
                 return lnks
             # Not done. Add the newly reached nodes to visted.
             visited |= {neighbor[1] for neighbor in neighbors}
-            # For each lnk_nbr construct an extended version of the current path.
+            # For each neighbor construct an extended version of the current path.
             extended_paths = [current_path + [neighbor] for neighbor in neighbors]
             # Add all those extended paths to the frontier.
             frontier += extended_paths
