@@ -1,11 +1,11 @@
 
-from copy import copy
+# from copy import copy
 from math import sqrt
-from random import choice, randint, sample, uniform
+from random import choice, sample, uniform
 from typing import Tuple
 
 from pygame.color import Color
-from pygame.colordict import THECOLORS
+# from pygame.colordict import THECOLORS
 from pygame.draw import circle
 
 from core.agent import Agent, PYGAME_COLORS
@@ -413,9 +413,6 @@ force_right_upper = [
                       ]
 
                     ]
-
-
-
 
 
 if __name__ == '__main__':
