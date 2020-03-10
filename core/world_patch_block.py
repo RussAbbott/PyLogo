@@ -174,14 +174,18 @@ class World:
         for _ in range(nbr_agents):
             self.agent_class()
 
-    def create_ordered_agents(self, n, shape_name='netlogo_figure',  radius=None):
-        """Create n Agents with headings evenly spaced from 0 to 360"""
-        for i in range(n):
-            agent = self.agent_class(shape_name=shape_name)
-            heading = i*360/n
+    def create_ordered_agents(self, n, shape_name='netlogo_figure', radius=100):
+        """
+        Create n Agents with headings evenly spaced from 0 to 360
+        Return a list of the Agents in the order created.
+        """
+        agent_list = [self.agent_class(shape_name=shape_name) for _ in range(n)]
+        for (i, agent) in enumerate(agent_list):
+            heading = i * 360 / n
             agent.set_heading(heading)
             if radius:
                 agent.forward(radius)
+        return agent_list
 
     def create_patches_array(self):
         patch_pseudo_array = [[self.patch_class(RowCol((r, c))) for c in range(gui.PATCH_COLS)]

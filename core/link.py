@@ -30,6 +30,8 @@ class Link:
         self.agent_1: Agent = agent_1
         self.agent_2: Agent = agent_2
         self.both_sides = {agent_1, agent_2}
+        if len(self.both_sides) != 2:
+            print('bad')
         self.directed = directed
         # Create a hash_object to be used by both __eq__ and __hash__.
         self.hash_object = hash_object(agent_1, agent_2, directed)
