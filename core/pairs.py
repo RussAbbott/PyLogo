@@ -17,9 +17,8 @@ class XY(tuple):
         return self.restore_type(xx, yy)
 
     def __truediv__(self, scalar):
-        if scalar == 0:
-            print(0)
-        return self * (1/scalar)
+        return self.restore_type(float('inf'), float('inf')) if scalar == 0 else self * (1/scalar)
+
 
     def __mul__(self, scalar):
         xx = self.x * scalar

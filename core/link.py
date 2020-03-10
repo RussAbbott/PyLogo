@@ -31,7 +31,7 @@ class Link:
         self.agent_2: Agent = agent_2
         self.both_sides = {agent_1, agent_2}
         if len(self.both_sides) != 2:
-            print('bad')
+            raise Exception(f"Can't have a link from a node to itself: {agent_1} == {agent_2}.")
         self.directed = directed
         # Create a hash_object to be used by both __eq__ and __hash__.
         self.hash_object = hash_object(agent_1, agent_2, directed)
