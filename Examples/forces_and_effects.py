@@ -12,7 +12,7 @@ from core.agent import Agent, PYGAME_COLORS
 import core.gui as gui
 from core.gui import BLOCK_SPACING, HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 from core.link import Link, link_exists
-from core.pairs import Pixel_xy, Velocity
+from core.pairs import center_pixel, Pixel_xy, Velocity
 from core.sim_engine import SimEngine
 from core.utils import normalize_dxdy
 from core.world_patch_block import World
@@ -21,17 +21,13 @@ from core.world_patch_block import World
 class Force_Layout_Node(Agent):
 
     def __init__(self, **kwargs):
-        shape_name = SimEngine.gui_get('shape')
         color = SimEngine.gui_get('color')
         color = Color(color) if color != 'Random' else None
-        super().__init__(shape_name=shape_name, color=color, **kwargs)
-        self.forward(randint(50, 300))
-        # If there are any (other) agents, create links to them with probability 0.25.
-        agents = World.agents - {self}
-        if agents:
-            self.make_links(agents)
-        # Has the node been selected for shortest path?
-        self.highlighted = False
+        shape_name = SimEngine.gui_get('shape')
+        kwargs['shape_name'] = shape_name
+        super().__init__(color=color, **kwargs)
+        # Is the  node selected?
+        self.selected = False
 
     def __str__(self):
         return f'FLN-{self.id}'
@@ -87,7 +83,7 @@ class Force_Layout_Node(Agent):
 
     def draw(self, shape_name=None):
         super().draw(shape_name=shape_name)
-        if self.highlighted:
+        if self.selected:
             radius = round((BLOCK_SPACING() / 2) * self.scale * 1.5)
             circle(gui.SCREEN, Color('red'), self.rect.center, radius, 1)
 
@@ -114,21 +110,21 @@ class Force_Layout_Node(Agent):
             att_coefficient = SimEngine.gui_get('att_coef')
             return 10**(att_coefficient-1) * force
 
-    def neighbors(self):
-        lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
-        return lns
-
-    def make_links(self, agents):
+    def make_links(self, other_nodes):
         """
         Ceate links from self to existing nodes.
         """
-        # Put agents (nodes) in random order.
-        potential_partners = sample(agents, len(agents))
+        # Put nodes in random order.
+        potential_partners = sample(other_nodes, len(other_nodes))
         # Build a generator that keeps with probability 0.25 potential partners without links to self
-        gen = (agent for agent in potential_partners if uniform(0, 1) < 0.25 and not link_exists(self, agent))
+        gen = (agent for agent in potential_partners if uniform(0, 1) < 0.1 and not link_exists(self, agent))
         # Create a link with each of these partners.
         for partner in gen:
             Link(self, partner)
+
+    def neighbors(self):
+        lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
+        return lns
 
 
 class Force_Layout_World(World):
@@ -186,6 +182,10 @@ class Force_Layout_World(World):
 
         SimEngine.gui_set('Delete shortest-path link', enabled=self.shortest_path_links)
 
+        show_labels = SimEngine.gui_get("Show node id's")
+        for node in World.agents:
+            node.label = str(node.id) if show_labels else None
+
     def handle_event(self, event):
         """
         This is called when a GUI widget is changed and the change isn't handled by the system.
@@ -219,13 +219,38 @@ class Force_Layout_World(World):
             nodes = {node for patch in patches for node in patch.agents}
             node = nodes.pop() if nodes else Pixel_xy(xy).closest_block(World.agents)
         if node:
-            node.highlighted = not node.highlighted
+            node.selected = not node.selected
 
     def setup(self):
-        # SimEngine.gui_set('Create node', disabled=False)
         nbr_nodes = SimEngine.gui_get('nbr_nodes')
-        for _ in range(nbr_nodes):
-            self.agent_class()
+        node_list = self.create_ordered_agents(nbr_nodes, radius=140)
+        first_node = node_list[0]
+        graph_type = SimEngine.gui_get('graph type')
+        node_a = first_node
+        if graph_type in ['star', 'wheel']:
+            first_node.move_to_xy(center_pixel())
+        for node_b in node_list if graph_type == 'random' else node_list[1:]:
+            if graph_type == 'star':
+                Link(first_node, node_b)
+            elif graph_type in ['ring', 'wheel']:
+                Link(node_a, node_b)
+                node_a = node_b
+            else:  # graph_type == 'random'
+                other_nodes = World.agents - {node_b}
+                # Because we are doing this for all nodes, each node
+                # gets two chances to create a link to every other node.
+                if other_nodes:
+                    node_b.make_links(other_nodes)
+
+        last_node = node_list[-1]
+        if graph_type == 'ring':
+            Link(last_node, first_node)
+        elif graph_type == 'wheel':
+            second_node = node_list[1]
+            Link(last_node, second_node)
+            for node in node_list[2:]:
+                Link(first_node, node)
+
         self.disable_enable_buttons()
 
     def shortest_path(self):
@@ -277,7 +302,7 @@ class Force_Layout_World(World):
             lnk.color = lnk.default_color
             lnk.width = 1
 
-        self.selected_nodes = [node for node in self.agents if node.highlighted]
+        self.selected_nodes = [node for node in self.agents if node.selected]
         # If there are exactly two selected nodes, find the shortest path between them.
         if len(self.selected_nodes) == 2:
             self.shortest_path_links = self.shortest_path()
@@ -344,20 +369,25 @@ force_left_upper = [
 
                     [sg.Text('Distance unit/ideal link length', pad=((0, 10), (20, 0)),
                              tooltip='The fraction of the screen diagonal used as one unit.'),
-                     sg.Slider((3, 16), default_value=10, orientation='horizontal', key='dist_unit',
+                     sg.Slider((3, 16), default_value=8, orientation='horizontal', key='dist_unit',
                                resolution=1, pad=((0, 0), (0, 0)), size=(10, 20),
                                tooltip='The fraction of the screen diagonal used as one unit.')],
 
+                    [
+                     sg.Checkbox("Show node id's", key="Show node id's", default=False, pad=((20, 0), (20, 0))),
+                     sg.Checkbox('Print force values', key='Print force values', default=False, pad=((20, 0), (20, 0)))
+                     ],
+
                     HOR_SEP(pad=((50, 0), (0, 0))),
 
-                    [sg.Text('Click "Setup and then "Go" for force computation.', pad=((0, 0), (0, 0)))],
+                    # [sg.Text('Click "Setup and then "Go" for force computation.', pad=((0, 0), (0, 0)))],
                     [sg.Text('Nbr of nodes', pad=((0, 10), (20, 0))),
                      sg.Slider((0, 20), default_value=7, orientation='horizontal', key='nbr_nodes',
-                               pad=((0, 0), (0, 0)), size=(15, 20),
-                               tooltip='Nbr of agents created by setup')],
+                               pad=((0, 10), (0, 0)), size=(10, 20),
+                               tooltip='Nbr of agents created by setup'),
+                     sg.Combo(['random', 'ring', 'star', 'wheel'], key='graph type', pad=((20, 0), (20, 0)),
+                              default_value='ring', tooltip='graph type')],
 
-                    [sg.Checkbox('Print force values', key='Print force values', default=False,
-                                 pad=((0, 0), (20, 0)))]
                     ]
 
 
