@@ -11,6 +11,8 @@ class Network_World(Force_Layout_World):
 
     @staticmethod
     def generate_graph(graph_type, ring_node_list):
+
+        print("\n\nYou're code goes here.")
         pass
 
 
