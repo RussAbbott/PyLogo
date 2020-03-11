@@ -174,7 +174,7 @@ class World:
         for _ in range(nbr_agents):
             self.agent_class()
 
-    def create_ordered_agents(self, n, shape_name='netlogo_figure', radius=100):
+    def create_ordered_agents(self, n, shape_name='netlogo_figure', radius=140):
         """
         Create n Agents with headings evenly spaced from 0 to 360
         Return a list of the Agents in the order created.
