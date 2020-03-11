@@ -158,12 +158,12 @@ class Network_World(World):
         # sample() both copies and shuffles elements from its first argument.
         node_set_1 = sample(World.agents, len(World.agents))
         while not link_created:
-            agent_1 = node_set_1.pop()
+            node_1 = node_set_1.pop()
             node_set_2 = sample(node_set_1, len(node_set_1))
             while node_set_2:
-                agent_2 = node_set_2.pop()
-                if not link_exists(agent_1, agent_2):
-                    Link(agent_1, agent_2)
+                node_2 = node_set_2.pop()
+                if not link_exists(node_1, node_2):
+                    Link(node_1, node_2)
                     link_created = True
                     break
 
