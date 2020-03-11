@@ -146,14 +146,22 @@ class Network_World(World):
 
     @staticmethod
     def create_random_link():
+        """
+        Create a new link between two random nodes, if possible.
+        The approach is to pick a random node and then pick another random node
+        with no link to the first one. If there are no nodes that are not already
+        linked to the first node, select a different first node. Repeat until
+        a pair of nodes is found that can be linked. If all pairs of nodes
+        are already linked, do nothing.
+        """
         link_created = False
-        agent_set_1 = sample(World.agents, len(World.agents))
+        # sample() both copies and shuffles elements from its first argument.
+        node_set_1 = sample(World.agents, len(World.agents))
         while not link_created:
-            # pop selects a random element from a set and removes and returns it.
-            agent_1 = agent_set_1.pop()
-            agent_set_2 = sample(agent_set_1, len(agent_set_1))  
-            while agent_set_2:
-                agent_2 = agent_set_2.pop()
+            agent_1 = node_set_1.pop()
+            node_set_2 = sample(node_set_1, len(node_set_1))
+            while node_set_2:
+                agent_2 = node_set_2.pop()
                 if not link_exists(agent_1, agent_2):
                     Link(agent_1, agent_2)
                     link_created = True
