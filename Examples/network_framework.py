@@ -407,5 +407,5 @@ network_right_upper = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Force_Layout_World, 'Force test', gui_left_upper=force_left_upper, gui_right_upper=force_right_upper,
-           agent_class=Force_Layout_Node,  bounce=True)
+    PyLogo(Network_World, 'Force test', gui_left_upper=network_left_upper, gui_right_upper=network_right_upper,
+           agent_class=Network_Node,  bounce=True)
