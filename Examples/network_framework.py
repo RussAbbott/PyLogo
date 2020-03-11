@@ -159,9 +159,10 @@ class Network_World(World):
         node_set_1 = sample(World.agents, len(World.agents))
         while not link_created:
             node_1 = node_set_1.pop()
-            # node_set_2 does not contain node_1 since node_1 has been popped from node_set_1.
             node_set_2 = sample(node_set_1, len(node_set_1))
             while node_set_2:
+                # Since node_1 has been popped from node_set_1,
+                # node_set_2 does not contain node_1.
                 node_2 = node_set_2.pop()
                 if not link_exists(node_1, node_2):
                     Link(node_1, node_2)
