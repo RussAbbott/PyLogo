@@ -108,18 +108,6 @@ class Force_Layout_Node(Agent):
             att_coefficient = SimEngine.gui_get('att_coef')
             return 10**(att_coefficient-1) * force
 
-    def make_links(self, other_nodes):
-        """
-        Ceate links from self to existing nodes.
-        """
-        # Put nodes in random order.
-        potential_partners = sample(other_nodes, len(other_nodes))
-        # Build a generator that keeps with probability 0.25 potential partners without links to self
-        gen = (agent for agent in potential_partners if uniform(0, 1) < 0.1 and not link_exists(self, agent))
-        # Create a link with each of these partners.
-        for partner in gen:
-            Link(self, partner)
-
     def neighbors(self):
         lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
         return lns
@@ -134,8 +122,30 @@ class Force_Layout_World(World):
         self.selected_nodes = set()
         self.disable_enable_buttons()
 
+    def build_graph(self):
+        """
+        Arrange all the nodes (or all but one) as a ring.
+        Then link them depending on the kind of network desired.
+        """
+        nbr_nodes = SimEngine.gui_get('nbr_nodes')
+        graph_type = SimEngine.gui_get('graph type')
+
+        # If we are generating a star or a wheel network, arrange nbr_nodes-1 as
+        # a ring and use the other node as the center node.
+
+        # If we are generating a ring or a random network, arrange all the nodes as a ring.
+
+        ring_nodes = (nbr_nodes - 1) if graph_type in ['star', 'wheel'] else nbr_nodes
+
+        # create_ordered_agents() creates the indicated number of nodes and arranges them in a ring.
+        # It also returns a list of the nodes in ring-order.
+        ring_node_list = self.create_ordered_agents(ring_nodes)
+
+        # Now link the nodes according to the desired graph.
+        self.generate_graph(graph_type, ring_node_list)
+
     @staticmethod
-    def create_link():
+    def create_random_link():
         link_created = False
         agent_set_1 = sample(World.agents, len(World.agents))
         while not link_created:
@@ -204,7 +214,7 @@ class Force_Layout_World(World):
             agent = sample(self.agents, 1)[0]
             agent.delete()
         elif event == 'Create random link':
-            self.create_link()
+            self.create_random_link()
         elif event == 'Delete random link':
             World.links.pop()
         elif event == 'Delete shortest-path link':
@@ -213,7 +223,7 @@ class Force_Layout_World(World):
         self.disable_enable_buttons()
 
     def mouse_click(self, xy: Tuple[int, int]):
-        """ Toggle clicked patch's aliveness. """
+        """ Select closest node. """
         patch = self.pixel_tuple_to_patch(xy)
         if len(patch.agents) == 1:
             node = choice(list(patch.agents))
@@ -225,23 +235,7 @@ class Force_Layout_World(World):
             node.selected = not node.selected
 
     def setup(self):
-        """
-        Arrange all the nodes (or all but one) as a ring.
-        Then link them depending on the kind of network desired.
-        """
-        nbr_nodes = SimEngine.gui_get('nbr_nodes')
-        graph_type = SimEngine.gui_get('graph type')
-        # If we are generating a star or a wheel network, arrange nbr_nodes-1 as
-        # a ring and use the other node as the center node.
-        # If we are generating a ring or a random network, arrange all the nodes as a ring.
-        # The difference is how they are hooked up.
-        ring_nodes = (nbr_nodes-1) if graph_type in ['star', 'wheel'] else nbr_nodes
-        # create_ordered_agents() arranges the indicated number of nodes as a ring.
-        # It also returns a list of the nodes in ring-order.
-        ring_node_list = self.create_ordered_agents(ring_nodes, radius=140)
-
-        self.generate_graph(graph_type, ring_node_list)
-
+        self.build_graph()
         self.disable_enable_buttons()
 
     def shortest_path(self):
@@ -378,6 +372,11 @@ force_left_upper = [
                                tooltip='Nbr of agents created by setup'),
                      sg.Combo(['random', 'ring', 'star', 'wheel'], key='graph type', pad=((20, 0), (20, 0)),
                               default_value='ring', tooltip='graph type')],
+
+                    [sg.Text('Random network link prob', pad=((0, 10), (20, 0)),
+                             tooltip='Probability that two nodes in a random network will be linked'),
+                     sg.Slider((0, 100), default_value=10, orientation='horizontal', key='random_link_prob',
+                               size=(10, 20), tooltip='Probability that two nodes in a random network will be linked')]
 
                     ]
 
