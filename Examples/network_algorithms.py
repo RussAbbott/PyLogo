@@ -1,22 +1,23 @@
 from core.link import Link
 from core.pairs import center_pixel
-from Examples.forces_and_effects import Force_Layout_Node, Force_Layout_World, force_left_upper, force_right_upper
+
+from Examples.network_framework import Network_Node, Network_World, network_left_upper, network_right_upper
 
 
-class Network_Node(Force_Layout_Node):
+class Network_Algorithms_Node(Network_Node):
     pass
 
 
-class Network_World(Force_Layout_World):
+class Network_Algorithms_World(Network_World):
 
     @staticmethod
     def generate_graph(graph_type, ring_node_list):
 
-        print("\n\nYou're code goes here.")
+        print("\n\nYour code goes here.")
         pass
 
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Network_World, 'Force test', gui_left_upper=force_left_upper, gui_right_upper=force_right_upper,
-           agent_class=Network_Node,  bounce=True)
+    PyLogo(Network_Algorithms_World, 'Network test', gui_left_upper=network_left_upper,
+           gui_right_upper=network_right_upper, agent_class=Network_Algorithms_Node,  bounce=True)

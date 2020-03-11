@@ -16,7 +16,7 @@ from core.utils import normalize_dxdy
 from core.world_patch_block import World
 
 
-class Force_Layout_Node(Agent):
+class Network_Node(Agent):
 
     def __init__(self, **kwargs):
         color = SimEngine.gui_get('color')
@@ -113,7 +113,7 @@ class Force_Layout_Node(Agent):
         return lns
 
 
-class Force_Layout_World(World):
+class Network_World(World):
 
     def __init__(self, patch_class, agent_class):
         self.velocity_adjustment = 1
@@ -305,7 +305,7 @@ class Force_Layout_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
-force_left_upper = [
+network_left_upper = [
                     [
                      sg.Button('Create random link', tooltip='Create a random link', pad=((0, 10), (5, 0))),
                      sg.Col([[sg.Button('Delete random link', tooltip='Delete a random link',
@@ -367,7 +367,7 @@ force_left_upper = [
 
                     # [sg.Text('Click "Setup and then "Go" for force computation.', pad=((0, 0), (0, 0)))],
                     [sg.Text('Nbr of nodes', pad=((0, 10), (20, 0))),
-                     sg.Slider((0, 20), default_value=7, orientation='horizontal', key='nbr_nodes',
+                     sg.Slider((0, 20), default_value=9, orientation='horizontal', key='nbr_nodes',
                                pad=((0, 10), (0, 0)), size=(10, 20),
                                tooltip='Nbr of agents created by setup'),
                      sg.Combo(['random', 'ring', 'star', 'wheel'], key='graph type', pad=((20, 0), (20, 0)),
@@ -381,7 +381,7 @@ force_left_upper = [
                     ]
 
 
-force_right_upper = [
+network_right_upper = [
                      [
                       sg.Col([
                               [sg.Button('Create node', tooltip='Create a node'),
