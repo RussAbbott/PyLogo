@@ -144,6 +144,20 @@ class Network_World(World):
         # Now link the nodes according to the desired graph.
         self.generate_graph(graph_type, ring_node_list)
 
+    def compute_metrics(self):
+        clust_coefficient = self.clustering_coefficient()
+        SimEngine.gui_set('cluster_coeff', value=clust_coefficient)
+        avg_path_length = self.average_path_length()
+        SimEngine.gui_set('path_length', value=avg_path_length)
+
+    # noinspection PyMethodMayBeStatic
+    def clustering_coefficient(self):
+        return 'TBD'
+
+    # noinspection PyMethodMayBeStatic
+    def average_path_length(self):
+        return 'TBD'
+
     @staticmethod
     def create_random_link():
         """
@@ -246,6 +260,7 @@ class Network_World(World):
 
     def setup(self):
         self.build_graph()
+        self.compute_metrics()
         self.disable_enable_buttons()
 
     def shortest_path(self):
@@ -315,6 +330,9 @@ class Network_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
+tt = 'Probability that two nodes in a random graph will be linked\n' \
+     'or that a link in a small world graph will be rewired'
+
 network_left_upper = [
                     [
                      sg.Button('Create random link', tooltip='Create a random link', pad=((0, 10), (5, 0))),
@@ -324,6 +342,25 @@ network_left_upper = [
                                         tooltip='Delete a random link on the shortest path',
                                         pad=((0, 0), (5, 0)))]])
                      ],
+
+                    HOR_SEP(pad=((50, 0), (0, 0))),
+
+                     [sg.Text('Graph type', pad=((0, 10), (20, 0))),
+                      sg.Combo(['lattice', 'pref attachment', 'random', 'ring', 'small world', 'star', 'wheel'],
+                               key='graph type', pad=((10, 0), (20, 0)), default_value='ring', tooltip='graph type')],
+
+                    [sg.Text('Random graph link prob\nSmall world rewire prob', pad=((0, 10), (20, 0)),
+                             tooltip=tt),
+                     sg.Slider((0, 100), default_value=10, orientation='horizontal', key='link_prob',
+                               size=(10, 20), pad=((0, 0), (10, 0)),
+                               tooltip=tt)],
+
+                    [sg.Text('Clustering coeff', pad=(None, (20, 0))),
+                     sg.Text('None', background_color='white', text_color='black', key='cluster_coeff',
+                             pad=((5, 0), (20, 0))),
+                     sg.Text('Avg path length', pad=((20, 0), (20, 0))),
+                     sg.Text('None', background_color='white', text_color='black', key='path_length',
+                             pad=((5, 0), (20, 0)))],
 
                     HOR_SEP(pad=((50, 0), (0, 0))),
 
@@ -373,24 +410,24 @@ network_left_upper = [
                      sg.Checkbox('Print force values', key='Print force values', default=False, pad=((20, 0), (20, 0)))
                      ],
 
-                    HOR_SEP(pad=((50, 0), (0, 0))),
+                    # HOR_SEP(pad=((50, 0), (0, 0))),
 
-                    # [sg.Text('Click "Setup and then "Go" for force computation.', pad=((0, 0), (0, 0)))],
-                    [sg.Text('Nbr of nodes', pad=((0, 10), (20, 0))),
-                     sg.Slider((0, 20), default_value=9, orientation='horizontal', key='nbr_nodes',
-                               pad=((0, 10), (0, 0)), size=(10, 20),
-                               tooltip='Nbr of agents created by setup'),
-                     sg.Combo(['random', 'ring', 'star', 'wheel'], key='graph type', pad=((20, 0), (20, 0)),
-                              default_value='ring', tooltip='graph type')],
-
-                    [sg.Text('Random network link prob', pad=((0, 10), (20, 0)),
-                             tooltip='Probability that two nodes in a random network will be linked'),
-                     sg.Slider((0, 100), default_value=10, orientation='horizontal', key='random_link_prob',
-                               size=(10, 20), tooltip='Probability that two nodes in a random network will be linked')]
+                    #  [sg.Text('Graph type', pad=((0, 10), (20, 0))),
+                    #   sg.Combo(['lattice', 'pref attachment', 'random', 'ring', 'small world', 'star', 'wheel'],
+                    #           key='graph type', pad=((10, 0), (20, 0)), default_value='ring', tooltip='graph type')],
+                    #
+                    # [sg.Text('Random graph link prob\nSmall world rewire prob', pad=((0, 10), (20, 0)),
+                    #          tooltip=tt),
+                    #  sg.Slider((0, 100), default_value=10, orientation='horizontal', key='link_prob',
+                    #            size=(10, 20), pad=((0, 0), (10, 0)),
+                    #            tooltip=tt)],
+                    #
+                    # [sg.Text('Clustering coeff', pad=(None, (20, 0))),
+                    #  sg.Text('None', background_color='white', key='cluster_coeff', pad=((5, 0), (20, 0))),
+                    #  sg.Text('Avg path length', pad=((20, 0), (20, 0))),
+                    #  sg.Text('None', background_color='white', key='path_length', pad=((5, 0), (20, 0))),]
 
                     ]
-
-
 network_right_upper = [
                      [
                       sg.Col([
@@ -398,7 +435,16 @@ network_right_upper = [
                                sg.Button('Delete random node', tooltip='Delete one random node')],
 
                               [sg.Text('Click two nodes for shortest path')]],
-                              pad=((60, 20), None)),
+                              pad=((0, 0), None)),
+
+                      sg.Col([
+                              [sg.Text('Nodes', pad=((0, 0), (15, 0))),
+                               sg.Slider((0, 20), default_value=9, orientation='horizontal', key='nbr_nodes',
+                                         size=(10, 20), tooltip='Nbr of agents created by setup')],
+                              # [sg.Text('Nbr of nodes', pad=((0, 0), (20, 0))),
+                              #  sg.Slider((0, 20), default_value=9, orientation='horizontal', key='nbr_nodes',
+                              #            size=(10, 20), tooltip='Nbr of agents created by setup')]
+                              ], pad=((0, 0), (5, 0))),
 
                       sg.Col([
                               [sg.Text('Node shape'),
