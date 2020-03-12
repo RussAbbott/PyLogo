@@ -34,7 +34,8 @@ class SimEngine:
         self.world = None
 
         self.simple_gui = SimpleGUI(gui_left_upper, caption=caption, gui_right_upper=gui_right_upper,
-                                    patch_size=patch_size, board_rows_cols=board_rows_cols, bounce=bounce, fps=fps)
+                                    patch_size=patch_size, board_rows_cols=board_rows_cols,
+                                    bounce=bounce, fps=fps)
         self.graph_point = None
 
     def draw_world(self):
@@ -135,7 +136,8 @@ class SimEngine:
             elif SimEngine.event == self.simple_gui.SETUP:
                 SimEngine.gui_set(self.simple_gui.GOSTOP, disabled=False)
                 SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=False)
-                self.world.reset_all()
+                if SimEngine.gui_get('Clear?'):
+                    self.world.reset_all()
                 self.world.setup()
 
             elif SimEngine.event == self.simple_gui.GO_ONCE:

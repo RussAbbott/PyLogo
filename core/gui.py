@@ -63,7 +63,7 @@ def HALF_PATCH_SIZE():
 
 
 
-def HOR_SEP(length=25, pad=((0, 0), (10, 10))):
+def HOR_SEP(length=25, pad=((0, 0), (0, 0))):
     return [sg.Text('_' * length, text_color='black', pad=pad)]
 
 
@@ -159,7 +159,8 @@ class SimpleGUI:
         self.screen_shape_width_height = (SCREEN_PIXEL_WIDTH(), SCREEN_PIXEL_HEIGHT())
 
         # All these gui.<variable> elements are globals in this file.
-        gui.WINDOW = self.make_window(caption, gui_left_upper, gui_right_upper=gui_right_upper, bounce=bounce, fps=fps)
+        gui.WINDOW = self.make_window(caption, gui_left_upper, gui_right_upper=gui_right_upper,
+                                      bounce=bounce, fps=fps)
 
         pg.init()
         gui.FONT = SysFont(None, int(1.5 * gui.BLOCK_SPACING()))
@@ -176,10 +177,14 @@ class SimpleGUI:
         Create the window, including sg.Graph, the drawing surface.
         """
         # --------------------- PySimpleGUI window layout and creation --------------------
-        bounce_checkbox_line = ''
-        if bounce is not None:
-            bounce_checkbox_line = [sg.Checkbox('Bounce?', key='Bounce?', default=bounce,
-                                    tooltip='Bounce back from the edges of the screen?')]
+        clear_line = [sg.Checkbox('Clear before setup?', key='Clear?', default=True, pad=((0, 0), (10, 0)),
+                                  tooltip='Bounce back from the edges of the screen?')]
+
+        bounce_checkbox_line = [] if bounce is None else \
+                               [sg.Checkbox('Bounce?', key='Bounce?', default=bounce, pad=((20, 0), (10, 0)),
+                                            tooltip='Bounce back from the edges of the screen?')]
+
+        clear_line += bounce_checkbox_line
 
         fps_combo_line = ''
         if fps:
@@ -202,7 +207,7 @@ class SimpleGUI:
         col1 = [ *gui_left_upper,
                  gui.HOR_SEP(),
                  setup_go_line,
-                 bounce_checkbox_line,
+                 clear_line,
                  fps_combo_line,
                  gui.HOR_SEP(),
                  exit_button_line
