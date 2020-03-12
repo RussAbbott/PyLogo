@@ -1,6 +1,6 @@
 
 from math import sqrt
-from random import choice, sample, uniform
+from random import choice, sample
 from typing import Tuple
 
 from pygame.color import Color
@@ -10,6 +10,7 @@ from core.agent import Agent, PYGAME_COLORS
 import core.gui as gui
 from core.gui import BLOCK_SPACING, HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 from core.link import Link, link_exists
+# noinspection PyUnresolvedReferences
 from core.pairs import center_pixel, Pixel_xy, Velocity
 from core.sim_engine import SimEngine
 from core.utils import normalize_dxdy
@@ -36,8 +37,8 @@ class Network_Node(Agent):
 
         repulsive_force: Velocity = Velocity((0, 0))
 
-        for agent in (World.agents - {self}):
-            repulsive_force += self.force_as_dxdy(self.center_pixel, agent.center_pixel, screen_distance_unit,
+        for node in (World.agents - {self}):
+            repulsive_force += self.force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
                                                     repulsive=True)
 
         # Also consider repulsive force from walls.
@@ -54,9 +55,9 @@ class Network_Node(Agent):
             repulsive_wall_force += self.force_as_dxdy(y_pixel, v_wall_pixel, screen_distance_unit, repulsive=True)
 
         attractive_force: Velocity = Velocity((0, 0))
-        for agent in (World.agents - {self}):
-            if link_exists(self, agent):
-                attractive_force += self.force_as_dxdy(self.center_pixel, agent.center_pixel, screen_distance_unit,
+        for node in (World.agents - {self}):
+            if link_exists(self, node):
+                attractive_force += self.force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
                                                          repulsive=False)
 
         net_force = repulsive_force + repulsive_wall_force + attractive_force
@@ -233,10 +234,10 @@ class Network_World(World):
 
         # Handle link/node creation/deletion request events.
         if event == 'Create node':
-            self.agent_class()
+            self.node_class()
         elif event == 'Delete random node':
-            agent = sample(self.agents, 1)[0]
-            agent.delete()
+            node = sample(self.nodes, 1)[0]
+            node.delete()
         elif event == 'Create random link':
             self.create_random_link()
         elif event == 'Delete random link':
@@ -304,8 +305,9 @@ class Network_World(World):
         return None
 
     def step(self):
-        for node in self.agents:
-            node.adjust_distances(self.velocity_adjustment)
+        if SimEngine.gui_get('layout') == 'force-directed':
+            for node in self.agents:
+                node.adjust_distances(self.velocity_adjustment)
 
         # Set all the links back to normal.
         for lnk in World.links:
@@ -345,9 +347,14 @@ network_left_upper = [
 
                     HOR_SEP(pad=((50, 0), (0, 0))),
 
-                     [sg.Text('Graph type', pad=((0, 10), (20, 0))),
-                      sg.Combo(['lattice', 'pref attachment', 'random', 'ring', 'small world', 'star', 'wheel'],
-                               key='graph type', pad=((10, 0), (20, 0)), default_value='ring', tooltip='graph type')],
+                    [sg.Text('Layout', pad=((0, 0), (20, 0))),
+                     sg.Combo(['circle', 'force-directed'], key='layout', size=(11, 20),
+                               pad=((5, 0), (20, 0)), default_value='force-directed', tooltip='Select a layout'),
+                     sg.Checkbox('Clear before setup?', key='clear', pad=((15, 0), (20, 0)), default=True)],
+
+                    [sg.Text('Graph type', pad=((0, 0), (20, 0))),
+                     sg.Combo(['pref attachment', 'random', 'ring', 'small world', 'star', 'wheel'],
+                              key='graph type', pad=((5, 0), (20, 0)), default_value='ring', tooltip='graph type')],
 
                     [sg.Text('Random graph link prob\nSmall world rewire prob', pad=((0, 10), (20, 0)),
                              tooltip=tt),
@@ -423,10 +430,7 @@ network_right_upper = [
                       sg.Col([
                               [sg.Text('Nodes', pad=((0, 0), (15, 0))),
                                sg.Slider((0, 20), default_value=9, orientation='horizontal', key='nbr_nodes',
-                                         size=(10, 20), tooltip='Nbr of agents created by setup')],
-                              # [sg.Text('Nbr of nodes', pad=((0, 0), (20, 0))),
-                              #  sg.Slider((0, 20), default_value=9, orientation='horizontal', key='nbr_nodes',
-                              #            size=(10, 20), tooltip='Nbr of agents created by setup')]
+                                         size=(10, 20), tooltip='Nbr of nodes created by setup')],
                               ], pad=((0, 0), (5, 0))),
 
                       sg.Col([
