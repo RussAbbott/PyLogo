@@ -410,24 +410,7 @@ network_left_upper = [
                      sg.Checkbox('Print force values', key='Print force values', default=False, pad=((20, 0), (20, 0)))
                      ],
 
-                    # HOR_SEP(pad=((50, 0), (0, 0))),
-
-                    #  [sg.Text('Graph type', pad=((0, 10), (20, 0))),
-                    #   sg.Combo(['lattice', 'pref attachment', 'random', 'ring', 'small world', 'star', 'wheel'],
-                    #           key='graph type', pad=((10, 0), (20, 0)), default_value='ring', tooltip='graph type')],
-                    #
-                    # [sg.Text('Random graph link prob\nSmall world rewire prob', pad=((0, 10), (20, 0)),
-                    #          tooltip=tt),
-                    #  sg.Slider((0, 100), default_value=10, orientation='horizontal', key='link_prob',
-                    #            size=(10, 20), pad=((0, 0), (10, 0)),
-                    #            tooltip=tt)],
-                    #
-                    # [sg.Text('Clustering coeff', pad=(None, (20, 0))),
-                    #  sg.Text('None', background_color='white', key='cluster_coeff', pad=((5, 0), (20, 0))),
-                    #  sg.Text('Avg path length', pad=((20, 0), (20, 0))),
-                    #  sg.Text('None', background_color='white', key='path_length', pad=((5, 0), (20, 0))),]
-
-                    ]
+                   ]
 network_right_upper = [
                      [
                       sg.Col([
