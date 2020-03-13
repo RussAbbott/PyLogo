@@ -236,7 +236,7 @@ class Network_World(World):
         if event == 'Create node':
             self.agent_class()
         elif event == 'Delete random node':
-            node = sample(self.agents, 1)[0]
+            node = sample(World.agents, 1)[0]
             node.delete()
         elif event == 'Create random link':
             self.create_random_link()
@@ -306,7 +306,7 @@ class Network_World(World):
 
     def step(self):
         if SimEngine.gui_get('layout') == 'force-directed':
-            for node in self.agents:
+            for node in World.agents:
                 node.adjust_distances(self.velocity_adjustment)
 
         # Set all the links back to normal.
@@ -314,7 +314,7 @@ class Network_World(World):
             lnk.color = lnk.default_color
             lnk.width = 1
 
-        self.selected_nodes = [node for node in self.agents if node.selected]
+        self.selected_nodes = [node for node in World.agents if node.selected]
         # If there are exactly two selected nodes, find the shortest path between them.
         if len(self.selected_nodes) == 2:
             self.shortest_path_links = self.shortest_path()
