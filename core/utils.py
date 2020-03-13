@@ -143,7 +143,10 @@ def normalize_180(angle):
 
 
 def normalize_dxdy(dxdy):
-    return dxdy/max(abs(dxdy.x), abs(dxdy.y))
+    mx = max(abs(dxdy.x), abs(dxdy.y))
+    if mx == 0:
+        return dxdy
+    return dxdy/mx
 
 def rgb_to_hex(rgb):
     (r, g, b) = rgb[:3]
