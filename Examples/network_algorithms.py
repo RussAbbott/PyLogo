@@ -20,4 +20,4 @@ class Network_Algorithms_World(Network_World):
 if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Network_Algorithms_World, 'Network test', gui_left_upper=network_left_upper,
-           gui_right_upper=network_right_upper, agent_class=Network_Algorithms_Node,  bounce=True)
+           gui_right_upper=network_right_upper, agent_class=Network_Algorithms_Node, clear=True, bounce=True)

@@ -451,4 +451,4 @@ network_right_upper = [
 if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Network_World, 'Force test', gui_left_upper=network_left_upper, gui_right_upper=network_right_upper,
-           agent_class=Network_Node,  bounce=True)
+           agent_class=Network_Node, clear=True, bounce=True)
