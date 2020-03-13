@@ -29,15 +29,10 @@ class Network_Algorithms_World(Network_World):
         return TBD
 
     def compute_metrics(self):
-        clust_coefficient = self.clustering_coefficient()
-        SimEngine.gui_set(CLUSTER_COEFF, value=clust_coefficient)
+        clust_coeff = self.clustering_coefficient()
+        SimEngine.gui_set(CLUSTER_COEFF, value=clust_coeff)
         avg_path_length = self.average_path_length()
         SimEngine.gui_set(PATH_LENGTH, value=avg_path_length)
-
-    # noinspection PyUnusedLocal
-    @staticmethod
-    def create_random_links(node_list, link_prob):
-        print("\n\nYour code goes here.")
 
     @staticmethod
     def generate_graph(graph_type, ring_node_list):
