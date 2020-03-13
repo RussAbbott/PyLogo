@@ -20,9 +20,9 @@ from core.world_patch_block import World
 class Network_Node(Agent):
 
     def __init__(self, **kwargs):
-        color = SimEngine.gui_get('color')
+        color = SimEngine.gui_get(COLOR)
         color = Color(color) if color != 'Random' else None
-        shape_name = SimEngine.gui_get('shape')
+        shape_name = SimEngine.gui_get(SHAPE)
         kwargs['shape_name'] = shape_name
         super().__init__(color=color, **kwargs)
         # Is the  node selected?
@@ -32,14 +32,14 @@ class Network_Node(Agent):
         return f'FLN-{self.id}'
 
     def adjust_distances(self, velocity_adjustment):
-        dist_unit = SimEngine.gui_get(('dist_unit'))
+        dist_unit = SimEngine.gui_get(DIST_UNIT)
         screen_distance_unit = sqrt(SCREEN_PIXEL_WIDTH()**2 + SCREEN_PIXEL_HEIGHT()**2)/dist_unit
 
         repulsive_force: Velocity = Velocity((0, 0))
 
         for node in (World.agents - {self}):
             repulsive_force += self.force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
-                                                    repulsive=True)
+                                                  repulsive=True)
 
         # Also consider repulsive force from walls.
         repulsive_wall_force: Velocity = Velocity((0, 0))
@@ -58,13 +58,13 @@ class Network_Node(Agent):
         for node in (World.agents - {self}):
             if link_exists(self, node):
                 attractive_force += self.force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
-                                                         repulsive=False)
+                                                       repulsive=False)
 
         net_force = repulsive_force + repulsive_wall_force + attractive_force
         normalized_force: Velocity = net_force/max([net_force.x, net_force.y, velocity_adjustment])
         normalized_force *= 10
 
-        if SimEngine.gui_get('Print force values'):
+        if SimEngine.gui_get(PRINT_FORCE_VALUES):
             print(f'{self}. \n'
                   f'rep-force {tuple(repulsive_force.round(2))}; \n'
                   f'rep-wall-force {tuple(repulsive_wall_force.round(2))}; \n'
@@ -92,12 +92,12 @@ class Network_Node(Agent):
         Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
         """
         direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
-        d = pixel_a.distance_to(pixel_b, wrap=False)
+        d = max(1, pixel_a.distance_to(pixel_b, wrap=False))
         if repulsive:
             dist = max(1, pixel_a.distance_to(pixel_b, wrap=False) / screen_distance_unit)
-            rep_coefficient = SimEngine.gui_get('rep_coef')
-            rep_exponent = SimEngine.gui_get('rep_exponent')
-            force = direction * (10**rep_coefficient)/10 * dist**rep_exponent
+            rep_coefficient = SimEngine.gui_get(REP_COEFF)
+            rep_exponent = SimEngine.gui_get(REP_EXPONENT)
+            force = direction * ((10**rep_coefficient)/10) * dist**rep_exponent
             return force
         else:  # attraction
             dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
@@ -106,7 +106,7 @@ class Network_Node(Agent):
             # If the link is too short, push away instead of attracting.
             if d < screen_distance_unit:
                 force = force*(-1)
-            att_coefficient = SimEngine.gui_get('att_coef')
+            att_coefficient = SimEngine.gui_get(ATT_COEFF)
             return 10**(att_coefficient-1) * force
 
     def neighbors(self):
@@ -128,8 +128,8 @@ class Network_World(World):
         Arrange all the nodes (or all but one) as a ring.
         Then link them depending on the kind of network desired.
         """
-        nbr_nodes = SimEngine.gui_get('nbr_nodes')
-        graph_type = SimEngine.gui_get('graph type')
+        nbr_nodes = SimEngine.gui_get(NBR_NODES)
+        graph_type = SimEngine.gui_get(GRAPH_TYPE)
 
         # If we are generating a star or a wheel network, arrange nbr_nodes-1 as
         # a ring and use the other node as the center node.
@@ -147,9 +147,9 @@ class Network_World(World):
 
     def compute_metrics(self):
         clust_coefficient = self.clustering_coefficient()
-        SimEngine.gui_set('cluster_coeff', value=clust_coefficient)
+        SimEngine.gui_set(CLUSTER_COEFF, value=clust_coefficient)
         avg_path_length = self.average_path_length()
-        SimEngine.gui_set('path_length', value=avg_path_length)
+        SimEngine.gui_set(PATH_LENGTH, value=avg_path_length)
 
     # noinspection PyMethodMayBeStatic
     def clustering_coefficient(self):
@@ -171,11 +171,14 @@ class Network_World(World):
         """
         link_created = False
         # sample() both copies and shuffles elements from its first argument.
+        # Can't use choice with World.agents because world.agents is a set and 
+        # can't be accessed through an index, which is what choice uses.
         node_set_1 = sample(World.agents, len(World.agents))
         while not link_created:
             node_1 = node_set_1.pop()
             # Since node_1 has been popped from node_set_1,
             # node_set_2 does not contain node_1.
+            # Can't use choice with a set.
             node_set_2 = sample(node_set_1, len(node_set_1))
             while node_set_2:
                 node_2 = node_set_2.pop()
@@ -216,7 +219,7 @@ class Network_World(World):
         SimEngine.gui_set('Delete shortest-path link', enabled=self.shortest_path_links)
 
         # Show node id's if requested.
-        show_labels = SimEngine.gui_get("Show node id's")
+        show_labels = SimEngine.gui_get(SHOW_NODE_IDS)
         for node in World.agents:
             node.label = str(node.id) if show_labels else None
 
@@ -236,6 +239,7 @@ class Network_World(World):
         if event == 'Create node':
             self.agent_class()
         elif event == 'Delete random node':
+            # Can't use choice with a set.
             node = sample(World.agents, 1)[0]
             node.delete()
         elif event == 'Create random link':
@@ -305,7 +309,7 @@ class Network_World(World):
         return None
 
     def step(self):
-        if SimEngine.gui_get('layout') == 'force-directed':
+        if SimEngine.gui_get(LAYOUT) == FORCE_DIRECTED:
             for node in World.agents:
                 node.adjust_distances(self.velocity_adjustment)
 
@@ -325,6 +329,7 @@ class Network_World(World):
                     lnk.color = Color('red')
                     lnk.width = 2
 
+        self.compute_metrics()
         # Update which buttons are enabled.
         self.disable_enable_buttons()
 
@@ -332,8 +337,34 @@ class Network_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
+# Keys and other GUI strings
+
 tt = 'Probability that two nodes in a random graph will be linked\n' \
      'or that a link in a small world graph will be rewired'
+
+LAYOUT = 'layout'
+CLEAR = 'clear'
+GRAPH_TYPE = 'graph type'
+LINK_PROB = 'link_prob'
+CLUSTER_COEFF = 'cluster_coeff'
+PATH_LENGTH = 'path_length'
+REP_COEFF = 'rep_coeff'
+REP_EXPONENT = 'rep_exponent'
+ATT_COEFF = 'att_coeff'
+DIST_UNIT = 'dist_unit'
+SHOW_NODE_IDS = "Show node id's"
+PRINT_FORCE_VALUES = 'Print force values'
+NBR_NODES = 'nbr_nodes'
+SHAPE = 'shape'
+COLOR = 'color'
+FORCE_DIRECTED = 'force-directed'
+PREF_ATTACHMENT = 'pref attachment'
+RANDOM = 'random'
+RING = 'ring'
+SMALL_WORLD = 'small world'
+STAR = 'star'
+WHEEL = 'wheel'
+TBD = 'TBD'
 
 network_left_upper = [
                     [
@@ -348,25 +379,25 @@ network_left_upper = [
                     HOR_SEP(pad=((50, 0), (0, 0))),
 
                     [sg.Text('Layout', pad=((0, 0), (20, 0))),
-                     sg.Combo(['circle', 'force-directed'], key='layout', size=(11, 20),
+                     sg.Combo(['circle', 'force-directed'], key=LAYOUT, size=(11, 20),
                                pad=((5, 0), (20, 0)), default_value='force-directed', tooltip='Select a layout'),
-                     sg.Checkbox('Clear before setup?', key='clear', pad=((15, 0), (20, 0)), default=True)],
+                     sg.Checkbox('Clear before setup?', key=CLEAR, pad=((15, 0), (20, 0)), default=True)],
 
                     [sg.Text('Graph type', pad=((0, 0), (20, 0))),
                      sg.Combo(['pref attachment', 'random', 'ring', 'small world', 'star', 'wheel'],
-                              key='graph type', pad=((5, 0), (20, 0)), default_value='ring', tooltip='graph type')],
+                              key=GRAPH_TYPE, pad=((5, 0), (20, 0)), default_value='ring', tooltip='graph type')],
 
                     [sg.Text('Random graph link prob\nSmall world rewire prob', pad=((0, 10), (20, 0)),
                              tooltip=tt),
-                     sg.Slider((0, 100), default_value=10, orientation='horizontal', key='link_prob',
+                     sg.Slider((0, 100), default_value=10, orientation='horizontal', key=LINK_PROB,
                                size=(10, 20), pad=((0, 0), (10, 0)),
                                tooltip=tt)],
 
                     [sg.Text('Clustering coeff', pad=(None, (20, 0))),
-                     sg.Text('None', background_color='white', text_color='black', key='cluster_coeff',
+                     sg.Text('None', background_color='white', text_color='black', key=CLUSTER_COEFF,
                              pad=((5, 0), (20, 0))),
                      sg.Text('Avg path length', pad=((20, 0), (20, 0))),
-                     sg.Text('None', background_color='white', text_color='black', key='path_length',
+                     sg.Text('None', background_color='white', text_color='black', key=PATH_LENGTH,
                              pad=((5, 0), (20, 0)))],
 
                     HOR_SEP(pad=((50, 0), (0, 0))),
@@ -374,14 +405,14 @@ network_left_upper = [
                     [sg.Text('Repulsion coefficient', pad=((0, 10), (20, 0)),
                              tooltip='Negative means raise to the power and divide (like gravity).\n'
                                      'Larger magnitude means distince reduces repulsive force more.'),
-                     sg.Slider((1, 5), default_value=1, orientation='horizontal', key='rep_coef',
+                     sg.Slider((1, 5), default_value=1, orientation='horizontal', key=REP_COEFF,
                                pad=((0, 0), (0, 0)), size=(15, 20),
                                tooltip='Larger is stronger.')],
 
                     [sg.Text('Repulsion exponent', pad=((0, 10), (20, 0)),
                              tooltip='Negative means raise to the power and divide (like gravity).\n'
                                      'Larger magnitude means distince reduces repulsive force more.'),
-                     sg.Slider((-5, -1), default_value=-2, orientation='horizontal', key='rep_exponent',
+                     sg.Slider((-5, -1), default_value=-2, orientation='horizontal', key=REP_EXPONENT,
                                pad=((0, 0), (0, 0)), size=(15, 20),
                                tooltip='Negative means raise to the power and divide (like gravity).\n'
                                        'Larger magnitude means distince reduces repulsive force more.')],
@@ -390,7 +421,7 @@ network_left_upper = [
                              tooltip='If > distance unit, larger magnitude means \n'
                                      'increase force more with distance (like a spring)\n'
                                      'If < distance unit, force becomes repulsive (also like a spring)'),
-                     sg.Slider((1, 6), default_value=1, orientation='horizontal', key='att_coef',
+                     sg.Slider((1, 6), default_value=1, orientation='horizontal', key=ATT_COEFF,
                                pad=((0, 0), (0, 0)), size=(15, 20),
                                tooltip='If distance > distance unit, larger magnitude means \n'
                                        'increase force more with distance (like a spring)\n'
@@ -408,13 +439,13 @@ network_left_upper = [
 
                     [sg.Text('Distance unit/ideal link length', pad=((0, 10), (20, 0)),
                              tooltip='The fraction of the screen diagonal used as one unit.'),
-                     sg.Slider((3, 16), default_value=8, orientation='horizontal', key='dist_unit',
+                     sg.Slider((3, 16), default_value=8, orientation='horizontal', key=DIST_UNIT,
                                resolution=1, pad=((0, 0), (0, 0)), size=(10, 20),
                                tooltip='The fraction of the screen diagonal used as one unit.')],
 
                     [
-                     sg.Checkbox("Show node id's", key="Show node id's", default=False, pad=((20, 0), (20, 0))),
-                     sg.Checkbox('Print force values', key='Print force values', default=False, pad=((20, 0), (20, 0)))
+                     sg.Checkbox("Show node id's", key=SHOW_NODE_IDS, default=False, pad=((20, 0), (20, 0))),
+                     sg.Checkbox('Print force values', key=PRINT_FORCE_VALUES, default=False, pad=((20, 0), (20, 0)))
                      ],
 
                    ]
@@ -429,18 +460,18 @@ network_right_upper = [
 
                       sg.Col([
                               [sg.Text('Nodes', pad=((0, 0), (15, 0))),
-                               sg.Slider((0, 20), default_value=9, orientation='horizontal', key='nbr_nodes',
+                               sg.Slider((0, 20), default_value=9, orientation='horizontal', key=NBR_NODES,
                                          size=(10, 20), tooltip='Nbr of nodes created by setup')],
                               ], pad=((0, 0), (5, 0))),
 
                       sg.Col([
                               [sg.Text('Node shape'),
-                               sg.Combo(KNOWN_FIGURES, key='shape', default_value='netlogo_figure',
+                               sg.Combo(KNOWN_FIGURES, key=SHAPE, default_value='netlogo_figure',
                                         tooltip='Node shape')],
 
 
                               [sg.Text('Node color'),
-                               sg.Combo(['Random'] + [color[0] for color in PYGAME_COLORS], key='color',
+                               sg.Combo(['Random'] + [color[0] for color in PYGAME_COLORS], key=COLOR,
                                         default_value='Random',  tooltip='Node color')]])
 
                       ]
