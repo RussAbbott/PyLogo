@@ -21,7 +21,7 @@ class Network_Node(Agent):
 
     def __init__(self, **kwargs):
         color = SimEngine.gui_get(COLOR)
-        color = Color(color) if color != 'Random' else None
+        color = Color(color) if color != RANDOM else None
         shape_name = SimEngine.gui_get(SHAPE)
         kwargs['shape_name'] = shape_name
         super().__init__(color=color, **kwargs)
@@ -101,7 +101,7 @@ class Network_Node(Agent):
             return force
         else:  # attraction
             dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
-            att_exponent = SimEngine.gui_get('att_exponent')
+            att_exponent = SimEngine.gui_get(ATT_EXPONENT)
             force = direction*dist**att_exponent
             # If the link is too short, push away instead of attracting.
             if d < screen_distance_unit:
@@ -153,11 +153,11 @@ class Network_World(World):
 
     # noinspection PyMethodMayBeStatic
     def clustering_coefficient(self):
-        return 'TBD'
+        return TBD
 
     # noinspection PyMethodMayBeStatic
     def average_path_length(self):
-        return 'TBD'
+        return TBD
 
     @staticmethod
     def create_random_link():
@@ -211,12 +211,12 @@ class Network_World(World):
     def disable_enable_buttons(self):
         # 'enabled' is a pseudo attribute. gui.gui_set replaces it with 'disabled' and negates the value.
 
-        SimEngine.gui_set('Delete random node', enabled=bool(World.agents))
+        SimEngine.gui_set(DELETE_RANDOM_NODE, enabled=bool(World.agents))
 
-        SimEngine.gui_set('Delete random link', enabled=bool(World.links))
-        SimEngine.gui_set('Create random link', enabled=len(World.links) < len(World.agents)*(len(World.agents)-1)/2)
+        SimEngine.gui_set(DELETE_RANDOM_LINK, enabled=bool(World.links))
+        SimEngine.gui_set(CREATE_RANDOM_LINK, enabled=len(World.links) < len(World.agents)*(len(World.agents)-1)/2)
 
-        SimEngine.gui_set('Delete shortest-path link', enabled=self.shortest_path_links)
+        SimEngine.gui_set(DELETE_SHORTEST_PATH_LINK, enabled=self.shortest_path_links)
 
         # Show node id's if requested.
         show_labels = SimEngine.gui_get(SHOW_NODE_IDS)
@@ -236,17 +236,17 @@ class Network_World(World):
         super().handle_event(event)
 
         # Handle link/node creation/deletion request events.
-        if event == 'Create node':
+        if event == CREATE_NODE:
             self.agent_class()
-        elif event == 'Delete random node':
+        elif event == DELETE_RANDOM_NODE:
             # Can't use choice with a set.
             node = sample(World.agents, 1)[0]
             node.delete()
-        elif event == 'Create random link':
+        elif event == CREATE_RANDOM_LINK:
             self.create_random_link()
-        elif event == 'Delete random link':
+        elif event == DELETE_RANDOM_LINK:
             World.links.pop()
-        elif event == 'Delete shortest-path link':
+        elif event == DELETE_SHORTEST_PATH_LINK:
             self.delete_a_shortest_path_link()
 
         self.disable_enable_buttons()
@@ -339,46 +339,60 @@ import PySimpleGUI as sg
 
 # Keys and other GUI strings
 
-tt = 'Probability that two nodes in a random graph will be linked\n' \
-     'or that a link in a small world graph will be rewired'
+CREATE_NODE = 'Create node'
+DELETE_RANDOM_NODE = 'Delete random node'
+
+DELETE_RANDOM_LINK = 'Delete random link'
+CREATE_RANDOM_LINK = 'Create random link'
+DELETE_SHORTEST_PATH_LINK = 'Delete a shortest-path link'
 
 LAYOUT = 'layout'
-CLEAR = 'clear'
-GRAPH_TYPE = 'graph type'
-LINK_PROB = 'link_prob'
-CLUSTER_COEFF = 'cluster_coeff'
-PATH_LENGTH = 'path_length'
-REP_COEFF = 'rep_coeff'
-REP_EXPONENT = 'rep_exponent'
-ATT_COEFF = 'att_coeff'
-DIST_UNIT = 'dist_unit'
-SHOW_NODE_IDS = "Show node id's"
-PRINT_FORCE_VALUES = 'Print force values'
-NBR_NODES = 'nbr_nodes'
-SHAPE = 'shape'
-COLOR = 'color'
 FORCE_DIRECTED = 'force-directed'
+CLEAR = 'clear'
+
+GRAPH_TYPE = 'graph type'
+
 PREF_ATTACHMENT = 'pref attachment'
 RANDOM = 'random'
 RING = 'ring'
 SMALL_WORLD = 'small world'
 STAR = 'star'
 WHEEL = 'wheel'
+
+LINK_PROB = 'link_prob'
+CLUSTER_COEFF = 'cluster_coeff'
+PATH_LENGTH = 'path_length'
 TBD = 'TBD'
+
+REP_COEFF = 'rep_coeff'
+REP_EXPONENT = 'rep_exponent'
+ATT_COEFF = 'att_coeff'
+ATT_EXPONENT = 'att_exponent'
+DIST_UNIT = 'dist_unit'
+SHOW_NODE_IDS = "Show node id's"
+PRINT_FORCE_VALUES = 'Print force values'
+
+NBR_NODES = 'nbr_nodes'
+SHAPE = 'shape'
+COLOR = 'color'
+
+tt = 'Probability that two nodes in a random graph will be linked\n' \
+     'or that a link in a small world graph will be rewired'
+
 
 network_left_upper = [
                     [
-                     sg.Button('Create random link', tooltip='Create a random link', pad=((0, 10), (5, 0))),
-                     sg.Col([[sg.Button('Delete random link', tooltip='Delete a random link',
+                     sg.Button(CREATE_RANDOM_LINK, tooltip='Create a random link', pad=((0, 10), (5, 0))),
+                     sg.Col([[sg.Button(DELETE_RANDOM_LINK, tooltip='Delete a random link',
                                         pad=((10, 10), (5, 0)))],
-                             [sg.Button('Delete shortest-path link',
+                             [sg.Button(DELETE_SHORTEST_PATH_LINK,
                                         tooltip='Delete a random link on the shortest path',
                                         pad=((0, 0), (5, 0)))]])
                      ],
 
                     HOR_SEP(pad=((50, 0), (0, 0))),
 
-                    [sg.Text('Layout', pad=((0, 0), (20, 0))),
+                    [sg.Text(LAYOUT, pad=((0, 0), (20, 0))),
                      sg.Combo(['circle', 'force-directed'], key=LAYOUT, size=(11, 20),
                                pad=((5, 0), (20, 0)), default_value='force-directed', tooltip='Select a layout'),
                      sg.Checkbox('Clear before setup?', key=CLEAR, pad=((15, 0), (20, 0)), default=True)],
@@ -431,7 +445,7 @@ network_left_upper = [
                              tooltip='If > distance unit, larger magnitude means \n'
                                      'increase force more with distance (like a spring)\n'
                                      'If < distance unit, force becomes repulsive (also like a spring)'),
-                     sg.Slider((0, 10), default_value=2, orientation='horizontal', key='att_exponent',
+                     sg.Slider((0, 10), default_value=2, orientation='horizontal', key=ATT_EXPONENT,
                                pad=((0, 0), (0, 0)), size=(15, 20),
                                tooltip='If distance > distance unit, larger magnitude means \n'
                                        'increase force more with distance (like a spring)\n'
@@ -449,11 +463,13 @@ network_left_upper = [
                      ],
 
                    ]
+
+
 network_right_upper = [
                      [
                       sg.Col([
-                              [sg.Button('Create node', tooltip='Create a node'),
-                               sg.Button('Delete random node', tooltip='Delete one random node')],
+                              [sg.Button(CREATE_NODE, tooltip='Create a node'),
+                               sg.Button(DELETE_RANDOM_NODE, tooltip='Delete one random node')],
 
                               [sg.Text('Click two nodes for shortest path')]],
                               pad=((0, 0), None)),
@@ -461,7 +477,9 @@ network_right_upper = [
                       sg.Col([
                               [sg.Text('Nodes', pad=((0, 0), (15, 0))),
                                sg.Slider((0, 20), default_value=9, orientation='horizontal', key=NBR_NODES,
-                                         size=(10, 20), tooltip='Nbr of nodes created by setup')],
+                                         size=(10, 20), tooltip='Nbr of nodes created by setup')
+                               ],
+                              # The "pad" on the next line is for the Col widget.
                               ], pad=((0, 0), (5, 0))),
 
                       sg.Col([
@@ -471,8 +489,8 @@ network_right_upper = [
 
 
                               [sg.Text('Node color'),
-                               sg.Combo(['Random'] + [color[0] for color in PYGAME_COLORS], key=COLOR,
-                                        default_value='Random',  tooltip='Node color')]])
+                               sg.Combo([RANDOM] + [color[0] for color in PYGAME_COLORS], key=COLOR,
+                                        default_value=RANDOM,  tooltip='Node color')]])
 
                       ]
 
