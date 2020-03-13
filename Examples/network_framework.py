@@ -234,9 +234,9 @@ class Network_World(World):
 
         # Handle link/node creation/deletion request events.
         if event == 'Create node':
-            self.node_class()
+            self.agent_class()
         elif event == 'Delete random node':
-            node = sample(self.nodes, 1)[0]
+            node = sample(self.agents, 1)[0]
             node.delete()
         elif event == 'Create random link':
             self.create_random_link()
