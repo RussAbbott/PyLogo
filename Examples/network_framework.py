@@ -337,7 +337,7 @@ class Network_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
-# Keys and other GUI strings
+# Keys and other GUI strings. Grouped more or less as they appear in the GUI.
 
 CREATE_NODE = 'Create node'
 DELETE_RANDOM_NODE = 'Delete random node'
@@ -375,6 +375,7 @@ PRINT_FORCE_VALUES = 'Print force values'
 
 NBR_NODES = 'nbr_nodes'
 SHAPE = 'shape'
+NETLOGO_FIGURE = 'netlogo_figure'
 COLOR = 'color'
 
 tt = 'Probability that two nodes in a random graph will be linked\n' \
@@ -395,12 +396,11 @@ network_left_upper = [
 
                     [sg.Text(LAYOUT, pad=((0, 0), (20, 0))),
                      sg.Combo([CIRCLE, FORCE_DIRECTED], key=LAYOUT, size=(11, 20),
-                               pad=((5, 0), (20, 0)), default_value='force-directed', tooltip='Select a layout'),
-                     sg.Checkbox('Clear before setup?', key=CLEAR, pad=((15, 0), (20, 0)), default=True)],
+                               pad=((5, 0), (20, 0)), default_value=FORCE_DIRECTED, tooltip='Select a layout'),
 
-                    [sg.Text('Graph type', pad=((0, 0), (20, 0))),
-                     sg.Combo(['pref attachment', 'random', 'ring', 'small world', 'star', 'wheel'],
-                              key=GRAPH_TYPE, pad=((5, 0), (20, 0)), default_value='ring', tooltip='graph type')],
+                     sg.Text('Graph type', pad=((10, 0), (20, 0))),
+                     sg.Combo([PREF_ATTACHMENT, RANDOM, RING, SMALL_WORLD, STAR, WHEEL], size=(11, 20),
+                              key=GRAPH_TYPE, pad=((5, 0), (20, 0)), default_value=RING, tooltip='graph type')],
 
                     [sg.Text('Random graph link prob\nSmall world rewire prob', pad=((0, 10), (20, 0)),
                              tooltip=tt),
@@ -444,13 +444,15 @@ network_left_upper = [
 
                     [sg.Text('Attraction exponent', pad=((0, 10), (20, 0)),
                              tooltip='If > distance unit, larger magnitude means \n'
-                                     'increase force more with distance (like a spring)\n'
-                                     'If < distance unit, force becomes repulsive (also like a spring)'),
+                                     'increased force more with distance (like a stretched spring)\n'
+                                     'If < distance unit, force becomes repulsive\n'
+                                     '(like a compressed spring)'),
                      sg.Slider((0, 10), default_value=2, orientation='horizontal', key=ATT_EXPONENT,
                                pad=((0, 0), (0, 0)), size=(15, 20),
                                tooltip='If distance > distance unit, larger magnitude means \n'
-                                       'increase force more with distance (like a spring)\n'
-                                       'If distance < distance unit, force becomes repulsive (also like a spring)')],
+                                       'increased force more with distance (like a spring)\n'
+                                       'If distance < distance unit, force becomes repulsive\n'
+                                       '(like a compressed spring)')],
 
                     [sg.Text('Distance unit/ideal link length', pad=((0, 10), (20, 0)),
                              tooltip='The fraction of the screen diagonal used as one unit.'),
@@ -485,7 +487,7 @@ network_right_upper = [
 
                       sg.Col([
                               [sg.Text('Node shape'),
-                               sg.Combo(KNOWN_FIGURES, key=SHAPE, default_value='netlogo_figure',
+                               sg.Combo(KNOWN_FIGURES, key=SHAPE, default_value=NETLOGO_FIGURE,
                                         tooltip='Node shape')],
 
 
