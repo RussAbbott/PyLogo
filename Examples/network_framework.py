@@ -347,6 +347,7 @@ CREATE_RANDOM_LINK = 'Create random link'
 DELETE_SHORTEST_PATH_LINK = 'Delete a shortest-path link'
 
 LAYOUT = 'layout'
+CIRCLE = 'circle'
 FORCE_DIRECTED = 'force-directed'
 CLEAR = 'clear'
 
@@ -393,7 +394,7 @@ network_left_upper = [
                     HOR_SEP(pad=((50, 0), (0, 0))),
 
                     [sg.Text(LAYOUT, pad=((0, 0), (20, 0))),
-                     sg.Combo(['circle', 'force-directed'], key=LAYOUT, size=(11, 20),
+                     sg.Combo([CIRCLE, FORCE_DIRECTED], key=LAYOUT, size=(11, 20),
                                pad=((5, 0), (20, 0)), default_value='force-directed', tooltip='Select a layout'),
                      sg.Checkbox('Clear before setup?', key=CLEAR, pad=((15, 0), (20, 0)), default=True)],
 
