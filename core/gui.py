@@ -136,7 +136,7 @@ def draw_line(start_pixel, end_pixel, line_color: Color = Color('white'), width=
 class SimpleGUI:
 
     def __init__(self, gui_left_upper, gui_right_upper=None, caption="Basic Model",
-                 patch_size=15, board_rows_cols=(51, 51), bounce=None, fps=None):
+                 patch_size=15, board_rows_cols=(51, 51), clear=None, bounce=None, fps=None):
 
         gui.PATCH_SIZE = patch_size if patch_size % 2 == 1 else patch_size + 1
         gui.PATCH_ROWS = board_rows_cols[0] if board_rows_cols[0] % 2 == 1 else board_rows_cols[0] + 1
@@ -160,7 +160,7 @@ class SimpleGUI:
 
         # All these gui.<variable> elements are globals in this file.
         gui.WINDOW = self.make_window(caption, gui_left_upper, gui_right_upper=gui_right_upper,
-                                      bounce=bounce, fps=fps)
+                                      clear=clear, bounce=bounce, fps=fps)
 
         pg.init()
         gui.FONT = SysFont(None, int(1.5 * gui.BLOCK_SPACING()))
@@ -172,12 +172,13 @@ class SimpleGUI:
     def fill_screen():
         gui.SCREEN.fill(pg.Color(gui.SCREEN_COLOR))
 
-    def make_window(self, caption, gui_left_upper, gui_right_upper=None, bounce=True, fps=None):
+    def make_window(self, caption, gui_left_upper, gui_right_upper=None, clear=None, bounce=True, fps=None):
         """
         Create the window, including sg.Graph, the drawing surface.
         """
         # --------------------- PySimpleGUI window layout and creation --------------------
-        clear_line = [sg.Checkbox('Clear before setup?', key='Clear?', default=True, pad=((0, 0), (10, 0)),
+        clear_line = [] if clear is None else \
+                     [sg.Checkbox('Clear before setup?', key='Clear?', default=clear, pad=((0, 0), (10, 0)),
                                   tooltip='Bounce back from the edges of the screen?')]
 
         bounce_checkbox_line = [] if bounce is None else \
