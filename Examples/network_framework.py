@@ -140,10 +140,11 @@ class Network_World(World):
 
         # create_ordered_agents() creates the indicated number of nodes and arranges them in a ring.
         # It also returns a list of the nodes in ring-order.
-        ring_node_list = self.create_ordered_agents(ring_nodes)
+        ring_node_list = [] if not ring_nodes else self.create_ordered_agents(ring_nodes)
 
         # Now link the nodes according to the desired graph.
-        self.generate_graph(graph_type, ring_node_list)
+        if nbr_nodes:
+            self.generate_graph(graph_type, nbr_nodes, ring_node_list)
 
     def compute_metrics(self):
         clust_coefficient = self.clustering_coefficient()
@@ -218,13 +219,13 @@ class Network_World(World):
 
         SimEngine.gui_set(DELETE_SHORTEST_PATH_LINK, enabled=self.shortest_path_links and len(self.selected_nodes) == 2)
 
-        # Show node id's if requested.
+        # Show node id's or not as requested.
         show_labels = SimEngine.gui_get(SHOW_NODE_IDS)
         for node in World.agents:
             node.label = str(node.id) if show_labels else None
 
     @staticmethod
-    def generate_graph(graph_type, ring_node_list):
+    def generate_graph(graph_type, ring_nodes, ring_node_list):
         pass
 
     def handle_event(self, event):
