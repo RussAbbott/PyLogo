@@ -216,7 +216,7 @@ class Network_World(World):
         SimEngine.gui_set(DELETE_RANDOM_LINK, enabled=bool(World.links))
         SimEngine.gui_set(CREATE_RANDOM_LINK, enabled=len(World.links) < len(World.agents)*(len(World.agents)-1)/2)
 
-        SimEngine.gui_set(DELETE_SHORTEST_PATH_LINK, enabled=self.shortest_path_links)
+        SimEngine.gui_set(DELETE_SHORTEST_PATH_LINK, enabled=self.shortest_path_links and len(self.selected_nodes) == 2)
 
         # Show node id's if requested.
         show_labels = SimEngine.gui_get(SHOW_NODE_IDS)
@@ -337,7 +337,7 @@ class Network_World(World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
-# Keys and other GUI strings. Grouped more or less as they appear in the GUI.
+# Keys and other GUI strings. Grouped together more or less as they appear in the GUI.
 
 CREATE_NODE = 'Create node'
 DELETE_RANDOM_NODE = 'Delete random node'
@@ -418,11 +418,11 @@ network_left_upper = [
                     HOR_SEP(pad=((50, 0), (0, 0))),
 
                     [sg.Text('Repulsion coefficient', pad=((0, 10), (20, 0)),
-                             tooltip='Negative means raise to the power and divide (like gravity).\n'
-                                     'Larger magnitude means distince reduces repulsive force more.'),
+                             tooltip='Larger is stronger.'),
                      sg.Slider((1, 5), default_value=1, orientation='horizontal', key=REP_COEFF,
                                pad=((0, 0), (0, 0)), size=(15, 20),
-                               tooltip='Larger is stronger.')],
+                               tooltip='Negative means raise to the power and divide (like gravity).\n'
+                                       'Larger magnitude means distince reduces repulsive force more.')],
 
                     [sg.Text('Repulsion exponent', pad=((0, 10), (20, 0)),
                              tooltip='Negative means raise to the power and divide (like gravity).\n'
