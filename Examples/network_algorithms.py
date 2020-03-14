@@ -35,7 +35,22 @@ class Network_Algorithms_World(Network_World):
         SimEngine.gui_set(PATH_LENGTH, value=avg_path_length)
 
     @staticmethod
-    def generate_graph(graph_type, ring_node_list):
+    def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):
+        """
+        Link the nodes to create the requested graph.
+
+        Args:
+            graph_type: The name of the graph type.
+            nbr_nodes: The total number of nodes the user requested
+            ring_node_list: The nodes that have been arranged in a ring.
+                            Will contain either:
+                            nbr_nodes - 1 if graph type is STAR or WHEEL
+                            or nbr_nodes otherwise
+
+        Returns: None
+
+        Overriding this function in network_framework.
+        """
         print("\n\nYour code goes here.")
 
 

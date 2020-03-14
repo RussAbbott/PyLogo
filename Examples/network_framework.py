@@ -134,17 +134,17 @@ class Network_World(World):
         # If we are generating a star or a wheel network, arrange nbr_nodes-1 as
         # a ring and use the other node as the center node.
 
-        # If we are generating a ring or a random network, arrange all the nodes as a ring.
+        # If we are generating another type of graph, arrange all the nodes as a ring.
 
-        ring_nodes = (nbr_nodes - 1) if graph_type in ['star', 'wheel'] else nbr_nodes
+        nbr_ring_nodes = (nbr_nodes - 1) if graph_type in ['star', 'wheel'] else nbr_nodes
 
-        # create_ordered_agents() creates the indicated number of nodes and arranges them in a ring.
-        # It also returns a list of the nodes in ring-order.
-        ring_node_list = self.create_ordered_agents(ring_nodes)
+        # create_ordered_agents() creates the indicated number of nodes and arranges
+        # them in a ring. It returns a list of the nodes in ring-order.
+        ring_node_list = self.create_ordered_agents(nbr_ring_nodes)
 
         # Now link the nodes according to the desired graph.
         if nbr_nodes:
-            self.generate_graph(graph_type, nbr_nodes, ring_node_list)
+            self.link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list)
 
     def compute_metrics(self):
         clust_coefficient = self.clustering_coefficient()
@@ -225,7 +225,22 @@ class Network_World(World):
             node.label = str(node.id) if show_labels else None
 
     @staticmethod
-    def generate_graph(graph_type, ring_nodes, ring_node_list):
+    def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):
+        """
+        Link the nodes to create the requested graph.
+
+        Args:
+            graph_type: The name of the graph type.
+            nbr_nodes: The total number of nodes the user requested
+            ring_node_list: The nodes that have been arranged in a ring.
+                            Will contain either:
+                            nbr_nodes - 1 if graph type is STAR or WHEEL
+                            or nbr_nodes otherwise
+
+        Returns: None
+
+        To be overridden in subclasses.
+        """
         pass
 
     def handle_event(self, event):
