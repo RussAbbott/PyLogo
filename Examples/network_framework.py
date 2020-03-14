@@ -140,7 +140,7 @@ class Network_World(World):
 
         # create_ordered_agents() creates the indicated number of nodes and arranges them in a ring.
         # It also returns a list of the nodes in ring-order.
-        ring_node_list = [] if not ring_nodes else self.create_ordered_agents(ring_nodes)
+        ring_node_list = self.create_ordered_agents(ring_nodes)
 
         # Now link the nodes according to the desired graph.
         if nbr_nodes:
