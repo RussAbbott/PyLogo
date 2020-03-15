@@ -17,7 +17,7 @@ from core.utils import normalize_dxdy
 from core.world_patch_block import World
 
 
-class Network_Node(Agent):
+class Graph_Node(Agent):
 
     def __init__(self, **kwargs):
         color = SimEngine.gui_get(COLOR)
@@ -31,10 +31,14 @@ class Network_Node(Agent):
     def __str__(self):
         return f'FLN-{self.id}'
 
-    def adjust_distances(self, velocity_adjustment):
-        dist_unit = SimEngine.gui_get(DIST_UNIT)
-        screen_distance_unit = sqrt(SCREEN_PIXEL_WIDTH()**2 + SCREEN_PIXEL_HEIGHT()**2)/dist_unit
+    def adjust_distances(self, screen_distance_unit, velocity_adjustment=1):
 
+        normalized_force = self.compute_velocity(screen_distance_unit, velocity_adjustment)
+
+        self.set_velocity(normalized_force)
+        self.forward()
+
+    def compute_velocity(self, screen_distance_unit, velocity_adjustment):
         repulsive_force: Velocity = Velocity((0, 0))
 
         for node in (World.agents - {self}):
@@ -60,8 +64,9 @@ class Network_Node(Agent):
                 attractive_force += self.force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
                                                        repulsive=False)
 
-        net_force = repulsive_force + repulsive_wall_force + attractive_force
-        normalized_force: Velocity = net_force/max([net_force.x, net_force.y, velocity_adjustment])
+        # noinspection PyTypeChecker
+        net_force: Velocity = repulsive_force + repulsive_wall_force + attractive_force
+        normalized_force: Velocity = net_force / max([net_force.x, net_force.y, velocity_adjustment])
         normalized_force *= 10
 
         if SimEngine.gui_get(PRINT_FORCE_VALUES):
@@ -72,9 +77,7 @@ class Network_Node(Agent):
                   f'net-force {tuple(net_force.round(2))}; \n'
                   f'normalized_force {tuple(normalized_force.round(2))}; \n\n'
                   )
-
-        self.set_velocity(normalized_force)
-        self.forward()
+        return normalized_force
 
     def delete(self):
         World.agents.remove(self)
@@ -107,14 +110,15 @@ class Network_Node(Agent):
             if d < screen_distance_unit:
                 force = force*(-1)
             att_coefficient = SimEngine.gui_get(ATT_COEFF)
-            return 10**(att_coefficient-1) * force
+            final_force = force * 10**(att_coefficient-1)
+            return final_force
 
     def neighbors(self):
         lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
         return lns
 
 
-class Network_World(World):
+class Graph_World(World):
 
     def __init__(self, patch_class, agent_class):
         self.velocity_adjustment = 1
@@ -325,9 +329,12 @@ class Network_World(World):
         return None
 
     def step(self):
+        dist_unit = SimEngine.gui_get(DIST_UNIT)
+        screen_distance_unit = sqrt(SCREEN_PIXEL_WIDTH()**2 + SCREEN_PIXEL_HEIGHT()**2)/dist_unit
+
         if SimEngine.gui_get(LAYOUT) == FORCE_DIRECTED:
             for node in World.agents:
-                node.adjust_distances(self.velocity_adjustment)
+                node.adjust_distances(screen_distance_unit, self.velocity_adjustment)
 
         # Set all the links back to normal.
         for lnk in World.links:
@@ -518,5 +525,5 @@ network_right_upper = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Network_World, 'Force test', gui_left_upper=network_left_upper, gui_right_upper=network_right_upper,
-           agent_class=Network_Node, clear=True, bounce=True)
+    PyLogo(Graph_World, 'Force test', gui_left_upper=network_left_upper, gui_right_upper=network_right_upper,
+           agent_class=Graph_Node, clear=True, bounce=True)
