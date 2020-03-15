@@ -243,6 +243,8 @@ class Graph_World(World):
 
     def draw(self):
         self.build_shortest_path()
+        # Update which buttons are enabled.
+        self.disable_enable_buttons()
         super().draw()
 
     @staticmethod
@@ -286,13 +288,11 @@ class Graph_World(World):
         elif event == DELETE_SHORTEST_PATH_LINK:
             self.delete_a_shortest_path_link()
 
-        self.disable_enable_buttons()
-
     def mouse_click(self, xy: Tuple[int, int]):
         """ Select closest node. """
         patch = self.pixel_tuple_to_patch(xy)
         if len(patch.agents) == 1:
-            node = select(patch.agents, 1)[0]
+            node = sample(patch.agents, 1)[0]
         else:
             patches = patch.neighbors_24()
             nodes = {node for patch in patches for node in patch.agents}
@@ -310,7 +310,6 @@ class Graph_World(World):
     def setup(self):
         self.build_graph()
         self.compute_metrics()
-        self.disable_enable_buttons()
 
     def shortest_path(self):
         (node1, node2) = self.selected_nodes
@@ -361,8 +360,6 @@ class Graph_World(World):
                 node.adjust_distances(screen_distance_unit, self.velocity_adjustment)
 
         self.compute_metrics()
-        # Update which buttons are enabled.
-        self.disable_enable_buttons()
 
 
 # ############################################## Define GUI ############################################## #
