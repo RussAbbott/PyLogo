@@ -316,7 +316,7 @@ class Graph_World(World):
             if lnks_to_node_2:
                 path = current_path + lnks_to_node_2
                 # Extract the links, but drop the None at the beginning.
-                lnks = [neighbor[0] for neighbor in path[1:]]
+                lnks = [lnk for (lnk, _nbr) in path[1:]]
                 return lnks
             # Not done. Add the newly reached nodes to visted.
             visited |= {nbr for (_lnk, nbr) in lnk_nbrs}
