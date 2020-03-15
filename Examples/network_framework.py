@@ -113,7 +113,7 @@ class Graph_Node(Agent):
             final_force = force * 10**(att_coefficient-1)
             return final_force
 
-    def neighbors(self):
+    def lnk_nbrs(self):
         lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
         return lns
 
@@ -291,7 +291,7 @@ class Graph_World(World):
     def shortest_path(self):
         (node1, node2) = self.selected_nodes
         # Start with the node with the smaller number of neighbors.
-        if len(node1.neighbors()) > len(node2.neighbors()):
+        if len(node1.lnk_nbrs()) > len(node2.lnk_nbrs()):
             (node1, node2) = (node2, node1)
         visited = {node1}
         # A path is a sequence of tuples (link, node) where the link
@@ -303,15 +303,15 @@ class Graph_World(World):
         frontier = [[(None, node1)]]
         while frontier:
             current_path = frontier.pop(0)
-            # The neighbors are tuples as in the paths. For a given node
-            # they are all the nodes links along with the nodes linked to.
+            # The lnk_nbrs are tuples as in the paths. For a given node
+            # they are all the node's links along with the nodes linked to.
             # This is asking for the last node in the current path,
-            last_node = current_path[-1][1]
-            # This gets all the non-visited neighbors of the last node.
-            # Each neighbor is a (link, node) pair.
-            neighbors = [neighbor for neighbor in last_node.neighbors() if neighbor[1] not in visited]
+            (_last_link, last_node) = current_path[-1]
+            # This gets all the non-visited lnk_nbrs of the last node.
+            # Each neighbor is a (link, node) pair. 
+            lnk_nbrs = [(lnk, nbr) for (lnk, nbr) in last_node.lnk_nbrs() if nbr not in visited]
             # Do any of these continuations reach the target, node_2? If so, we've found the shortest path.
-            lnks_to_node_2 = [neighbor for neighbor in neighbors if neighbor[1] == node2]
+            lnks_to_node_2 = [(lnk, nbr) for (lnk, nbr) in lnk_nbrs if nbr == node2]
             # If lnks_to_node_2 is non-empty it will have one element: (lnk, node_2)
             if lnks_to_node_2:
                 path = current_path + lnks_to_node_2
@@ -319,9 +319,9 @@ class Graph_World(World):
                 lnks = [neighbor[0] for neighbor in path[1:]]
                 return lnks
             # Not done. Add the newly reached nodes to visted.
-            visited |= {neighbor[1] for neighbor in neighbors}
+            visited |= {nbr for (_lnk, nbr) in lnk_nbrs}
             # For each neighbor construct an extended version of the current path.
-            extended_paths = [current_path + [neighbor] for neighbor in neighbors]
+            extended_paths = [current_path + [lnk_nbr] for lnk_nbr in lnk_nbrs]
             # Add all those extended paths to the frontier.
             frontier += extended_paths
 
