@@ -127,6 +127,10 @@ class Graph_World(World):
         self.selected_nodes = set()
         self.disable_enable_buttons()
 
+    # noinspection PyMethodMayBeStatic
+    def average_path_length(self):
+        return TBD
+
     def build_graph(self):
         """
         Arrange all the nodes (or all but one) as a ring.
@@ -150,6 +154,19 @@ class Graph_World(World):
         if nbr_nodes:
             self.link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list)
 
+    def build_shortest_path(self):
+        Graph_World.reset_links()
+        self.selected_nodes = [node for node in World.agents if node.selected]
+        # If there are exactly two selected nodes, find the shortest path between them.
+        if len(self.selected_nodes) == 2:
+            self.shortest_path_links = self.shortest_path()
+            # self.shortest_path_links will be either a list of links or None
+            # If there is a path, highlight it.
+            if self.shortest_path_links:
+                for lnk in self.shortest_path_links:
+                    lnk.color = Color('red')
+                    lnk.width = 2
+
     def compute_metrics(self):
         clust_coefficient = self.clustering_coefficient()
         SimEngine.gui_set(CLUSTER_COEFF, value=clust_coefficient)
@@ -158,10 +175,6 @@ class Graph_World(World):
 
     # noinspection PyMethodMayBeStatic
     def clustering_coefficient(self):
-        return TBD
-
-    # noinspection PyMethodMayBeStatic
-    def average_path_length(self):
         return TBD
 
     @staticmethod
@@ -228,6 +241,10 @@ class Graph_World(World):
         for node in World.agents:
             node.label = str(node.id) if show_labels else None
 
+    def draw(self):
+        self.build_shortest_path()
+        super().draw()
+
     @staticmethod
     def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):
         """
@@ -275,13 +292,20 @@ class Graph_World(World):
         """ Select closest node. """
         patch = self.pixel_tuple_to_patch(xy)
         if len(patch.agents) == 1:
-            node = choice(list(patch.agents))
+            node = select(patch.agents, 1)[0]
         else:
             patches = patch.neighbors_24()
             nodes = {node for patch in patches for node in patch.agents}
             node = nodes.pop() if nodes else Pixel_xy(xy).closest_block(World.agents)
         if node:
             node.selected = not node.selected
+
+    @staticmethod
+    def reset_links():
+        # Set all the links back to normal.
+        for lnk in World.links:
+            lnk.color = lnk.default_color
+            lnk.width = 1
 
     def setup(self):
         self.build_graph()
@@ -335,22 +359,6 @@ class Graph_World(World):
         if SimEngine.gui_get(LAYOUT) == FORCE_DIRECTED:
             for node in World.agents:
                 node.adjust_distances(screen_distance_unit, self.velocity_adjustment)
-
-        # Set all the links back to normal.
-        for lnk in World.links:
-            lnk.color = lnk.default_color
-            lnk.width = 1
-
-        self.selected_nodes = [node for node in World.agents if node.selected]
-        # If there are exactly two selected nodes, find the shortest path between them.
-        if len(self.selected_nodes) == 2:
-            self.shortest_path_links = self.shortest_path()
-            # self.shortest_path_links will be either a list of links or None
-            # If there is a path, highlight it.
-            if self.shortest_path_links:
-                for lnk in self.shortest_path_links:
-                    lnk.color = Color('red')
-                    lnk.width = 2
 
         self.compute_metrics()
         # Update which buttons are enabled.
