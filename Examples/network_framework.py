@@ -210,7 +210,7 @@ class Graph_World(World):
         # Look for a link to delete so that there is still some path.
         link_deleted = False
         # Sort the shortest_path links by number of siblings.
-        for lnk in sorted(self.shortest_path_links, key=lambda lnk: lnk.siblings(), reverse=True):
+        for lnk in sorted(self.shortest_path_links, key=lambda lnk: tuple(map(len, lnk.siblings())), reverse=True):
             World.links.remove(lnk)
             # self.shortest_path() will return either a shortest path or None.
             # If it returns a shortest path, the link we deleted is ok to delete.
