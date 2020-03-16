@@ -67,7 +67,7 @@ class Link:
     def is_linked_with(self, other, directed=False):
         return link_exists(self, other, directed)
 
-    def min_alternative(self):
+    def siblings(self):
         (s1, s2) = (len(self.agent_1.lnk_nbrs()), len(self.agent_2.lnk_nbrs()))
         return min((s1, s2), (s2, s1))
 
