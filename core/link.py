@@ -20,13 +20,17 @@ def link_exists(agent_1, agent_2, directed=False):
     the same hash_object.
     """
     hash_obj = hash_object(agent_1, agent_2, directed)
-    return any(hash_obj == lnk.hash_object for lnk in World.links)
+    links = [lnk for lnk in World.links if lnk.hash_object == hash_obj]
+    return links[0] if links else None
+    # return any(hash_obj == lnk.hash_object for lnk in World.links)
 
 
 class Link:
 
     def __init__(self, agent_1: Agent, agent_2: Agent, directed: bool = False,
                  color: Color = Color('white'), width: int = 1):
+        if None in {agent_1, agent_2}:
+            raise Exception(f"Can't link to None: agent_1: {agent_1}, agent_2: {agent_2}.")
         self.agent_1: Agent = agent_1
         self.agent_2: Agent = agent_2
         self.both_sides = {agent_1, agent_2}
@@ -63,6 +67,10 @@ class Link:
 
     def is_linked_with(self, other, directed=False):
         return link_exists(self, other, directed)
+
+    def min_alternative(self):
+        (s1, s2) = (len(self.agent_1.lnk_nbrs()), len(self.agent_2.lnk_nbrs()))
+        return min((s1, s2), (s2, s1))
 
     def other_side(self, node):
         return (self.both_sides - {node}).pop()
