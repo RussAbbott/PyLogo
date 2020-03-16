@@ -22,7 +22,6 @@ def link_exists(agent_1, agent_2, directed=False):
     hash_obj = hash_object(agent_1, agent_2, directed)
     links = [lnk for lnk in World.links if lnk.hash_object == hash_obj]
     return links[0] if links else None
-    # return any(hash_obj == lnk.hash_object for lnk in World.links)
 
 
 class Link:
