@@ -1,7 +1,7 @@
 
 from math import sqrt
 from random import choice, sample
-from typing import Tuple
+from typing import List, Tuple
 
 from pygame.color import Color
 from pygame.draw import circle
@@ -22,8 +22,9 @@ class Graph_Node(Agent):
     def __init__(self, **kwargs):
         color = SimEngine.gui_get(COLOR)
         color = Color(color) if color != RANDOM else None
-        shape_name = SimEngine.gui_get(SHAPE)
-        kwargs['shape_name'] = shape_name
+        if 'shape_name' not in kwargs:
+            shape_name = SimEngine.gui_get(SHAPE)
+            kwargs['shape_name'] = shape_name
         super().__init__(color=color, **kwargs)
         # Is the  node selected?
         self.selected = False
@@ -160,7 +161,7 @@ class Graph_World(World):
         # If there are exactly two selected nodes, find the shortest path between them.
         if len(self.selected_nodes) == 2:
             self.shortest_path_links = self.shortest_path()
-            # self.shortest_path_links will be either a list of links or None
+            # self.shortest_path_links will be either a list of links or []
             # If there is a path, highlight it.
             if self.shortest_path_links:
                 for lnk in self.shortest_path_links:
@@ -208,7 +209,10 @@ class Graph_World(World):
     def delete_a_shortest_path_link(self):
         # Look for a link to delete so that there is still some path.
         link_deleted = False
-        for lnk in self.shortest_path_links:
+        # shortest_path: List[Link] = self.shortest_path()
+        # for lnk in shortest_path[1:-1]:
+
+        for lnk in sorted(self.shortest_path_links, key=lambda lnk: lnk.min_alternative(), reverse=True):
             World.links.remove(lnk)
             # self.shortest_path() will return either a shortest path or None.
             # If it returns a shortest path, the link we deleted is ok to delete.
@@ -311,7 +315,7 @@ class Graph_World(World):
         self.build_graph()
         self.compute_metrics()
 
-    def shortest_path(self):
+    def shortest_path(self) -> List[Link]:
         (node1, node2) = self.selected_nodes
         # Start with the node with the smaller number of neighbors.
         if len(node1.lnk_nbrs()) > len(node2.lnk_nbrs()):
@@ -349,7 +353,7 @@ class Graph_World(World):
             frontier += extended_paths
 
         # If we get out of the loop because the frontier is empty, there is no path from node_1 to node_2.
-        return None
+        return []
 
     def step(self):
         dist_unit = SimEngine.gui_get(DIST_UNIT)
@@ -404,6 +408,7 @@ PRINT_FORCE_VALUES = 'Print force values'
 NBR_NODES = 'nbr_nodes'
 SHAPE = 'shape'
 NETLOGO_FIGURE = 'netlogo_figure'
+NODE = 'node'
 COLOR = 'color'
 
 tt = 'Probability that two nodes in a random graph will be linked\n' \
@@ -428,7 +433,7 @@ network_left_upper = [
 
                      sg.Text('Graph type', pad=((10, 0), (20, 0))),
                      sg.Combo([PREF_ATTACHMENT, RANDOM, RING, SMALL_WORLD, STAR, WHEEL], size=(11, 20),
-                              key=GRAPH_TYPE, pad=((5, 0), (20, 0)), default_value=RING, tooltip='graph type')],
+                              key=GRAPH_TYPE, pad=((5, 0), (20, 0)), default_value=WHEEL, tooltip='graph type')],
 
                     [sg.Text('Random graph link prob\nSmall world rewire prob', pad=((0, 10), (20, 0)),
                              tooltip=tt),
