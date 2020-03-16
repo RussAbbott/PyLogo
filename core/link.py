@@ -68,8 +68,11 @@ class Link:
         return link_exists(self, other, directed)
 
     def siblings(self):
-        (s1, s2) = (len(self.agent_1.lnk_nbrs()), len(self.agent_2.lnk_nbrs()))
-        return min((s1, s2), (s2, s1))
+        """
+        Return: A tuple with the lnk_nbrs on each side, smaller side first
+        """
+        sibs = (self.agent_1.lnk_nbrs(), self.agent_2.lnk_nbrs())
+        return sibs if len(sibs[0]) < len(sibs[1]) else (sibs[1], sibs[0])
 
     def other_side(self, node):
         return (self.both_sides - {node}).pop()
