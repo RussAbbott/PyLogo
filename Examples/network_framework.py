@@ -223,7 +223,6 @@ class Graph_World(World):
             lnk = choice(self.shortest_path_links)
         World.links.remove(lnk)
 
-
     def disable_enable_buttons(self):
         # 'enabled' is a pseudo attribute. gui.gui_set replaces it with 'disabled' and negates the value.
 
