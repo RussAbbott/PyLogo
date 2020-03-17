@@ -207,26 +207,22 @@ class Graph_World(World):
                     break
 
     def delete_a_shortest_path_link(self):
-        # Look for a link to delete so that there is still some path.
-        link_deleted = False
-        # Sort the shortest_path links by number of siblings.
-        for lnk in sorted(self.shortest_path_links, key=lambda lnk: tuple(map(len, lnk.siblings())), reverse=True):
-            World.links.remove(lnk)
-            # self.shortest_path() will return either a shortest path or None.
-            # If it returns a shortest path, the link we deleted is ok to delete.
-            if self.shortest_path():
-                link_deleted = True
-                break
-            else:
-                # Deleting lnk prevents any path. Put it back and try another one.
-                World.links.add(lnk)
-        # At this point we have either found and deleted a link or not.
-        # If we have found a link to delete, i.e., link_deleted is True, we're done.
-        # Otherwise delete a random link in the shortest path.
-        if not link_deleted:
-            # Select a random link and delete it.
+        """
+        Look for a link to delete so that there is still some shortest path.
+        Pick the one with the longest shortest path.
+        """
+        (longest_path_len, lnk) = (0, None)
+        for lnk_x in self.shortest_path_links:
+            World.links.remove(lnk_x)
+            path = self.shortest_path()
+            if len(path) > longest_path_len:
+                (longest_path_len, lnk) = (len(path), lnk_x)
+            World.links.add(lnk_x)
+
+        if not lnk:
             lnk = choice(self.shortest_path_links)
-            World.links.remove(lnk)
+        World.links.remove(lnk)
+
 
     def disable_enable_buttons(self):
         # 'enabled' is a pseudo attribute. gui.gui_set replaces it with 'disabled' and negates the value.
