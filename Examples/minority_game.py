@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from core.agent import Agent
+from functools import reduce
+from random import choice
+
 import core.gui as gui
+from core.agent import Agent
 from core.sim_engine import SimEngine
 from core.utils import int_round
 from core.world_patch_block import World
-
-from functools import reduce
-
-from random import choice
 
 
 class Minority_Game_Agent(Agent):

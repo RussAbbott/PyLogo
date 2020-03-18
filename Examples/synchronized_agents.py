@@ -1,12 +1,11 @@
 
+from math import pi
+from random import choice, randint
+
 from core.gui import KNOWN_FIGURES
 from core.pairs import center_pixel
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
-
-from math import pi
-
-from random import choice, randint
 
 
 class Synchronized_Agent_World(World):
@@ -71,7 +70,7 @@ class Synchronized_Agent_World(World):
     def setup(self):
         nbr_agents = SimEngine.gui_get('nbr_agents')
         shape_name = SimEngine.gui_get('shape')
-        self.create_ordered_agents(nbr_agents, shape_name=shape_name,  radius=100)
+        self.create_ordered_agents(nbr_agents, shape_name=shape_name, radius=100)
         self.reference_agent = list(World.agents)[0]
         twitchy_turn = randint(0, 360)
         for agent in World.agents:

@@ -6,12 +6,12 @@ from typing import List, Tuple
 from pygame.color import Color
 from pygame.draw import circle
 
-from core.agent import Agent, PYGAME_COLORS
 import core.gui as gui
+from core.agent import Agent, PYGAME_COLORS
 from core.gui import BLOCK_SPACING, HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
 from core.link import Link, link_exists
 # noinspection PyUnresolvedReferences
-from core.pairs import center_pixel, Pixel_xy, Velocity
+from core.pairs import Pixel_xy, Velocity, center_pixel
 from core.sim_engine import SimEngine
 from core.utils import normalize_dxdy
 from core.world_patch_block import World
@@ -20,12 +20,13 @@ from core.world_patch_block import World
 class Graph_Node(Agent):
 
     def __init__(self, **kwargs):
-        color = SimEngine.gui_get(COLOR)
-        color = Color(color) if color != RANDOM else None
+        if 'color' not in kwargs:
+            color = SimEngine.gui_get(COLOR)
+            kwargs['color'] = Color(color) if color != RANDOM else None
         if 'shape_name' not in kwargs:
             shape_name = SimEngine.gui_get(SHAPE)
             kwargs['shape_name'] = shape_name
-        super().__init__(color=color, **kwargs)
+        super().__init__(**kwargs)
         # Is the  node selected?
         self.selected = False
 
@@ -35,7 +36,6 @@ class Graph_Node(Agent):
     def adjust_distances(self, screen_distance_unit, velocity_adjustment=1):
 
         normalized_force = self.compute_velocity(screen_distance_unit, velocity_adjustment)
-
         self.set_velocity(normalized_force)
         self.forward()
 
@@ -151,7 +151,7 @@ class Graph_World(World):
         # them in a ring. It returns a list of the nodes in ring-order.
         ring_node_list = self.create_ordered_agents(nbr_ring_nodes)
 
-        # Now link the nodes according to the desired graph.
+        # Now, link the nodes according to the desired graph.
         if nbr_nodes:
             self.link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list)
 
@@ -304,6 +304,12 @@ class Graph_World(World):
             lnk.color = lnk.default_color
             lnk.width = 1
 
+    @staticmethod
+    def screen_distance_unit():
+        dist_unit = SimEngine.gui_get(DIST_UNIT)
+        screen_distance_unit = sqrt(SCREEN_PIXEL_WIDTH() ** 2 + SCREEN_PIXEL_HEIGHT() ** 2) / dist_unit
+        return screen_distance_unit
+
     def setup(self):
         self.build_graph()
         self.compute_metrics()
@@ -349,12 +355,10 @@ class Graph_World(World):
         return []
 
     def step(self):
-        dist_unit = SimEngine.gui_get(DIST_UNIT)
-        screen_distance_unit = sqrt(SCREEN_PIXEL_WIDTH()**2 + SCREEN_PIXEL_HEIGHT()**2)/dist_unit
-
+        dist_unit = Graph_World.screen_distance_unit()
         if SimEngine.gui_get(LAYOUT) == FORCE_DIRECTED:
             for node in World.agents:
-                node.adjust_distances(screen_distance_unit, self.velocity_adjustment)
+                node.adjust_distances(dist_unit, self.velocity_adjustment)
 
         self.compute_metrics()
 

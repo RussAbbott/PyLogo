@@ -1,9 +1,9 @@
 
-from core.gui import HOR_SEP
-from core.on_off import on_off_left_upper, OnOffPatch, OnOffWorld
-from core.sim_engine import SimEngine
-
 from random import randint
+
+from core.gui import HOR_SEP
+from core.on_off import OnOffPatch, OnOffWorld, on_off_left_upper
+from core.sim_engine import SimEngine
 
 
 class Life_Patch(OnOffPatch):

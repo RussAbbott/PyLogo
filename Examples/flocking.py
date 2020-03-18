@@ -1,5 +1,7 @@
 
 """
+From NetLogo
+
 turtles-own [
   flockmates         ;; agentset of nearby turtles
   nearest-neighbor   ;; closest one of our flockmates
@@ -105,17 +107,17 @@ to turn-at-most [turn max-turn]  ;; turtle procedure
 end
 """
 
+from random import uniform
+
 from pygame import Color
 
+import core.utils as utils
 from core.agent import Agent
 from core.gui import BLOCK_SPACING, HOR_SEP, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
-from core.link import hash_object, Link, link_exists
+from core.link import Link, link_exists
 from core.pairs import Pixel_xy
 from core.sim_engine import SimEngine
-import core.utils as utils
 from core.world_patch_block import World
-
-from random import choice, uniform
 
 
 class Flocking_Agent(Agent):

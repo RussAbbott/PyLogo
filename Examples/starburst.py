@@ -1,12 +1,11 @@
 
+from itertools import cycle
+from random import random, uniform
+
 from core.agent import Agent
 from core.pairs import Velocity
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
-
-from itertools import cycle
-
-from random import random, uniform
 
 
 class Starburst_World(World):

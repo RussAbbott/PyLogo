@@ -1,21 +1,17 @@
 
 from __future__ import annotations
 
-import core.gui as gui
-from core.gui import HOR_SEP
-from core.on_off import on_off_left_upper, OnOffPatch, OnOffWorld
-from core.sim_engine import SimEngine
-from core.utils import bin_str
-
 from copy import copy
-
 from itertools import chain, repeat
+from random import choice
 
 import numpy as np
 
-from random import choice
-
-from typing import List
+import core.gui as gui
+from core.gui import HOR_SEP
+from core.on_off import OnOffPatch, OnOffWorld, on_off_left_upper
+from core.sim_engine import SimEngine
+from core.utils import bin_str
 
 
 class CA_World(OnOffWorld):

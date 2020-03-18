@@ -1,21 +1,8 @@
-
-from copy import copy
-from random import randint
-
-from core.link import Link
-from core.pairs import center_pixel
+# Import the string constants you need (mainly keys) as well as classes and gui elements
+# Import the string constants you need (mainly keys) as well as classes and gui elements
+from Examples.network_framework import (CLUSTER_COEFF, Graph_World, PATH_LENGTH, TBD, network_left_upper,
+                                        network_right_upper)
 from core.sim_engine import SimEngine
-from core.world_patch_block import World
-
-# Import the string constants you will need (mainly keys but also values such as the graph types)
-# as well as the classes and gui elements
-from Examples.network_framework import CLUSTER_COEFF, LINK_PROB, PATH_LENGTH, TBD, \
-                                       PREF_ATTACHMENT, RANDOM, RING, SMALL_WORLD, STAR, WHEEL, \
-                                       Graph_Node, Graph_World, network_left_upper, network_right_upper
-
-
-class Graph_Algorithms_Node(Graph_Node):
-    pass
 
 
 class Graph_Algorithms_World(Graph_World):
@@ -29,8 +16,8 @@ class Graph_Algorithms_World(Graph_World):
         return TBD
 
     def compute_metrics(self):
-        clust_coeff = self.clustering_coefficient()
-        SimEngine.gui_set(CLUSTER_COEFF, value=clust_coeff)
+        cluster_coefficient = self.clustering_coefficient()
+        SimEngine.gui_set(CLUSTER_COEFF, value=cluster_coefficient)
         avg_path_length = self.average_path_length()
         SimEngine.gui_set(PATH_LENGTH, value=avg_path_length)
 
@@ -41,7 +28,8 @@ class Graph_Algorithms_World(Graph_World):
 
         Args:
             graph_type: The name of the graph type.
-            nbr_nodes: The total number of nodes the user requested
+            nbr_nodes: The total number of nodes the user requested.
+                       (Will be > 0 or this method won't be called.)
             ring_node_list: The nodes that have been arranged in a ring.
                             Will contain either:
                             nbr_nodes - 1 if graph type is STAR or WHEEL
@@ -49,7 +37,7 @@ class Graph_Algorithms_World(Graph_World):
 
         Returns: None
 
-        Overriding this function in network_framework.
+        Overrides this function from network_framework.
         """
         print("\n\nYour code goes here.")
 

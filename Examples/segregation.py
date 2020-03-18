@@ -1,11 +1,11 @@
 
-from core.agent import Agent, PYGAME_COLORS
-from core.sim_engine import SimEngine
-from core.world_patch_block import Patch, World
+from random import choice, randint, sample
 
 from pygame import Color
 
-from random import choice, randint, sample
+from core.agent import Agent, PYGAME_COLORS
+from core.sim_engine import SimEngine
+from core.world_patch_block import Patch, World
 
 
 class SegregationAgent(Agent):

@@ -1,12 +1,12 @@
 
-from core.pairs import RowCol, Velocity
-from core.sim_engine import SimEngine
-from core.world_patch_block import Patch, World
+from random import randint, random, uniform
 
 from pygame.color import Color
 from pygame.sprite import collide_rect
 
-from random import randint, random, uniform
+from core.pairs import RowCol, Velocity
+from core.sim_engine import SimEngine
+from core.world_patch_block import Patch, World
 
 
 class CollisionTest_Patch(Patch):
