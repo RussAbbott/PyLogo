@@ -45,4 +45,5 @@ class Graph_Algorithms_World(Graph_World):
 if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Graph_Algorithms_World, 'Network test', gui_left_upper=network_left_upper,
-           gui_right_upper=network_right_upper, agent_class=Graph_Algorithms_Node, clear=True, bounce=True)
+           gui_right_upper=network_right_upper, agent_class=Graph_Algorithms_Node,
+           clear=True, bounce=True, auto_setup=True)
