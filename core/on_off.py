@@ -1,16 +1,13 @@
+from random import randint
+from typing import Tuple
+
+import PySimpleGUI as sg
 from pygame.color import Color
 
 import core.gui as gui
-from core.gui import HOR_SEP
 from core.sim_engine import SimEngine
 from core.utils import rgb_to_hex
 from core.world_patch_block import Patch, World
-
-import PySimpleGUI as sg
-
-from random import randint
-
-from typing import Tuple
 
 
 class OnOffPatch(Patch):

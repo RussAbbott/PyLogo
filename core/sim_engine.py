@@ -3,11 +3,11 @@
 # running. It's in that loop where the user clicks, setup, go, exit, etc.
 # The model loop runs the model. Once around that loop for each model tick.
 
-import core.gui as gui
-from core.gui import SimpleGUI
-
 import pygame as pg
 from pygame.time import Clock
+
+import core.gui as gui
+from core.gui import SimpleGUI
 
 
 class SimEngine:

@@ -1,9 +1,8 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-
 import math
+from functools import lru_cache
 
 import core.gui as gui
 import core.utils as utils

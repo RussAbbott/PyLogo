@@ -2,23 +2,21 @@
 # This file contains (a) the Agent class and (b) the PyLogo function, which starts a model run.
 
 from math import sqrt
-
-import pygame as pg
-from pygame.color import Color
-from pygame.colordict import THECOLORS
-from pygame import Surface
-import pygame.transform as pgt
-
-import core.gui as gui
-from core.gui import HALF_PATCH_SIZE, PATCH_SIZE, SHAPES
-import core.pairs as pairs
-from core.pairs import heading_and_speed_to_velocity, Pixel_xy, RowCol, Velocity, XY
-import core.utils as utils
-from core.world_patch_block import Block, Patch, World
-
-import math
 from random import choice, randint
 from statistics import mean
+
+import pygame as pg
+import pygame.transform as pgt
+from pygame import Surface
+from pygame.color import Color
+from pygame.colordict import THECOLORS
+
+import core.gui as gui
+import core.pairs as pairs
+import core.utils as utils
+from core.gui import HALF_PATCH_SIZE, PATCH_SIZE, SHAPES
+from core.pairs import Pixel_xy, RowCol, Velocity, XY, heading_and_speed_to_velocity
+from core.world_patch_block import Block, Patch, World
 
 
 def is_acceptable_color(rgb):

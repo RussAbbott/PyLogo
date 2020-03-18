@@ -1,24 +1,18 @@
 
 import os
+from typing import Tuple, Union
 
+import PySimpleGUI as sg
 import pygame as pg
 from pygame.color import Color
 from pygame.draw import line
 from pygame.font import SysFont
 from pygame.rect import Rect
-from pygame.sprite import Sprite
 from pygame.surface import Surface
 
 # By importing this file itself, can avoid the use of globals
 # noinspection PyUnresolvedReferences
 import core.gui as gui
-
-import PySimpleGUI as sg
-
-from typing import Optional, Tuple, Union
-
-import tkinter as tk
-
 
 # Assumes that all Blocks are square with side BLOCK_SIDE and one pixel between them.
 # PATCH_SIZE should be odd so that there is a center pixel: (HALF_PATCH_SIZE(), HALF_PATCH_SIZE()).

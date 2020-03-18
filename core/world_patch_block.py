@@ -2,25 +2,21 @@
 from __future__ import annotations
 
 from math import sqrt
+from typing import Tuple
 
 import numpy as np
-
-import core.gui as gui
-from core.gui import SHAPES
-from core.pairs import Pixel_xy, RowCol
-from core.utils import get_class_name
-
-# Importing this file eliminates the need for a globals declaration
-# noinspection PyUnresolvedReferences
-import core.world_patch_block as world
-
 from pygame.color import Color
-from pygame.draw import line
 from pygame.rect import Rect
 from pygame.sprite import Sprite
 from pygame.surface import Surface
 
-from typing import Tuple
+import core.gui as gui
+# Importing this file eliminates the need for a globals declaration
+# noinspection PyUnresolvedReferences
+import core.world_patch_block as world
+from core.gui import SHAPES
+from core.pairs import Pixel_xy, RowCol
+from core.utils import get_class_name
 
 
 class Block(Sprite):
@@ -151,9 +147,6 @@ class World:
     done = False
 
     def __init__(self, patch_class, agent_class):
-
-        # self.event = None
-        # self.values = None
 
         World.ticks = 0
 

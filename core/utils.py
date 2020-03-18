@@ -1,22 +1,21 @@
 
 from __future__ import annotations
 
+# We also cache calls to trig functions
+import math
+from functools import lru_cache
+from math import copysign
+from random import randint
+
 from pygame.color import Color
 
 # noinspection PyUnresolvedReferences
 import core.utils as utils
 
-from functools import lru_cache
-from math import copysign
-from random import randint
-
 
 # ###################### Start trig functions in degrees ###################### #
 # import Python's trig functions, which are in radians. pi radians == 180 degrees
 # These functions expect their arguments in degrees.
-
-# We also cache calls to trig functions
-import math
 
 
 def atan2(y, x):

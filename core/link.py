@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from pygame.color import Color
 
-from core.agent import Agent
 import core.gui as gui
+from core.agent import Agent
 from core.world_patch_block import World
 
 
