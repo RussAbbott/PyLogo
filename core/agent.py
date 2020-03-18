@@ -252,7 +252,7 @@ from core.sim_engine import SimEngine
 
 
 def PyLogo(world_class=World, caption=None, gui_left_upper=None, gui_right_upper=None,
-           agent_class=Agent, patch_class=Patch,
+           agent_class=Agent, patch_class=Patch, auto_setup=False,
            patch_size=11, board_rows_cols=(51, 51), clear=None, bounce=None, fps=None):
     if gui_left_upper is None:
         gui_left_upper = []
@@ -265,4 +265,4 @@ def PyLogo(world_class=World, caption=None, gui_left_upper=None, gui_right_upper
     the_world = world_class(patch_class, agent_class)
 
     gui.WINDOW.read(timeout=10)
-    sim_engine.top_loop(the_world)
+    sim_engine.top_loop(the_world, auto_setup=auto_setup)
