@@ -1,7 +1,7 @@
 # Import the string constants you need (mainly keys) as well as classes and gui elements
 # Import the string constants you need (mainly keys) as well as classes and gui elements
-from Examples.graph_framework import (CLUSTER_COEFF, Graph_World, PATH_LENGTH, TBD, graph_left_upper,
-                                        graph_right_upper)
+from Examples.graph_framework import (CLUSTER_COEFF, Graph_Node, Graph_World, PATH_LENGTH, TBD, graph_left_upper,
+                                      graph_right_upper)
 from core.sim_engine import SimEngine
 
 
@@ -45,5 +45,5 @@ class Graph_Algorithms_World(Graph_World):
 if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Graph_Algorithms_World, 'Network test', gui_left_upper=graph_left_upper,
-           gui_right_upper=graph_right_upper, agent_class=Graph_Algorithms_Node,
+           gui_right_upper=graph_right_upper, agent_class=Graph_Node,
            clear=True, bounce=True, auto_setup=True)
