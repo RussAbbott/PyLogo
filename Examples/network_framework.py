@@ -7,8 +7,10 @@ from pygame.color import Color
 from pygame.draw import circle
 
 import core.gui as gui
-from core.agent import Agent, PYGAME_COLORS
-from core.gui import BLOCK_SPACING, HOR_SEP, KNOWN_FIGURES, SCREEN_PIXEL_HEIGHT, SCREEN_PIXEL_WIDTH
+from core.agent import PYGAME_COLORS
+from core.graph_basics import Basic_Graph_Node, Basic_Graph_World
+from core.gui import (BLOCK_SPACING, CIRCLE, HOR_SEP, KNOWN_FIGURES, NETLOGO_FIGURE, SCREEN_PIXEL_HEIGHT,
+                      SCREEN_PIXEL_WIDTH, STAR)
 from core.link import Link, link_exists
 # noinspection PyUnresolvedReferences
 from core.pairs import Pixel_xy, Velocity, center_pixel
@@ -17,7 +19,7 @@ from core.utils import normalize_dxdy
 from core.world_patch_block import World
 
 
-class Graph_Node(Agent):
+class Graph_Node(Basic_Graph_Node):
 
     def __init__(self, **kwargs):
         if 'color' not in kwargs:
@@ -115,11 +117,14 @@ class Graph_Node(Agent):
             return final_force
 
     def lnk_nbrs(self):
+        """
+        Return a list of links from this node and the nodes to which they attach.
+        """
         lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
         return lns
 
 
-class Graph_World(World):
+class Graph_World(Basic_Graph_World):
 
     def __init__(self, patch_class, agent_class):
         self.velocity_adjustment = 1
@@ -149,7 +154,7 @@ class Graph_World(World):
 
         # create_ordered_agents() creates the indicated number of nodes and arranges
         # them in a ring. It returns a list of the nodes in ring-order.
-        ring_node_list = self.create_ordered_agents(nbr_ring_nodes)
+        ring_node_list = self.create_ordered_agents(nbr_ring_nodes, shape_name=SimEngine.gui_get(SHAPE))
 
         # Now, link the nodes according to the desired graph.
         if nbr_nodes:
@@ -376,7 +381,6 @@ CREATE_RANDOM_LINK = 'Create random link'
 DELETE_SHORTEST_PATH_LINK = 'Delete a shortest-path link'
 
 LAYOUT = 'layout'
-CIRCLE = 'circle'
 FORCE_DIRECTED = 'force-directed'
 CLEAR = 'clear'
 
@@ -386,7 +390,6 @@ PREF_ATTACHMENT = 'pref attachment'
 RANDOM = 'random'
 RING = 'ring'
 SMALL_WORLD = 'small world'
-STAR = 'star'
 WHEEL = 'wheel'
 
 LINK_PROB = 'link_prob'
@@ -404,15 +407,13 @@ PRINT_FORCE_VALUES = 'Print force values'
 
 NBR_NODES = 'nbr_nodes'
 SHAPE = 'shape'
-NETLOGO_FIGURE = 'netlogo_figure'
-NODE = 'node'
 COLOR = 'color'
 
 tt = 'Probability that two nodes in a random graph will be linked\n' \
      'or that a link in a small world graph will be rewired'
 
 
-network_left_upper = [
+graph_left_upper = [
                     [
                      sg.Button(CREATE_RANDOM_LINK, tooltip='Create a random link', pad=((0, 10), (5, 0))),
                      sg.Col([[sg.Button(DELETE_RANDOM_LINK, tooltip='Delete a random link',
@@ -498,7 +499,7 @@ network_left_upper = [
                    ]
 
 
-network_right_upper = [
+graph_right_upper = [
                      [
                       sg.Col([
                               [sg.Button(CREATE_NODE, tooltip='Create a node'),
@@ -532,5 +533,5 @@ network_right_upper = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Graph_World, 'Force test', gui_left_upper=network_left_upper, gui_right_upper=network_right_upper,
+    PyLogo(Graph_World, 'Force test', gui_left_upper=graph_left_upper, gui_right_upper=graph_right_upper,
            agent_class=Graph_Node, clear=True, bounce=True, auto_setup=True)
