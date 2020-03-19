@@ -12,7 +12,6 @@ from core.graph_basics import Basic_Graph_Node, Basic_Graph_World
 from core.gui import (BLOCK_SPACING, CIRCLE, HOR_SEP, KNOWN_FIGURES, NETLOGO_FIGURE, SCREEN_PIXEL_HEIGHT,
                       SCREEN_PIXEL_WIDTH, STAR)
 from core.link import Link, link_exists
-# noinspection PyUnresolvedReferences
 from core.pairs import Pixel_xy, Velocity, center_pixel
 from core.sim_engine import SimEngine
 from core.utils import normalize_dxdy
