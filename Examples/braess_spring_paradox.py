@@ -274,29 +274,30 @@ braess_left_upper = [
                      [sg.Text('Two (green) springs are connected by a (white) "cord." (Note that cords\n'
                               'maintain a constant length and simply provide stability for the springs.)\n\n'
                               
-                              "Click 'go' to allow the weight to pull on the springs.\n\n"
+                              "Click 'go' to allow the (plum-colored) weight to pull on the springs.\n\n"
                               
                               "When a weight pulls on a spring, the spring extends in proportion to the weight.\n"
-                              'In this case the weight is 100. When the springs reach equilibrium, each spring\n'
-                              'will have grown from 100 units to 200 units.\n\n'
+                              'In this case the weight is 100 units. When the springs reach equilibrium, each(!)\n'
+                              'spring will have grown from 100 units to 200 units.\n\n'
                               
-                              "Now click 'Cut cord.' This converts the system from two springs in series to two \n"
-                              'springs in parallel. The weight has been allowed to drop by 25 units before being\n'
+                              "Now click 'Cut cord.' The weight is allowed to drop by 25 units before being\n"
                               'caught by two additional cords (of length 275). (The cut cord is not shown.)\n\n'
                               
-                              "Click 'go' again to let the system reach a new equilibrium.\n\n"
+                              'More significantly, cutting the cord converts the system from two springs in\n'
+                              'series to two springs in parallel.\n\n'
                               
-                              'That the weight hangs lower (500) when the springs are in series than when\n'
-                              'they are in parallel (475) is sometimes considered paradoxical.\n\n'
+                              "When you click 'go' to let the system reach a new equilibrium, the weight rises!\n\n"
                               
-                              'The simple explanation is that when in series, each spring supports the full\n'
-                              'weight of 100. But when in parallel, each spring supports half the weight. So\n'
-                              'each spring is now of length 150.\n\n'
+                              'Why?\n\n'
+                              
+                              'In series, each(!) spring supports the full 100 units and stretches to 200 units.\n'
+                              '(Can you explain why?) In parallel, each spring supports half the weight (50 units).\n'
+                              'So each spring stretches to 150 units.\n\n'
                               
                               'For a physical demo, see https://youtu.be/ekd2MeDBV8s.\n\n'
                               
-                              'Cutting the cord is equivalent to removing the extra road in the road paradox.\n'
-                              'It forces the weight, i.e., the traffic, to be split between the two sides.',
+                              'Cutting the cord is equivalent to removing(!) the extra road in the Braess road\n'
+                              'paradox. It splits the weight, i.e., the traffic, between the two sides.',
                               pad=(None, (0, 10)))],
     
                      [sg.Button(Braess_World.CUT_CORD)]
