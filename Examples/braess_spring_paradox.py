@@ -239,16 +239,21 @@ import PySimpleGUI as sg
 The following appears at the top-left of the window. There is only one model-specific gui widget.
 """
 braess_left_upper = [[sg.Button('Cut string')],
-                     [sg.Text("Click 'go' to allow the weight to pull on the (green) \n"
-                              "springs. When the springs reach equilibrium, click \n"
-                              "'Cut string' to convert the system from two springs \n"
-                              'in series of two springs in parallel--each side shares \n'
-                              "half the load. Click 'go' again to let the let the \n"
-                              'system reach a new equilibrium.\n\n'
-                              'That the series system hangs lower than the parallel\n'
-                              'system is sometimes considered paradoxical.\n\n'
-                              'Note that the white "strings" retain their length\n'
-                              'and simply provide stability for the strings.')]
+                     [sg.Text("\nClick 'go' to allow the weight to pull on the (green) springs.\n"
+                              'The two springs are connected by a (white) string.\n\n'
+                              "When the springs reach equilibrium, click 'Cut string' to \n"
+                              "convert the system from two springs in series to two \n"
+                              'springs in paralle. \n\n'
+                              "Click 'go' again to let the system reach a new equilibrium.\n\n"
+                              'That the weight hangs lower in the series system\n'
+                              'than in the parallel system is sometimes considered\n'
+                              'paradoxical.\n\n'
+                              'The simple explanation is that when in series, the\n'
+                              'two springs each support the full weight. But when in\n'
+                              'parallel, each spring supports half the weight.\n\n'
+                              'Note that the white "strings" retain a constant length\n'
+                              'and simply provide stability for the springs.\n\n'
+                              'For a physical demo, see https://youtu.be/ekd2MeDBV8s.\n')]
                      ]
 
 
