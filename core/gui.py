@@ -25,13 +25,21 @@ PATCH_SIZE = 11
 PATCH_ROWS = 51
 PATCH_COLS = 51
 
+CIRCLE = 'circle'
+NETLOGO_FIGURE = 'netlogo_figure'
+NODE = 'node'
+SQUARE = 'square'
+STAR = 'star'
 
 # Since it's used as a default value, can't be a list. A tuple works just as well.
-SHAPES = {'netlogo_figure': ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
-          'square': ((1, 1), (1, 0), (0, 0), (0, 1)),
-          'star': ((1, 1), (0, 0), (0.5, 0.5), (0, 1), (1, 0), (0.5, 0.5), (0, 0.5), (1, 0.5), (0.5, 0.5),
+SHAPES = {NETLOGO_FIGURE: ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
+          SQUARE: ((1, 1), (1, 0), (0, 0), (0, 1)),
+          STAR: ((1, 1), (0, 0), (0.5, 0.5), (0, 1), (1, 0), (0.5, 0.5), (0, 0.5), (1, 0.5), (0.5, 0.5),
                    (0.5, 0), (0.5, 1), (0.5, 0.5)),
           }
+
+
+KNOWN_FIGURES = sorted(list(SHAPES.keys()) + [CIRCLE, NODE])
 
 
 def polygon(sides):
@@ -43,9 +51,6 @@ def polygon(sides):
         points.append(xy)
     # print(sides, points)
     return points
-
-
-KNOWN_FIGURES = sorted(list(SHAPES.keys()) + ['circle', 'node'])
 
 
 def BLOCK_SPACING():
