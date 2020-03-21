@@ -23,19 +23,17 @@ class Braess_Link(Link):
 
     def __init__(self, node_1, node_2, **kwargs):
         super().__init__(node_1, node_2, **kwargs)
-        (self.node_1, self.node_2) = (self.agent_1, self.agent_2)
         # This is the resting length. All springs have this as their default length.
-        self.length = Braess_World.dist_unit
-        if not (isinstance(self, Braess_Bar) or isinstance(self, Braess_String)):
-            self.node_2.move_to_xy(Pixel_xy((self.node_2.x, self.node_1.y + self.length)))
+        self.resting_length = Braess_World.dist_unit
+        if not (isinstance(self, Braess_Bar) or isinstance(self, Braess_Cord)):
+            self.node_2.move_to_xy(Pixel_xy((self.node_2.x, self.node_1.y + self.resting_length)))
         self.color = Color('green')
         self.width = 2
-        # self.node_1.label = str(int(self.node_1.distance_to(self.node_2)))
 
     # ########################################################################################################
 
-    # This is a strange andometimes convenient Python feature. The following define node_1 and node_2 as
-    # getters and setters for agent_1 and agent_2.
+    # This is a strange and sometimes convenient Python feature. The following define node_1 and node_2 as
+    # getters and setters for node_1 and node_2. When used parentheses are not needed.
     @property
     def node_1(self) -> Agent:
         return self.agent_1
@@ -71,12 +69,12 @@ class Braess_Link(Link):
 
     @property
     def label(self):
+        """ label is also defined as a getter. No parentheses needed.) """
         return str(int(self.node_1.distance_to(self.node_2)))
 
     def proper_length(self):
-        divisor = len(Braess_World.weight_node.lnk_nbrs())
-        prpr_len = self.length + Braess_World.mass() / divisor
-        return prpr_len
+        """ A spring should be as long as its resting length plus the weight it is supporting. """
+        return self.resting_length + Braess_World.mass()
 
 
 class Braess_Bar(Braess_Link):
@@ -86,7 +84,7 @@ class Braess_Bar(Braess_Link):
 
     def __init__(self, node_1, node_2, **kwargs):
         super().__init__(node_1, node_2, **kwargs)
-        self.length = Braess_World.dist_unit/2
+        self.resting_length = Braess_World.dist_unit/2
         self.color = Color('violet')
 
     def adjust_nodes(self):
@@ -100,19 +98,19 @@ class Braess_Bar(Braess_Link):
 
 
 
-class Braess_String(Braess_Link):
+class Braess_Cord(Braess_Link):
     """
-    A Braess_String is a rigid vertical link. It retains its length whenever one of its ends is moved.
+    A Braess_Cord is a rigid vertical link. It retains its length whenever one of its ends is moved.
     """
 
     def __init__(self, node_1, node_2, **kwargs):
         super().__init__(node_1, node_2, **kwargs)
-        self.length = self.node_1.distance_to(self.node_2)
+        self.resting_length = self.node_1.distance_to(self.node_2)
         self.color = Color('white')
         self.width = 1
 
     def proper_length(self):
-        return self.length
+        return self.resting_length
 
 
 class Braess_Node(Graph_Node):
@@ -128,22 +126,22 @@ class Braess_Node(Graph_Node):
 
 class Braess_World(World):
 
-    dist_unit = 100
+    CUT_CORD = 'Cut cord'
 
-    # weight is the weight object hanging from the springs
-    weight_node = None
+    cord_slack = 25
+
+    dist_unit = 100
 
     # The system is in either of two states: series (1) or parallel (2)
     state = None
 
     top = 20
 
-    slack = 25
+    # the weight_node is the weight hanging from the springs.
+    weight_node = None
 
-    CUT_STRING = 'Cut cord'
-
-    def __init__(self, patch_class, agent_class):
-        super().__init__(patch_class, agent_class)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.x = int(SCREEN_PIXEL_WIDTH()/2)
         self.x_offset = 20
 
@@ -152,7 +150,7 @@ class Braess_World(World):
         This is called when a GUI widget is changed and the change isn't handled by the system.
         The key of the widget that changed is in event.
         """
-        if event == Braess_World.CUT_STRING:
+        if event == Braess_World.CUT_CORD:
             self.setup_2()
 
     @staticmethod
@@ -161,7 +159,7 @@ class Braess_World(World):
         This is the value by which the weight_node pulls down on the springs.
         In state 1 (series) each node is pulled by the full weight, which is equal to the dist_unit.
         We define the weight in terms of the dist_unit because springs expand linearly with the weight
-        pulling on them.
+        pulling on them. In state 2 each node is pulled down by half the weight.
         """
         return Braess_World.dist_unit / Braess_World.state
 
@@ -179,7 +177,7 @@ class Braess_World(World):
         self.bottom_spring_node_1 = Braess_Node(Pixel_xy( (self.x,
                                                            self.top_spring_node_2.y +
                                                            Braess_World.dist_unit/2) ) )
-        self.cord_1 = Braess_String(self.top_spring_node_2, self.bottom_spring_node_1)
+        self.cord_1 = Braess_Cord(self.top_spring_node_2, self.bottom_spring_node_1)
 
         bar_y = self.bottom_spring_node_1.y + Braess_World.dist_unit
 
@@ -191,14 +189,14 @@ class Braess_World(World):
                                                      shape_name=CIRCLE)
         Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
 
-        self.weight_cord = Braess_String(self.bar_node_center, Braess_World.weight_node)
+        self.weight_cord = Braess_Cord(self.bar_node_center, Braess_World.weight_node)
 
         # These are the links whose lengths are adjusted as the weight_node pulls on them.
         self.adjustable_links = [self.top_spring, self.cord_1, self.bottom_spring, self.weight_cord]
 
         Braess_Link.some_link_changed = True
         Braess_World.state = 1
-        SimEngine.gui_set(Braess_World.CUT_STRING, enabled=False)
+        SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
 
     # noinspection PyAttributeOutsideInit
     def setup_2(self):
@@ -206,49 +204,49 @@ class Braess_World(World):
         Set up for state 2. State 2 reuses and in some cases repurposes the elements of state 1.
         It also creates a new Node and a new String.
         """
-
-        # Move the stop spring to the right by x_offset
+        # Move the top spring to the right by x_offset
         self.top_spring_node_1.move_by_dxdy(Velocity((self.x_offset, 0)))
         self.top_spring_node_2.move_by_dxdy(Velocity((self.x_offset, 0)))
 
-        self.bar_node_center.move_by_dxdy(Velocity((0, Braess_World.slack)))
-        bar_y = self.bar_node_center.y
-        Braess_World.weight_node.move_by_dxdy(Velocity((0, Braess_World.slack)))
+        self.bar_node_center.move_by_dxdy(Velocity((0, Braess_World.cord_slack)))
+        Braess_World.weight_node.move_by_dxdy(Velocity((0, Braess_World.cord_slack)))
 
+        # Construct the bar.
+        bar_y = self.bar_node_center.y
         self.bar_node_left = Braess_Node(Pixel_xy( (self.x - self.x_offset, bar_y) ) )
         self.bar_node_right = Braess_Node(Pixel_xy( (self.x + self.x_offset, bar_y) ) )
 
         self.bar_left = Braess_Bar(self.bar_node_center, self.bar_node_left)
         self.bar_right = Braess_Bar(self.bar_node_center, self.bar_node_right)
 
-        # Change cord_1 to link to the node at the right of the bar rather than the center
+        # Change cord_1 to link to the node at the right of the bar rather than the center.
         self.cord_1.node_2 = self.bar_node_right
-        # Redefine its length as its current length
-        self.cord_1.length = self.cord_1.node_1.distance_to(self.cord_1.node_2)
-        # self.cord_1.node_1.label = str(int(self.cord_1.node_1.distance_to(self.cord_1.node_2)))
+        # Redefine its resting length as its current length.
+        self.cord_1.resting_length = self.cord_1.node_1.distance_to(self.cord_1.node_2)
 
         # The left cord is a new element in state 2. It consists of a new Node and a new String.
         self.top_left_cord_node = Braess_Node(Pixel_xy((self.x - self.x_offset, Braess_World.top)), pinned=True)
-        self.bottom_spring_node_1.move_by_dxdy(Velocity((- self.x_offset, Braess_World.slack)))
-        self.left_cord = Braess_String(self.top_left_cord_node, self.bottom_spring_node_1)
+        self.bottom_spring_node_1.move_by_dxdy(Velocity((- self.x_offset, Braess_World.cord_slack)))
+        self.left_cord = Braess_Cord(self.top_left_cord_node, self.bottom_spring_node_1)
 
         # Add the new cord to the adjustable links.
         self.adjustable_links.insert(2, self.left_cord)
         self.adjustable_links.extend([self.bar_right, self.bar_left])
 
-        # Move the bottom of spring 2 to the left end of the bar.
-        self.bottom_spring.node_2 = self.bar_node_left
-
-        # Exchange agent_1 and agent_2 in the two bars. By convention agent_1 position determines agent_2's position.
+        # Exchange node_1 and node_2 in the two bars. By convention
+        # the position of node_1 determines node_2's position.
         (self.bar_right.node_1, self.bar_right.node_2) = (self.bar_right.node_2, self.bar_right.node_1)
         (self.bar_left.node_1, self.bar_left.node_2) = (self.bar_left.node_2, self.bar_left.node_1)
+
+        # Move the bottom of spring 2 to the left end of the bar.
+        self.bottom_spring.node_2 = self.bar_node_left
 
         Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
         # self.bar_node_center.label = str(int(self.weight_cord.length))
 
         Braess_Link.some_link_changed = True
         Braess_World.state = 2
-        SimEngine.gui_set(Braess_World.CUT_STRING, enabled=False)
+        SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
 
     def step(self):
         if Braess_Link.some_link_changed:
@@ -261,7 +259,7 @@ class Braess_World(World):
         else:
             # If no adjustable link changed on the previous step, we're done. "click" the STOP button.
             gui.WINDOW['GoStop'].click()
-            SimEngine.gui_set(Braess_World.CUT_STRING, enabled=(self.state == 1))
+            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(self.state == 1))
 
         Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
 
@@ -288,16 +286,20 @@ braess_left_upper = [
                               
                               "Click 'go' again to let the system reach a new equilibrium.\n\n"
                               
-                              'That the weight hangs lower (500) when the springs are in series than when they\n'
-                              'are in parallel (475) is sometimes considered paradoxical.\n\n'
+                              'That the weight hangs lower (500) when the springs are in series than when\n'
+                              'they are in parallel (475) is sometimes considered paradoxical.\n\n'
                               
                               'The simple explanation is that when in series, each spring supports the full\n'
                               'weight of 100. But when in parallel, each spring supports half the weight. So\n'
                               'each spring is now of length 150.\n\n'
                               
-                              'For a physical demo, see https://youtu.be/ekd2MeDBV8s.',
-                              pad=(None, (0, 20)))],
-                     [sg.Button(Braess_World.CUT_STRING)]
+                              'For a physical demo, see https://youtu.be/ekd2MeDBV8s.\n\n'
+                              
+                              'Cutting the cord is equivalent to removing the extra road in the road paradox.\n'
+                              'It forces the weight, i.e., the traffic, to be split between the two sides.',
+                              pad=(None, (0, 10)))],
+    
+                     [sg.Button(Braess_World.CUT_CORD)]
                      ]
 
 
