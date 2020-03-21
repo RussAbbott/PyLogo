@@ -11,43 +11,70 @@ import core.utils as utils
 class XY(tuple):
 
     def __add__(self, xy: XY):
-        xx = self[0] + xy[0]
-        yy = self[1] + xy[1]
-        return self.restore_type(xx, yy)
+        sum = (self.x + xy.x, self.y + xy.y)
+        return self.restore_type(sum)
+        # xx = self[0] + xy[0]
+        # yy = self[1] + xy[1]
+        # return self.restore_type(xx, yy)
 
     def __truediv__(self, scalar):
-        return self.restore_type(float('inf'), float('inf')) if scalar == 0 else self * (1/scalar)
+        quot = (float('inf'), float('inf')) if scalar == 0 else self * (1/scalar)
+        return self.restore_type(quot)
+        # return self.restore_type((float('inf'), float('inf'))) if scalar == 0 else self * (1/scalar)
+        # return self.restore_type(float('inf'), float('inf')) if scalar == 0 else self * (1/scalar)
 
 
     def __mul__(self, scalar):
-        xx = self.x * scalar
-        yy = self.y * scalar
-        return self.restore_type(xx, yy)
+        prod = (self.x * scalar, self.y * scalar)
+        # val1 = self.restore_type(prod)
+        return self.restore_type(prod)
+
+        # xx = self.x * scalar
+        # yy = self.y * scalar
+        # val2 =  self.restore_type(xx, yy)
+        # if val1 != val2:
+        #     print(val1, val2)
+        # return val2
 
     def __str__(self):
         clas_string = utils.extract_class_name(self.__class__)
         return f'{clas_string}{(self.x, self.y)}'
 
     def __sub__(self, xy: XY):
-        xx = self[0] - xy[0]
-        yy = self[1] - xy[1]
-        return self.restore_type(xx, yy)
+        diff = (self.x - xy.x, self.y - xy.y)
+        return self.restore_type(diff)
+
+        # xx = self[0] - xy[0]
+        # yy = self[1] - xy[1]
+        # return self.restore_type(xx, yy)
 
     def as_int(self):
-        return self.restore_type(int(self.x), int(self.y))
+        int_tuple = (int(self.x), int(self.y))
+        return self.restore_type(int_tuple)
+        # return self.restore_type((int(self.x), int(self.y)))
+        # return self.restore_type(int(self.x), int(self.y))
 
-    def restore_type(self, xx, yy):
+    # def restore_type(self, xx, yy):
+    #     cls = type(self)
+    #     return cls((xx, yy))
+    #
+    def restore_type(self, tuple):
         cls = type(self)
-        return cls((xx, yy))
+        return cls(tuple)
 
     def round(self, prec=0):
-        clas = type(self)
-        return clas((round(self.x, prec), round(self.y, prec)))
+        rounded_tuple = (round(self.x, prec), round(self.y, prec))
+        # return self.restore_type(rounded)
+        return self.restore_type( (round(self.x, prec), round(self.y, prec)) )
+        # clas = type(self)
+        # return clas((round(self.x, prec), round(self.y, prec)))
 
     def wrap3(self, x_limit, y_limit):
-        xx = self.x % x_limit
-        yy = self.y % y_limit
-        return self.restore_type(xx, yy)
+        wrapped_tuple = (self.x % x_limit, self.y % y_limit)
+        return self.restore_type(wrapped_tuple)
+        # xx = self.x % x_limit
+        # yy = self.y % y_limit
+        # return self.restore_type((xx, yy))
 
     @property
     def x(self):

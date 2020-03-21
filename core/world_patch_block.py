@@ -29,7 +29,7 @@ class Block(Sprite):
 
     def __init__(self, center_pixel: Pixel_xy, color=Color('black')):
         super().__init__()
-        self.center_pixel = center_pixel
+        self.center_pixel: Pixel_xy = center_pixel
         self.rect = Rect((0, 0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         # noinspection PyTypeChecker
         sum_pixel: Pixel_xy = center_pixel + Pixel_xy((1, 1))

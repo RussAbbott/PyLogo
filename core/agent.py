@@ -170,6 +170,9 @@ class Agent(Block):
         self.set_velocity(velocity)
         self.move_by_velocity()
 
+    # def get_center_pixel(self_xy) -> Pixel_xy:
+    #     return self.rect.center - Agent.half_patch_pixel).round()
+    #
     def heading_toward(self, target):
         """ The heading required to face the target """
         from_pixel = self.center_pixel
@@ -183,7 +186,8 @@ class Agent(Block):
         """
         Move to self.center_pixel + (dx, dy)
         """
-        new_center_pixel_unwrapped = self.center_pixel + dxdy
+        # noinspection PyTypeChecker
+        new_center_pixel_unwrapped: Pixel_xy = self.center_pixel + dxdy
         # Wrap around the grid of pixels.
         new_center_pixel_wrapped = new_center_pixel_unwrapped.wrap()
         self.move_to_xy(new_center_pixel_wrapped)
@@ -238,6 +242,16 @@ class Agent(Block):
 
     def undirected_links(self):
         return [lnk for lnk in self.all_links() if not lnk.directed]
+
+    @property
+    def x(self):
+        return self.center_pixel.x
+
+    @property
+    def y(self):
+        return self.center_pixel.y
+
+
 
 
 class Turtle(Agent):
