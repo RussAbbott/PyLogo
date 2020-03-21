@@ -3,6 +3,7 @@ from math import copysign
 from pygame.color import Color
 
 import core.gui as gui
+from core.agent import Agent
 from core.graph_basics import Basic_Graph_Node, Basic_Graph_World
 from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH
 from core.link import Link
@@ -27,13 +28,14 @@ class Braess_Link(Link):
             self.node_2.move_to_xy(Pixel_xy((self.node_2.x, self.node_1.y + self.length)))
         self.color = Color('green')
         self.width = 2
+        self.node_1.label = str(int(self.node_1.distance_to(self.node_2)))
 
     # ########################################################################################################
 
     # This is a strange andometimes convenient Python feature. The following define node_1 and node_2 as
     # getters and setters for agent_1 and agent_2.
     @property
-    def node_1(self):
+    def node_1(self) -> Agent:
         return self.agent_1
 
     @node_1.setter
@@ -41,7 +43,7 @@ class Braess_Link(Link):
         self.agent_1 = val
 
     @property
-    def node_2(self):
+    def node_2(self) -> Agent:
         return self.agent_2
 
     @node_2.setter
@@ -63,6 +65,7 @@ class Braess_Link(Link):
             # Note that x and y have been defined to be getters for the (x, y) center pixels.
             new_center_pixel = Pixel_xy((self.node_2.x, self.node_2.y + adjusted_discrepancy))
             self.node_2.move_to_xy(new_center_pixel)
+            self.node_1.label = str(int(self.node_1.distance_to(self.node_2)))
 
     def proper_length(self):
         divisor = len(Braess_World.weight.lnk_nbrs())
@@ -175,6 +178,7 @@ class Braess_World(Basic_Graph_World):
 
         Braess_World.weight = Braess_Node(Pixel_xy( (self.x, bar_y + Braess_World.dist_unit/2)),
                                                      shape_name=CIRCLE)
+        Braess_World.weight.label = str(Braess_World.weight.y - 20)
 
         self.weight_string = Braess_String(self.bar_node_center, Braess_World.weight)
 
@@ -196,14 +200,22 @@ class Braess_World(Basic_Graph_World):
         self.top_spring_node_1.move_by_dxdy(Velocity((self.x_offset, 0)))
         self.top_spring_node_2.move_by_dxdy(Velocity((self.x_offset, 0)))
 
-        # Change string_1 to link to the node as the right of the bar rather than the center
-        self.string_1.agent_2 = self.bar_node_right
+        self.bar_node_left.move_by_dxdy(Velocity((0, 25)))
+        self.bar_node_center.move_by_dxdy(Velocity((0, 25)))
+        self.bar_node_right.move_by_dxdy(Velocity((0, 25)))
+        Braess_World.weight.move_by_dxdy(Velocity((0, 25)))
+
+        # Change string_1 to link to the node at the right of the bar rather than the center
+        self.string_1.node_2 = self.bar_node_right
+        # self.string_1.node_1.move_by_dxdy(Velocity((0, 10)))
         # Redefine its length as its current length
         self.string_1.length = self.string_1.node_1.distance_to(self.string_1.node_2)
+        self.string_1.node_1.label = str(int(self.string_1.node_1.distance_to(self.string_1.node_2)))
+
 
         # The left string is a new element in state 2. It consists of a new Node and a new String.
         self.top_left_string_node = Braess_Node(Pixel_xy((self.x - self.x_offset, 20)), pinned=True)
-        self.bottom_spring_node_1.move_by_dxdy(Velocity((- self.x_offset, 0)))
+        self.bottom_spring_node_1.move_by_dxdy(Velocity((- self.x_offset, 25)))
         self.left_string = Braess_String(self.top_left_string_node, self.bottom_spring_node_1)
 
         # Add the new string to the adjustable links.
@@ -215,6 +227,8 @@ class Braess_World(Basic_Graph_World):
         # Invert agent_1 and agent_2 in the two bars. By convention agent_1 position determines agent_2's position.
         (self.bar_right.agent_1, self.bar_right.agent_2) = (self.bar_right.agent_2, self.bar_right.agent_1)
         (self.bar_left.agent_1, self.bar_left.agent_2) = (self.bar_left.agent_2, self.bar_left.agent_1)
+
+        Braess_World.weight.label = str(Braess_World.weight.y - 20)
 
         Braess_Link.some_link_changed = True
         Braess_World.state = 2
@@ -230,6 +244,8 @@ class Braess_World(Basic_Graph_World):
         else:
             # If no adjustable link changed on the previous step, we're done. "click" the STOP button.
             gui.WINDOW['GoStop'].click()
+
+        Braess_World.weight.label = str(Braess_World.weight.y - 20)
 
 
 # ############################################## Define GUI ############################################## #
