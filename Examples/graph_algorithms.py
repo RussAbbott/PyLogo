@@ -39,7 +39,7 @@ class Graph_Algorithms_World(Graph_World):
 
         Overrides this function from graph_framework.
         """
-        print("\n\nYour code goes here.")
+        print("\n\nlink_nodes_for_graph: Your code goes here.")
 
 
 if __name__ == '__main__':
