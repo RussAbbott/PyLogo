@@ -21,7 +21,7 @@ class Braess_Link(Link):
     def __init__(self, node_1, node_2, **kwargs):
         super().__init__(node_1, node_2, **kwargs)
         (self.node_1, self.node_2) = (self.agent_1, self.agent_2)
-        # This is the resting length. All standard links have this as their default length.
+        # This is the resting length. All springs have this as their default length.
         self.length = Braess_World.dist_unit
         if not (isinstance(self, Braess_Bar) or isinstance(self, Braess_String)):
             self.node_2.move_to_xy(Pixel_xy((self.node_2.x, self.node_1.y + self.length)))
@@ -119,7 +119,7 @@ class Braess_World(Basic_Graph_World):
     # The weight is the weight hanging from the springs
     weight = None
 
-    # The system is in either of two states: series or parallel
+    # The system is in either of two states: series (1) or parallel (2)
     state = None
 
     def __init__(self, patch_class, agent_class):
@@ -132,7 +132,6 @@ class Braess_World(Basic_Graph_World):
         This is called when a GUI widget is changed and the change isn't handled by the system.
         The key of the widget that changed is in event.
         """
-        # Handle link/node creation/deletion request events.
         if event == 'Cut string':
             self.setup_2()
 
