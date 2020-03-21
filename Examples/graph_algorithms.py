@@ -1,7 +1,6 @@
 # Import the string constants you need (mainly keys) as well as classes and gui elements
-# Import the string constants you need (mainly keys) as well as classes and gui elements
-from Examples.graph_framework import (CLUSTER_COEFF, Graph_Node, Graph_World, PATH_LENGTH, TBD, graph_left_upper,
-                                      graph_right_upper)
+from core.graph_framework import (CLUSTER_COEFF, Graph_Node, Graph_World, PATH_LENGTH, TBD, graph_left_upper,
+                                  graph_right_upper)
 from core.sim_engine import SimEngine
 
 
