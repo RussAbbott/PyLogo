@@ -125,10 +125,14 @@ class Braess_World(Basic_Graph_World):
     # The system is in either of two states: series (1) or parallel (2)
     state = None
 
+    top = 20
+
+    slack = 25
+
     def __init__(self, patch_class, agent_class):
         super().__init__(patch_class, agent_class)
         self.x = int(SCREEN_PIXEL_WIDTH()/2)
-        self.x_offset = 50
+        self.x_offset = 20
 
     def handle_event(self, event):
         """
@@ -154,7 +158,7 @@ class Braess_World(Basic_Graph_World):
         Set up for state 1.
         """
 
-        self.top_spring_node_1 = Braess_Node(Pixel_xy( (self.x, 20) ), pinned=True)
+        self.top_spring_node_1 = Braess_Node(Pixel_xy( (self.x, Braess_World.top) ), pinned=True)
         self.top_spring_node_2 = Braess_Node(Pixel_xy( (self.x, self.top_spring_node_1.y +
                                                            Braess_World.dist_unit) ) )
         self.top_spring = Braess_Link(self.top_spring_node_1, self.top_spring_node_2)
@@ -170,21 +174,14 @@ class Braess_World(Basic_Graph_World):
 
         self.bottom_spring = Braess_Link(self.bottom_spring_node_1, self.bar_node_center)
 
-        self.bar_node_left = Braess_Node(Pixel_xy( (self.x - self.x_offset, bar_y) ) )
-        self.bar_node_right = Braess_Node(Pixel_xy( (self.x + self.x_offset, bar_y) ) )
-
-        self.bar_left = Braess_Bar(self.bar_node_center, self.bar_node_left)
-        self.bar_right = Braess_Bar(self.bar_node_center, self.bar_node_right)
-
         Braess_World.weight = Braess_Node(Pixel_xy( (self.x, bar_y + Braess_World.dist_unit/2)),
                                                      shape_name=CIRCLE)
-        Braess_World.weight.label = str(Braess_World.weight.y - 20)
+        Braess_World.weight.label = str(Braess_World.weight.y - Braess_World.top)
 
         self.weight_string = Braess_String(self.bar_node_center, Braess_World.weight)
 
         # These are the links whose lengths are adjusted as the weight pulls on them.
-        self.adjustable_links = [self.top_spring, self.string_1, self.bottom_spring,
-                                 self.bar_left, self.bar_right, self.weight_string]
+        self.adjustable_links = [self.top_spring, self.string_1, self.bottom_spring, self.weight_string]
 
         Braess_Link.some_link_changed = True
         Braess_World.state = 1
@@ -200,26 +197,30 @@ class Braess_World(Basic_Graph_World):
         self.top_spring_node_1.move_by_dxdy(Velocity((self.x_offset, 0)))
         self.top_spring_node_2.move_by_dxdy(Velocity((self.x_offset, 0)))
 
-        self.bar_node_left.move_by_dxdy(Velocity((0, 25)))
-        self.bar_node_center.move_by_dxdy(Velocity((0, 25)))
-        self.bar_node_right.move_by_dxdy(Velocity((0, 25)))
-        Braess_World.weight.move_by_dxdy(Velocity((0, 25)))
+        self.bar_node_center.move_by_dxdy(Velocity((0, Braess_World.slack)))
+        bar_y = self.bar_node_center.y
+        Braess_World.weight.move_by_dxdy(Velocity((0, Braess_World.slack)))
+
+        self.bar_node_left = Braess_Node(Pixel_xy( (self.x - self.x_offset, bar_y) ) )
+        self.bar_node_right = Braess_Node(Pixel_xy( (self.x + self.x_offset, bar_y) ) )
+
+        self.bar_left = Braess_Bar(self.bar_node_center, self.bar_node_left)
+        self.bar_right = Braess_Bar(self.bar_node_center, self.bar_node_right)
 
         # Change string_1 to link to the node at the right of the bar rather than the center
         self.string_1.node_2 = self.bar_node_right
-        # self.string_1.node_1.move_by_dxdy(Velocity((0, 10)))
         # Redefine its length as its current length
         self.string_1.length = self.string_1.node_1.distance_to(self.string_1.node_2)
         self.string_1.node_1.label = str(int(self.string_1.node_1.distance_to(self.string_1.node_2)))
 
-
         # The left string is a new element in state 2. It consists of a new Node and a new String.
-        self.top_left_string_node = Braess_Node(Pixel_xy((self.x - self.x_offset, 20)), pinned=True)
-        self.bottom_spring_node_1.move_by_dxdy(Velocity((- self.x_offset, 25)))
+        self.top_left_string_node = Braess_Node(Pixel_xy((self.x - self.x_offset, Braess_World.top)), pinned=True)
+        self.bottom_spring_node_1.move_by_dxdy(Velocity((- self.x_offset, Braess_World.slack)))
         self.left_string = Braess_String(self.top_left_string_node, self.bottom_spring_node_1)
 
         # Add the new string to the adjustable links.
         self.adjustable_links.insert(2, self.left_string)
+        self.adjustable_links.extend([self.bar_right, self.bar_left])
 
         # Move the bottom of spring 2 to the left end of the bar.
         self.bottom_spring.agent_2 = self.bar_node_left
@@ -228,7 +229,8 @@ class Braess_World(Basic_Graph_World):
         (self.bar_right.agent_1, self.bar_right.agent_2) = (self.bar_right.agent_2, self.bar_right.agent_1)
         (self.bar_left.agent_1, self.bar_left.agent_2) = (self.bar_left.agent_2, self.bar_left.agent_1)
 
-        Braess_World.weight.label = str(Braess_World.weight.y - 20)
+        Braess_World.weight.label = str(Braess_World.weight.y - Braess_World.top)
+        self.bar_node_center.label = str(int(self.weight_string.length))
 
         Braess_Link.some_link_changed = True
         Braess_World.state = 2
@@ -245,7 +247,7 @@ class Braess_World(Basic_Graph_World):
             # If no adjustable link changed on the previous step, we're done. "click" the STOP button.
             gui.WINDOW['GoStop'].click()
 
-        Braess_World.weight.label = str(Braess_World.weight.y - 20)
+        Braess_World.weight.label = str(Braess_World.weight.y - Braess_World.top)
 
 
 # ############################################## Define GUI ############################################## #
