@@ -45,4 +45,4 @@ if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Graph_Algorithms_World, 'Network test', gui_left_upper=graph_left_upper,
            gui_right_upper=graph_right_upper, agent_class=Graph_Node,
-           clear=True, bounce=True, auto_setup=True)
+           clear=True, bounce=True, auto_setup=False)

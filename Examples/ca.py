@@ -446,5 +446,5 @@ if __name__ == "__main__":
     # Note that we are using OnOffPatch as the Patch class. We could define CA_Patch(OnOffPatch),
     # but since it doesn't add anything to OnOffPatch, there is no need for it.
     PyLogo(CA_World, '1D CA', patch_class=OnOffPatch,
-           gui_left_upper=ca_left_upper, gui_right_upper=ca_right_upper,
+           gui_left_upper=ca_left_upper, gui_right_upper=ca_right_upper, auto_setup=False,
            fps=10, patch_size=3, board_rows_cols=(CA_World.ca_display_size, CA_World.ca_display_size))

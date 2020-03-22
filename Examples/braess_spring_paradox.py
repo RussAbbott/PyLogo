@@ -14,10 +14,11 @@ from core.world_patch_block import World
 
 class Braess_Link(Link):
     """
-    A Braess_Link links two Braess_Nodes together. This is used mainly for springs.
+    A Braess_Link links two Braess_Nodes. This is used mainly for springs.
     There are special subclasses for rigid bars and cords.
     """
 
+    # Updated during each step function call.
     # When the system reaches equilibrium, this becomes False
     some_link_changed = None
 
@@ -65,11 +66,13 @@ class Braess_Link(Link):
             # Note that x and y have been defined to be getters for the (x, y) center pixels.
             new_center_pixel = Pixel_xy((self.node_2.x, self.node_2.y + adjusted_discrepancy))
             self.node_2.move_to_xy(new_center_pixel)
-            # self.node_1.label = str(int(self.node_1.distance_to(self.node_2)))
 
     @property
     def label(self):
-        """ label is also defined as a getter. No parentheses needed.) """
+        """
+        label is defined as a getter. No parentheses needed.
+        Returns the length of the link.
+        """
         return str(int(self.node_1.distance_to(self.node_2)))
 
     def proper_length(self):
@@ -79,12 +82,11 @@ class Braess_Link(Link):
 
 class Braess_Bar(Braess_Link):
     """
-    A Braess_Bar is a rigid horizontal bar. It remains horizontal
+    A Braess_Bar is a rigid horizontal bar. It remains horizontal.
     """
 
     def __init__(self, node_1, node_2, **kwargs):
         super().__init__(node_1, node_2, **kwargs)
-        self.resting_length = Braess_World.dist_unit/2
         self.color = Color('violet')
 
     def adjust_nodes(self):
@@ -95,7 +97,6 @@ class Braess_Bar(Braess_Link):
     @property
     def label(self):
         return None
-
 
 
 class Braess_Cord(Braess_Link):
@@ -122,6 +123,12 @@ class Braess_Node(Graph_Node):
         # A Node may be pinned, i.e., fixed in placed. The top-most nodes are always pinned.
         self.pinned = pinned
         self.move_to_xy(location)
+
+    @property
+    def label(self):
+        if self is not Braess_World.weight_node:
+            return None
+        return f'weight: 100; total dist: {str(int(Braess_World.weight_node.y - Braess_World.top))}'
 
 
 class Braess_World(World):
@@ -186,8 +193,8 @@ class Braess_World(World):
         self.bottom_spring = Braess_Link(self.bottom_spring_node_1, self.bar_node_center)
 
         Braess_World.weight_node = Braess_Node(Pixel_xy( (self.x, bar_y + Braess_World.dist_unit/2)),
-                                                     shape_name=CIRCLE)
-        Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
+                                               shape_name=CIRCLE)
+        # Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
 
         self.weight_cord = Braess_Cord(self.bar_node_center, Braess_World.weight_node)
 
@@ -241,8 +248,7 @@ class Braess_World(World):
         # Move the bottom of spring 2 to the left end of the bar.
         self.bottom_spring.node_2 = self.bar_node_left
 
-        Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
-        # self.bar_node_center.label = str(int(self.weight_cord.length))
+        # Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
 
         Braess_Link.some_link_changed = True
         Braess_World.state = 2
@@ -261,7 +267,7 @@ class Braess_World(World):
             gui.WINDOW['GoStop'].click()
             SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(self.state == 1))
 
-        Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
+        # Braess_World.weight_node.label = str(Braess_World.weight_node.y - Braess_World.top)
 
 
 # ############################################## Define GUI ############################################## #
@@ -306,5 +312,4 @@ braess_left_upper = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Braess_World, "Braess' spring paradox",
-           gui_left_upper=braess_left_upper, agent_class=Braess_Node, auto_setup=True)
+    PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node)
