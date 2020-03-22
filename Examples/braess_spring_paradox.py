@@ -271,31 +271,31 @@ import PySimpleGUI as sg
 The following appears at the top-left of the window. There is only one model-specific gui widget.
 """
 braess_left_upper = [
-                     [sg.Text('Two (green) springs (unstretched length 100 units each) are connected by a \n'
-                              '(white) "cord" and then to a (plum-colored) weight. (Cords maintain a \n'
-                              'constant length and provide scaffolding for the springs.)\n\n'
+                     [sg.Text('Two (green) springs (unstretched length 100 units each) are connected\n'
+                              'by a (white) "cord" and then to a (plum-colored) weight. (Cords maintain\n'
+                              'a constant length and provide scaffolding for the springs.)\n\n'
                               
                               "Click 'go' to allow the weight to pull on the springs.\n\n"
                               
-                              "When a weight pulls on a spring, the spring extends in proportion to the weight.\n"
-                              'In this case the weight is 100 units. When the springs reach equilibrium, each(!)\n'
-                              'spring will have grown to 200 units.\n\n'
+                              "When a weight pulls on a spring, the spring extends in proportion to the\n"
+                              'weight. In this case the weight is 100 units. When the springs reach\n'
+                              'equilibrium, each(!) spring will have grown to 200 units.\n\n'
                               
                               "Now click 'Cut cord.' The weight is allowed to drop by 25 units before being\n"
                               'caught by two new cords (of length 275). (The cut cord is not shown.)\n\n'
                               
-                              'More significantly, cutting the cord converts the system from two springs in\n'
-                              'series to two springs in parallel.\n\n'
+                              'More significantly, cutting the cord converts the system from two springs\n'
+                              'in series to two springs in parallel.\n\n'
                               
                               "Click 'go' to let the system reach a new equilibrium. The weight rises! Why?\n\n"
                               
-                              'In series, each(!) spring supports 100 units (Why?) and stretches to 200 units.\n'
-                              'In parallel, each spring supports (50 units) and stretches to 150 units.\n\n'
+                              'In series, each(!) spring supports 100 units (Why?) and stretches to 200\n'
+                              'units. In parallel, each spring supports (50 units) and stretches to 150 units.\n\n'
                               
                               'For a physical demo, see https://youtu.be/ekd2MeDBV8s.\n\n'
                               
-                              'Cutting the cord is equivalent to removing(!) the extra road in the Braess road\n'
-                              'paradox. It splits the weight, i.e., the traffic, between the two sides.',
+                              'Cutting the cord is equivalent to removing(!) the extra road in the Braess\n'
+                              'road paradox. It splits the weight, i.e., the traffic, between the two sides.',
                               pad=(None, (0, 10)))],
     
                      [sg.Button(Braess_World.CUT_CORD)]
