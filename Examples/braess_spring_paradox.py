@@ -289,13 +289,15 @@ braess_left_upper = [
                               
                               "Click 'go' to let the system reach a new equilibrium. The weight rises! Why?\n\n"
                               
-                              'In series, each(!) spring supports 100 units (Why?) and stretches to 200\n'
-                              'units. In parallel, each spring supports (50 units) and stretches to 150 units.\n\n'
+                              'In series, each(!) spring bears 100 units (Why?) and stretches to 200\n'
+                              'units. In parallel, each spring bears (50 units) and stretches to 150 units.\n\n'
+                              
+                              'Click setup to restart.\n\n'
                               
                               'For a physical demo, see https://youtu.be/ekd2MeDBV8s.\n\n'
                               
-                              'Cutting the cord is equivalent to removing(!) the extra road in the Braess\n'
-                              'road paradox. It splits the weight, i.e., the traffic, between the two sides.',
+                              'Cutting the cord is equivalent to removing(!) the extra road in the Braess road \n'
+                              'paradox. It forces the weight (the "traffic") to be split between the two sides.',
                               pad=(None, (0, 10)))],
     
                      [sg.Button(Braess_World.CUT_CORD)]
