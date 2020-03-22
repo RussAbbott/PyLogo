@@ -271,28 +271,26 @@ import PySimpleGUI as sg
 The following appears at the top-left of the window. There is only one model-specific gui widget.
 """
 braess_left_upper = [
-                     [sg.Text('Two (green) springs are connected by a (white) "cord." (Note that cords\n'
-                              'maintain a constant length and simply provide stability for the springs.)\n\n'
+                     [sg.Text('Two (green) springs (unstretched length 100 units each) are connected by a \n'
+                              '(white) "cord" and then to a (plum-colored) weight. (Cords maintain a \n'
+                              'constant length and provide scaffolding for the springs.)\n\n'
                               
-                              "Click 'go' to allow the (plum-colored) weight to pull on the springs.\n\n"
+                              "Click 'go' to allow the weight to pull on the springs.\n\n"
                               
                               "When a weight pulls on a spring, the spring extends in proportion to the weight.\n"
                               'In this case the weight is 100 units. When the springs reach equilibrium, each(!)\n'
-                              'spring will have grown from 100 units to 200 units.\n\n'
+                              'spring will have grown to 200 units.\n\n'
                               
                               "Now click 'Cut cord.' The weight is allowed to drop by 25 units before being\n"
-                              'caught by two additional cords (of length 275). (The cut cord is not shown.)\n\n'
+                              'caught by two new cords (of length 275). (The cut cord is not shown.)\n\n'
                               
                               'More significantly, cutting the cord converts the system from two springs in\n'
                               'series to two springs in parallel.\n\n'
                               
-                              "When you click 'go' to let the system reach a new equilibrium, the weight rises!\n\n"
+                              "Click 'go' to let the system reach a new equilibrium. The weight rises! Why?\n\n"
                               
-                              'Why?\n\n'
-                              
-                              'In series, each(!) spring supports the full 100 units and stretches to 200 units.\n'
-                              '(Can you explain why?) In parallel, each spring supports half the weight (50 units).\n'
-                              'So each spring stretches to 150 units.\n\n'
+                              'In series, each(!) spring supports 100 units (Why?) and stretches to 200 units.\n'
+                              'In parallel, each spring supports (50 units) and stretches to 150 units.\n\n'
                               
                               'For a physical demo, see https://youtu.be/ekd2MeDBV8s.\n\n'
                               
