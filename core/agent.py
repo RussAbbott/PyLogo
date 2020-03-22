@@ -48,8 +48,6 @@ class Agent(Block):
 
     id = 0
 
-    # SQRT_2 = sqrt(2)
-
     def __init__(self, center_pixel=None, color=None, scale=1.4, shape_name='netlogo_figure'):
         # Can't make this a default value because pairs.CENTER_PIXEL() isn't defined
         # when the default values are compiled
@@ -69,7 +67,7 @@ class Agent(Block):
 
         self.id = Agent.id
         Agent.id += 1
-        self.label = None
+        # self._label = None
         World.agents.add(self)
         self.current_patch().add_agent(self)
 
@@ -182,6 +180,13 @@ class Agent(Block):
     def in_links(self):
         return [lnk for lnk in World.links if lnk.directed and lnk.agent_2 is self]
 
+    def lnk_nbrs(self):
+        """
+        Return a list of links from this node and the nodes to which they attach.
+        """
+        lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
+        return lns
+
     def move_by_dxdy(self, dxdy: Velocity):
         """
         Move to self.center_pixel + (dx, dy)
@@ -264,7 +269,7 @@ from core.sim_engine import SimEngine
 
 
 def PyLogo(world_class=World, caption=None, gui_left_upper=None, gui_right_upper=None,
-           agent_class=Agent, patch_class=Patch, auto_setup=False,
+           agent_class=Agent, patch_class=Patch, auto_setup=True,
            patch_size=11, board_rows_cols=(51, 51), clear=None, bounce=None, fps=None):
     if gui_left_upper is None:
         gui_left_upper = []
