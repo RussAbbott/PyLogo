@@ -1,5 +1,7 @@
 from math import copysign
 
+from typing import Tuple
+
 from pygame.color import Color
 
 import core.gui as gui
@@ -84,15 +86,9 @@ class Braess_Link(Link):
         """
         return str(int(self.node_1.distance_to(self.node_2)))
 
-    @staticmethod
-    def linked_nodes(LinkType, x, y_top, pinned=False):
-        node_1 = Braess_Node(Pixel_xy((x, y_top)), pinned=pinned)
-        length = Braess_World.dist_unit
-        if LinkType == Braess_Cord:
-            length /= 2
-        node_2 = Braess_Node(Pixel_xy((x, y_top + length)))
-        link_construct = LinkType(node_1, node_2)
-        return link_construct
+    def move_by_dxdy(self, dxdy: Tuple):
+        self.node_1.move_by_dxdy(Velocity(dxdy))
+        self.node_2.move_by_dxdy(Velocity(dxdy))
 
     def proper_length(self):
         """
@@ -101,6 +97,17 @@ class Braess_Link(Link):
         plus the weight it is supporting.
         """
         return self.resting_length + Braess_World.mass()
+
+    @staticmethod
+    def vertical_linked_nodes(LinkType, x, y_top, length=None):
+        node_1 = Braess_Node(Pixel_xy((x, y_top)))
+        if length is None:
+            length = Braess_World.dist_unit
+            if LinkType == Braess_Cord:
+                length /= 2
+        node_2 = Braess_Node(Pixel_xy((x, y_top + length)))
+        link_construct = LinkType(node_1, node_2)
+        return link_construct
 
 
 class Braess_Bar(Braess_Link):
@@ -138,16 +145,18 @@ class Braess_Cord(Braess_Link):
         """ Since cords don't stretch, their proper_length is their resting length. """
         return self.resting_length
 
+    def reset_length(self):
+        self.resting_length = self.node_1.distance_to(self.node_2)
+
+
 
 class Braess_Node(Graph_Node):
 
-    def __init__(self, location, pinned=False, shape_name=NODE, **kwargs):
+    def __init__(self, location, shape_name=NODE, **kwargs):
         # Add color and shape_name to the key-word arguments.
         kwargs['color'] = Color('plum4' if shape_name == CIRCLE else 'orange')
         kwargs['shape_name'] = shape_name
         super().__init__(**kwargs)
-        # A Node may be pinned, i.e., fixed in placed. The top-most nodes are pinned.
-        self.pinned = pinned
         self.move_to_xy(location)
 
     @property
@@ -201,20 +210,20 @@ class Braess_World(World):
         """
         Set up for state 1. Build the contraption piece by piece.
         """
-        self.top_spring = Braess_Link.linked_nodes(Braess_Link, self.x, Braess_World.top, pinned=True)
+        self.top_spring = Braess_Link.vertical_linked_nodes(Braess_Link, self.x, Braess_World.top)
 
         self.top_cord = self.top_spring.extend_linked_nodes(Braess_Cord)
 
         self.bottom_spring = self.top_cord.extend_linked_nodes(Braess_Link)
 
-        self.weight_cord = self.bottom_spring = self.top_cord.extend_linked_nodes(Braess_Cord)
+        self.weight_cord = self.bottom_spring.extend_linked_nodes(Braess_Cord)
 
-        # Braess_Link.linked_nodes(Braess_Cord, self.x, self.bottom_spring.node_2.y)
-        # self.agents.remove(self.weight_cord.node_1)
-        # self.weight_cord.node_1 = self.bottom_spring.node_2
+        # Make the node_2 of the weight_cord the weight.
         Braess_World.weight_node = self.weight_cord.node_2
-        self.weight_cord.node_2.shape_name = CIRCLE
-        self.weight_cord.node_2.color = Color('plum4')
+        Braess_World.weight_node.shape_name = CIRCLE
+        Braess_World.weight_node.color = Color('plum4')
+
+        #                            ## Done with building state 1. ##                            #
 
         self.adjustable_links = [self.top_spring, self.top_cord, self.bottom_spring, self.weight_cord]
 
@@ -229,38 +238,41 @@ class Braess_World(World):
         It also creates a new Node and a new String.
         """
         # Move the top spring to the right by x_offset
-        self.top_spring.node_1.move_by_dxdy(Velocity((self.x_offset, 0)))
-        self.top_spring.node_2.move_by_dxdy(Velocity((self.x_offset, 0)))
+        self.top_spring.move_by_dxdy((self.x_offset, 0))
 
-        self.bar_node_center = self.bottom_spring.node_2
-        # Move the center bar node and the weight down by the slack in the new cords.
-        self.bar_node_center.move_by_dxdy(Velocity((0, Braess_World.cord_slack)))
-        self.weight_cord.node_2.move_by_dxdy(Velocity((0, Braess_World.cord_slack)))
+        self.weight_cord.move_by_dxdy((0, Braess_World.cord_slack))
 
-        # Construct the full bar. By the convention built into Braess-Bar,
-        # the position of node_1 determines node_2's position.
-        # self.bar_node_center = self.bottom_spring.node_2
-        bar_y = self.bar_node_center.y
-        self.bar_node_left = Braess_Node(Pixel_xy( (self.x - self.x_offset, bar_y) ) )
-        self.bar_node_right = Braess_Node(Pixel_xy( (self.x + self.x_offset, bar_y) ) )
+        center_bar_node = self.bottom_spring.node_2
 
-        self.bar_right = Braess_Bar(self.bar_node_right, self.bar_node_center)
-        self.bar_left = Braess_Bar( self.bar_node_left, self.bar_node_center)
-        # Move the bottom of spring 2 from the center of the bar to its left end.
-        self.bottom_spring.node_2 = self.bar_node_left
+        # Construct the full bar.
+        # By convention, the position of node_1 determines node_2's position.
+        bar_y = center_bar_node.y
+        left_bar_node = Braess_Node(Pixel_xy( (self.x - self.x_offset, bar_y) ) )
+        right_bar_node = Braess_Node(Pixel_xy( (self.x + self.x_offset, bar_y) ) )
 
-        # Change cord_1 to link to the node at the right of the bar rather than the center.
-        self.top_cord.node_2 = self.bar_node_right
+        self.bar_right = Braess_Bar(right_bar_node, center_bar_node)
+        self.bar_left = Braess_Bar( left_bar_node, center_bar_node)
+
+        # Attach the bottom spring to its left end of the bar.
+        self.bottom_spring.node_2 = left_bar_node
+
+        # Attach the top cord to the right end of the bar rather than the center.
+        self.top_cord.node_2 = right_bar_node
+
         # Redefine its (fixed) resting length as its current length.
-        self.top_cord.resting_length = self.top_cord.node_1.distance_to(self.top_cord.node_2)
+        self.top_cord.reset_length()
 
-        # The left cord is a new element in state 2. It consists of a new Node and a new String.
-        # It is offset to the left.
-        self.top_left_cord_node = Braess_Node(Pixel_xy((self.x - self.x_offset, Braess_World.top)), pinned=True)
-        self.bottom_spring.node_1.move_by_dxdy(Velocity((- self.x_offset, Braess_World.cord_slack)))
-        self.left_cord = Braess_Cord(self.top_left_cord_node, self.bottom_spring.node_1)
+        # The left cord is a new element in state 2. It is offset to the left.
+        x_coord = self.x - self.x_offset
+        cord_length = self.bottom_spring.node_1.y + Braess_World.cord_slack - Braess_World.top
+        self.left_cord = Braess_Link.vertical_linked_nodes(Braess_Cord,
+                                                           x_coord, Braess_World.top,
+                                                           length=cord_length)
+        # Make its bottom node the top node of the bottom spring.
+        World.agents.remove(self.bottom_spring.node_1)
+        self.bottom_spring.node_1 = self.left_cord.node_2
 
-        # ## Done with the adjustments for state 2. ## #
+        #                            ## Done with the adjustments for state 2. ##                            #
 
         # Add the new cord and bar nodes to the adjustable links.
         self.adjustable_links.extend([self.left_cord, self.bar_right, self.bar_left])
