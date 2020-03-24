@@ -1,4 +1,3 @@
-from math import copysign
 
 from typing import Tuple
 
@@ -62,12 +61,8 @@ class Braess_Link(Link):
         """
         actual_length = self.node_1.distance_to(self.node_2)
         discrepancy = self.proper_length() - actual_length
-        adjusted_discrepancy = copysign(min(1, abs(discrepancy)), discrepancy)
-        if abs(adjusted_discrepancy) > 0:
-            Braess_Link.some_link_changed = True
-            # Note that x and y have been defined to be getters for center pixels (x, y).
-            new_center_pixel = Pixel_xy((self.node_2.x, self.node_2.y + adjusted_discrepancy))
-            self.node_2.move_to_xy(new_center_pixel)
+        if abs(discrepancy) > 0:
+            self.node_2.move_node(Velocity((0, discrepancy)))
 
     def extend_linked_nodes(self, LinkType):
         node_1 = self.node_2
@@ -97,6 +92,10 @@ class Braess_Link(Link):
         plus the weight it is supporting.
         """
         return self.resting_length + Braess_World.mass()
+
+    def set_target_by_dxdy(self, dxdy: Tuple):
+        for node in [self.node_1, self.node_2]:
+            node.set_target_by_dxdy(Velocity(dxdy))
 
     @staticmethod
     def vertical_linked_nodes(LinkType, x, y_top, length=None):
@@ -165,6 +164,19 @@ class Braess_Node(Graph_Node):
             return None
         return f'weight: 100; total dist: {str(int(Braess_World.weight_node.y - Braess_World.top))}'
 
+    # noinspection PyTypeChecker
+    def take_animation_step(self):
+        if not self.animation_target:
+            return
+
+        Agent.some_agent_changed = True
+        delta = self.animation_target - self.center_pixel
+        self.move_node(delta)
+
+        if abs(self.distance_to_pixel(self.animation_target)) < 0.5:
+            self.move_to_xy(self.animation_target)
+            self.animation_target = None
+
 
 class Braess_World(World):
 
@@ -186,6 +198,7 @@ class Braess_World(World):
         super().__init__(*args, **kwargs)
         self.x = int(SCREEN_PIXEL_WIDTH()/2)
         self.x_offset = 20
+        self.state_transitions = {1: 'a', 'a': 2, 2: 2}
 
     def handle_event(self, event):
         """
@@ -193,7 +206,7 @@ class Braess_World(World):
         event holds the key of the widget that changed.
         """
         if event == Braess_World.CUT_CORD:
-            self.setup_2()
+            self.setup_a()
 
     @staticmethod
     def mass():
@@ -227,72 +240,101 @@ class Braess_World(World):
 
         self.adjustable_links = [self.top_spring, self.top_cord, self.bottom_spring, self.weight_cord]
 
-        Braess_Link.some_link_changed = True
+        Agent.some_agent_changed = True
         Braess_World.state = 1
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
 
     # noinspection PyAttributeOutsideInit
-    def setup_2(self):
+    def setup_a(self):
         """
         Set up for state 2. State 2 reuses and in some cases repurposes the elements of state 1.
         It also creates a new Node and a new String.
         """
-        # Move the top spring to the right by x_offset
-        self.top_spring.move_by_dxdy((self.x_offset, 0))
 
-        self.weight_cord.move_by_dxdy((0, Braess_World.cord_slack))
+        # sep = 5
+
+        # self.top_spring.move_by_dxdy((sep, 0))
+        self.top_spring.set_target_by_dxdy((self.x_offset, 0))
+
+        self.weight_cord.set_target_by_dxdy((0, Braess_World.cord_slack))
 
         center_bar_node = self.bottom_spring.node_2
 
         # Construct the full bar.
-        # By convention, the position of node_1 determines node_2's position.
         bar_y = center_bar_node.y
-        left_bar_node = Braess_Node(Pixel_xy( (self.x - self.x_offset, bar_y) ) )
-        right_bar_node = Braess_Node(Pixel_xy( (self.x + self.x_offset, bar_y) ) )
+        left_bar_node = Braess_Node(Pixel_xy( (self.x, bar_y) ) )
+        right_bar_node = Braess_Node(Pixel_xy( (self.x, bar_y) ) )
 
-        self.bar_right = Braess_Bar(right_bar_node, center_bar_node)
-        self.bar_left = Braess_Bar( left_bar_node, center_bar_node)
+        # By convention, the position of node_1 determines node_2's position.
+        self.bar_right = Braess_Bar(center_bar_node, right_bar_node)
+        self.bar_left = Braess_Bar(center_bar_node, left_bar_node)
 
-        # Attach the bottom spring to its left end of the bar.
+        # Attach the bottom spring to the left end of the bar.
         self.bottom_spring.node_2 = left_bar_node
+
+        left_bar_node.set_target_by_dxdy(Velocity((-self.x_offset, Braess_World.cord_slack)))
+        right_bar_node.set_target_by_dxdy(Velocity((self.x_offset, Braess_World.cord_slack)))
 
         # Attach the top cord to the right end of the bar rather than the center.
         self.top_cord.node_2 = right_bar_node
 
-        # Redefine its (fixed) resting length as its current length.
-        self.top_cord.reset_length()
-
+        # # Redefine its (fixed) resting length as its current length.
+        # self.top_cord.reset_length()
+        #
         # The left cord is a new element in state 2. It is offset to the left.
-        x_coord = self.x - self.x_offset
+        x_coord = self.x   # - self.x_offset
         cord_length = self.bottom_spring.node_1.y + Braess_World.cord_slack - Braess_World.top
         self.left_cord = Braess_Link.vertical_linked_nodes(Braess_Cord,
                                                            x_coord, Braess_World.top,
                                                            length=cord_length)
+        # self.left_cord.move_by_dxdy((-sep, 0))
+        self.left_cord.set_target_by_dxdy(Velocity((-self.x_offset, 0)))
         # Make its bottom node the top node of the bottom spring.
         World.agents.remove(self.bottom_spring.node_1)
         self.bottom_spring.node_1 = self.left_cord.node_2
+        # # Redefine its (fixed) resting length as its current length.
+        # self.left_cord.reset_length()
+
 
         #                            ## Done with the adjustments for state 2. ##                            #
 
         # Add the new cord and bar nodes to the adjustable links.
         self.adjustable_links.extend([self.left_cord, self.bar_right, self.bar_left])
 
-        Braess_Link.some_link_changed = True
-        Braess_World.state = 2
+        Agent.some_agent_changed = True
+        Braess_World.state = 'a'
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
+        gui.WINDOW['GoStop'].click()
 
     def step(self):
         # If there was a change during the previous step, see if additional changes are needed.
-        if Braess_Link.some_link_changed:
-            # When a link changes length, Braess_Link.some_link_changed is set to True.
-            Braess_Link.some_link_changed = False
-            for lnk in self.adjustable_links:
-                lnk.adjust_nodes()
+        if Agent.some_agent_changed:
+            # When a link changes length, Agent.some_agent_changed is set to True.
+            Agent.some_agent_changed = False
+            if Braess_World.state == 'a':
+                visited_nodes = set()
+                for node in World.agents:
+                    if node.animation_target and node not in visited_nodes:
+                        visited_nodes.add(node)
+                        node.take_animation_step()
+            else:
+                for lnk in self.adjustable_links:
+                    lnk.adjust_nodes()
         else:
             # If no adjustable link changed on the previous step, we're done. "Click" the STOP button.
             gui.WINDOW['GoStop'].click()
+
+            if Braess_World.state == 'a':
+                # Redefine the resting length of the two main cords.
+                self.top_cord.reset_length()
+                self.left_cord.reset_length()
+                (self.bar_right.node_1, self.bar_right.node_2) = (self.bar_right.node_2, self.bar_right.node_1)
+                (self.bar_left.node_1, self.bar_left.node_2) = (self.bar_left.node_2, self.bar_left.node_1)
+
             # Enable/disable the Cut-cord button depending on whether we just finished state 1 or state 2.
-            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(self.state == 1))
+            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 1))
+            Braess_World.state = self.state_transitions[Braess_World.state]
+            Agent.some_agent_changed = True
 
 
 # ############################################## Define GUI ############################################## #
