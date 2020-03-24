@@ -164,18 +164,19 @@ class Braess_Node(Graph_Node):
             return None
         return f'weight: 100; total dist: {str(int(Braess_World.weight_node.y - Braess_World.top))}'
 
-    # noinspection PyTypeChecker
-    def take_animation_step(self):
-        if not self.animation_target:
-            return
-
-        Agent.some_agent_changed = True
-        delta = self.animation_target - self.center_pixel
-        self.move_node(delta)
-
-        if abs(self.distance_to_pixel(self.animation_target)) < 0.5:
-            self.move_to_xy(self.animation_target)
-            self.animation_target = None
+    # # noinspection PyTypeChecker
+    # def take_animation_step(self):
+    #     if not self.animation_target:
+    #         return
+    #
+    #     Agent.some_agent_changed = True
+    #     delta = self.animation_target - self.center_pixel
+    #     self.move_node(delta)
+    #
+    #     if abs(self.distance_to_pixel(self.animation_target)) < 0.5:
+    #         self.move_to_xy(self.animation_target)
+    #         self.animation_target = None
+    #
 
 
 class Braess_World(World):
@@ -251,9 +252,10 @@ class Braess_World(World):
         It also creates a new Node and a new String.
         """
 
+        step = 5
 
-        self.top_spring.move_by_dxdy((self.x_offset, 0))
-        # self.top_spring.set_target_by_dxdy((self.x_offset, 0))
+        self.top_spring.move_by_dxdy((step, 0))
+        self.top_spring.set_target_by_dxdy((self.x_offset-step, 0))
 
         self.weight_cord.set_target_by_dxdy((0, Braess_World.cord_slack))
 
@@ -271,23 +273,31 @@ class Braess_World(World):
         # Attach the bottom spring to the left end of the bar.
         self.bottom_spring.node_2 = left_bar_node
 
-        left_bar_node.set_target_by_dxdy(Velocity((-self.x_offset, Braess_World.cord_slack)))
-        right_bar_node.set_target_by_dxdy(Velocity((self.x_offset, Braess_World.cord_slack)))
+        left_bar_node.move_by_dxdy(Velocity((-step, 0)))
+        right_bar_node.move_by_dxdy(Velocity((step, 0)))
+        # center_bar_node.move_by_dxdy(Velocity((0, Braess_World.cord_slack)))
+
+        left_bar_node.set_target_by_dxdy(Velocity((-self.x_offset+step, Braess_World.cord_slack)))
+        right_bar_node.set_target_by_dxdy(Velocity((self.x_offset-step, Braess_World.cord_slack)))
+        # center_bar_node.move_by_dxdy(Velocity((0, 0)))
 
         # Attach the top cord to the right end of the bar rather than the center.
         self.top_cord.node_2 = right_bar_node
 
-        # # Redefine its (fixed) resting length as its current length.
-        # self.top_cord.reset_length()
-        #
         # The left cord is a new element in state 2. It is offset to the left.
         x_coord = self.x   # - self.x_offset
-        cord_length = self.bottom_spring.node_1.y + Braess_World.cord_slack - Braess_World.top
+        cord_length = self.bottom_spring.node_1.y - Braess_World.top # + Braess_World.cord_slack
         self.left_cord = Braess_Link.vertical_linked_nodes(Braess_Cord,
                                                            x_coord, Braess_World.top,
                                                            length=cord_length)
-        self.left_cord.move_by_dxdy((-self.x_offset, 0))
-        # self.left_cord.set_target_by_dxdy(Velocity((-self.x_offset, 0)))
+
+        self.left_cord.move_by_dxdy((-step, 0))
+        self.left_cord.node_1.set_target_by_dxdy(Velocity((-self.x_offset + step, 0)))
+        self.left_cord.node_2.set_target_by_dxdy(Velocity((-self.x_offset + step, Braess_World.cord_slack)))
+
+        self.top_cord.color = Color('gold3')
+        self.left_cord.color = Color('gold3')
+
         # Make its bottom node the top node of the bottom spring.
         World.agents.remove(self.bottom_spring.node_1)
         self.bottom_spring.node_1 = self.left_cord.node_2
@@ -327,6 +337,9 @@ class Braess_World(World):
                 # Redefine the resting length of the two main cords.
                 self.top_cord.reset_length()
                 self.left_cord.reset_length()
+                self.top_cord.color = Color('white')
+                self.left_cord.color = Color('white')
+
                 (self.bar_right.node_1, self.bar_right.node_2) = (self.bar_right.node_2, self.bar_right.node_1)
                 (self.bar_left.node_1, self.bar_left.node_2) = (self.bar_left.node_2, self.bar_left.node_1)
 
