@@ -251,10 +251,9 @@ class Braess_World(World):
         It also creates a new Node and a new String.
         """
 
-        # sep = 5
 
-        # self.top_spring.move_by_dxdy((sep, 0))
-        self.top_spring.set_target_by_dxdy((self.x_offset, 0))
+        self.top_spring.move_by_dxdy((self.x_offset, 0))
+        # self.top_spring.set_target_by_dxdy((self.x_offset, 0))
 
         self.weight_cord.set_target_by_dxdy((0, Braess_World.cord_slack))
 
@@ -287,8 +286,8 @@ class Braess_World(World):
         self.left_cord = Braess_Link.vertical_linked_nodes(Braess_Cord,
                                                            x_coord, Braess_World.top,
                                                            length=cord_length)
-        # self.left_cord.move_by_dxdy((-sep, 0))
-        self.left_cord.set_target_by_dxdy(Velocity((-self.x_offset, 0)))
+        self.left_cord.move_by_dxdy((-self.x_offset, 0))
+        # self.left_cord.set_target_by_dxdy(Velocity((-self.x_offset, 0)))
         # Make its bottom node the top node of the bottom spring.
         World.agents.remove(self.bottom_spring.node_1)
         self.bottom_spring.node_1 = self.left_cord.node_2
@@ -304,7 +303,7 @@ class Braess_World(World):
         Agent.some_agent_changed = True
         Braess_World.state = 'a'
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
-        gui.WINDOW['GoStop'].click()
+        # gui.WINDOW['GoStop'].click()
 
     def step(self):
         # If there was a change during the previous step, see if additional changes are needed.
