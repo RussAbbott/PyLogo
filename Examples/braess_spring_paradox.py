@@ -5,7 +5,7 @@ from pygame.color import Color
 
 import core.gui as gui
 from core.agent import Agent
-from core.graph_framework import Graph_Node   # , Graph_World
+from core.graph_framework import Graph_Node
 from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH
 from core.link import Link
 from core.pairs import Pixel_xy, Velocity
@@ -18,10 +18,6 @@ class Braess_Link(Link):
     A Braess_Link links two Braess_Nodes. This is used mainly for springs.
     There are special subclasses for rigid bars and cords.
     """
-
-    # Updated during each step() call.
-    # When the system reaches equilibrium, this becomes False
-    some_link_changed = None
 
     def __init__(self, *arags, **kwargs):
         super().__init__(*arags, **kwargs)
@@ -164,32 +160,19 @@ class Braess_Node(Graph_Node):
             return None
         return f'weight: 100; total dist: {str(int(Braess_World.weight_node.y - Braess_World.top))}'
 
-    # # noinspection PyTypeChecker
-    # def take_animation_step(self):
-    #     if not self.animation_target:
-    #         return
-    #
-    #     Agent.some_agent_changed = True
-    #     delta = self.animation_target - self.center_pixel
-    #     self.move_node(delta)
-    #
-    #     if abs(self.distance_to_pixel(self.animation_target)) < 0.5:
-    #         self.move_to_xy(self.animation_target)
-    #         self.animation_target = None
-    #
-
 
 class Braess_World(World):
 
-    CUT_CORD = 'Cut cord'
-
     cord_slack = 25
+
+    CUT_CORD = 'Cut cord'
 
     dist_unit = 100
 
-    # The system is in either of two states: series (1) or parallel (2)
+    # The system is in either of three states: series (1), animation (a), or parallel (2)
     state = None
 
+    # The offset from the top of the screen.
     top = 20
 
     # the weight_node is the plum-colored weight hanging at the bottom.
@@ -206,6 +189,8 @@ class Braess_World(World):
         This is called when a GUI widget is changed and the change isn't handled by the system.
         event holds the key of the widget that changed.
         """
+        # This is triggered when the user clicks 'Cut cord'.
+        # self.setup_a prepares for the animation step.
         if event == Braess_World.CUT_CORD:
             self.setup_a()
 
@@ -232,7 +217,7 @@ class Braess_World(World):
 
         self.weight_cord = self.bottom_spring.extend_linked_nodes(Braess_Cord)
 
-        # Make the node_2 of the weight_cord the weight.
+        # Make node_2 of the weight_cord the weight.
         Braess_World.weight_node = self.weight_cord.node_2
         Braess_World.weight_node.shape_name = CIRCLE
         Braess_World.weight_node.color = Color('plum4')
@@ -248,11 +233,11 @@ class Braess_World(World):
     # noinspection PyAttributeOutsideInit
     def setup_a(self):
         """
-        Set up for state 2. State 2 reuses and in some cases repurposes the elements of state 1.
-        It also creates a new Node and a new String.
+        Set up for the cut-cord animation.
         """
 
-        step = 5
+        # Move out by a small amount so that the two lines can be seen.
+        step = 0
 
         self.top_spring.move_by_dxdy((step, 0))
         self.top_spring.set_target_by_dxdy((self.x_offset-step, 0))
@@ -275,35 +260,31 @@ class Braess_World(World):
 
         left_bar_node.move_by_dxdy(Velocity((-step, 0)))
         right_bar_node.move_by_dxdy(Velocity((step, 0)))
-        # center_bar_node.move_by_dxdy(Velocity((0, Braess_World.cord_slack)))
 
         left_bar_node.set_target_by_dxdy(Velocity((-self.x_offset+step, Braess_World.cord_slack)))
         right_bar_node.set_target_by_dxdy(Velocity((self.x_offset-step, Braess_World.cord_slack)))
-        # center_bar_node.move_by_dxdy(Velocity((0, 0)))
 
         # Attach the top cord to the right end of the bar rather than the center.
         self.top_cord.node_2 = right_bar_node
 
         # The left cord is a new element in state 2. It is offset to the left.
-        x_coord = self.x   # - self.x_offset
-        cord_length = self.bottom_spring.node_1.y - Braess_World.top # + Braess_World.cord_slack
+        x_coord = self.x
+        cord_length = self.bottom_spring.node_1.y - Braess_World.top
         self.left_cord = Braess_Link.vertical_linked_nodes(Braess_Cord,
                                                            x_coord, Braess_World.top,
                                                            length=cord_length)
 
+        # The left cord is offset to the left.
         self.left_cord.move_by_dxdy((-step, 0))
         self.left_cord.node_1.set_target_by_dxdy(Velocity((-self.x_offset + step, 0)))
         self.left_cord.node_2.set_target_by_dxdy(Velocity((-self.x_offset + step, Braess_World.cord_slack)))
 
-        self.top_cord.color = Color('gold3')
-        self.left_cord.color = Color('gold3')
+        self.left_cord.color = Color('yellow2')
+        self.top_cord.color = Color('yellow2')
 
-        # Make its bottom node the top node of the bottom spring.
+        # Make the left_cord's bottom node the top node of the bottom spring.
         World.agents.remove(self.bottom_spring.node_1)
         self.bottom_spring.node_1 = self.left_cord.node_2
-        # # Redefine its (fixed) resting length as its current length.
-        # self.left_cord.reset_length()
-
 
         #                            ## Done with the adjustments for state 2. ##                            #
 
@@ -313,7 +294,7 @@ class Braess_World(World):
         Agent.some_agent_changed = True
         Braess_World.state = 'a'
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
-        # gui.WINDOW['GoStop'].click()
+        gui.WINDOW['GoStop'].click()
 
     def step(self):
         # If there was a change during the previous step, see if additional changes are needed.
@@ -330,9 +311,6 @@ class Braess_World(World):
                 for lnk in self.adjustable_links:
                     lnk.adjust_nodes()
         else:
-            # If no adjustable link changed on the previous step, we're done. "Click" the STOP button.
-            gui.WINDOW['GoStop'].click()
-
             if Braess_World.state == 'a':
                 # Redefine the resting length of the two main cords.
                 self.top_cord.reset_length()
@@ -342,6 +320,10 @@ class Braess_World(World):
 
                 (self.bar_right.node_1, self.bar_right.node_2) = (self.bar_right.node_2, self.bar_right.node_1)
                 (self.bar_left.node_1, self.bar_left.node_2) = (self.bar_left.node_2, self.bar_left.node_1)
+            else:
+                # If no agent changed changed on the previous step, we're done. "Click" the STOP button.
+                # But only if not finishing the animation phase.
+                gui.WINDOW['GoStop'].click()
 
             # Enable/disable the Cut-cord button depending on whether we just finished state 1 or state 2.
             SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 1))
