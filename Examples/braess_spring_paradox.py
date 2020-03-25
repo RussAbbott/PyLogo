@@ -370,4 +370,5 @@ braess_left_upper = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node)
+    PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node,
+           fps=60)
