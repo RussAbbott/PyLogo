@@ -1,4 +1,5 @@
 
+import math
 import os
 from typing import Tuple, Union
 
@@ -47,7 +48,7 @@ def polygon(sides):
     arc = 2*math.pi/sides
     for i in range(sides):
         angle = i*arc + math.pi/4
-        xy = (XY((math.cos(angle), math.sin(angle))) + XY((0.5, 0.5))).round(2)
+        xy = ((math.cos(angle), math.sin(angle)) + (0.5, 0.5)).round(2)
         points.append(xy)
     # print(sides, points)
     return points
@@ -100,9 +101,8 @@ def gui_set(key, **kwargs):
 def set_fps(val):
     # Select the value in FPS_VALUES closest to val.
     new_val = min(FPS_VALUES, key=lambda v: abs(v - val))
-    # WINDOW['fps'].update(value=new_val)
     gui_set('fps', value=new_val)
-
+    return new_val
 
 # The WINDOW variable will be available to refer to the WINDOW object from elsewhere in the code.
 # Neither the WINDOW nor the SCREEN can be imported directly because imports occur before they are created.
@@ -126,6 +126,15 @@ def draw(agent, shape_name):
         pg.draw.circle(gui.SCREEN, agent.color, agent.rect.center, int(radius), 0)
     else:
         print(f"Don't know how to draw a {shape_name}.")
+
+
+def draw_label(label, text_center, obj_center, line_color):
+    text = gui.FONT.render(label, True, Color('black'), Color('white'))
+    # offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
+    # text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
+    gui.blit(text, text_center)
+    # line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
+    gui.draw_line(start_pixel=obj_center, end_pixel=text_center, line_color=line_color)
 
 
 def draw_line(start_pixel, end_pixel, line_color: Color = Color('white'), width=1):

@@ -69,9 +69,9 @@ class SimEngine:
             if SimEngine.event in (None, self.simple_gui.EXIT):
                 return self.simple_gui.EXIT
 
-            fps = SimEngine.values.get('fps', None)
+            fps = int(SimEngine.gui_get('fps'))
             if fps:
-                self.fps = fps
+                self.fps = gui.set_fps(fps)
 
             self.set_grab_anywhere(self.gui_get('Grab'))
 
@@ -140,7 +140,7 @@ class SimEngine:
                 auto_setup = False
                 SimEngine.gui_set(self.simple_gui.GOSTOP, disabled=False)
                 SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=False)
-                if SimEngine.gui_get('Clear?') in [True, None] :
+                if SimEngine.gui_get('Clear?') in [True, None]:
                     self.world.reset_all()
                 self.world.setup()
 
