@@ -253,16 +253,18 @@ class Agent(Block):
     def set_target_by_dxdy(self, velocity):
         self.animation_target = self.center_pixel + velocity
 
-    # # noinspection PyTypeChecker
-    # def take_animation_step(self):
-    #     if not self.animation_target:
-    #         return
-    #
-    #     self.move_to_xy(self.animation_target)
-    #     Agent.some_agent_changed = True
-    #
-    #     if abs(self.distance_to_pixel(self.animation_target)) < 0.5:
-    #         self.move_to_xy(self.animation_target)
+    # noinspection PyTypeChecker
+    def take_animation_step(self):
+        if not self.animation_target:
+            return
+
+        Agent.some_agent_changed = True
+        delta = self.animation_target - self.center_pixel
+        self.move_node(delta)
+
+        if abs(self.distance_to_pixel(self.animation_target)) < 0.5:
+            self.move_to_xy(self.animation_target)
+            self.animation_target = None
 
     def turn_left(self, delta_angles):
         self.turn_right(-delta_angles)

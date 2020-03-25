@@ -80,7 +80,6 @@ class SimEngine:
 
             if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
-                # gui.WINDOW[self.simple_gui.GO_ONCE].update(disabled=False)
                 SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=False)
                 break
 
