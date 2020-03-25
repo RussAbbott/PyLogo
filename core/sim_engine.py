@@ -69,7 +69,7 @@ class SimEngine:
             if SimEngine.event in (None, self.simple_gui.EXIT):
                 return self.simple_gui.EXIT
 
-            fps = int(SimEngine.gui_get('fps'))
+            fps = int(SimEngine.gui_get(self.simple_gui.FPS))
             if fps:
                 self.fps = gui.set_fps(fps)
 
@@ -80,12 +80,12 @@ class SimEngine:
 
             if SimEngine.event == self.simple_gui.GOSTOP:
                 # Enable the GO_ONCE button
-                SimEngine.gui_set(self.simple_gui.GO_ONCE, disabled=False)
+                SimEngine.gui_set(self.simple_gui.GO_ONCE, enabled=True)
                 break
 
             elif self.world._done():
                 # gui.WINDOW['GoStop'].update(disabled=True)
-                SimEngine.gui_set('GoStop', disabled=True)
+                SimEngine.gui_set(self.simple_gui.GOSTOP, enabled=False)
                 break
 
             elif SimEngine.event == '__TIMEOUT__':

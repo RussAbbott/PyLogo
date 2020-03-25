@@ -1,5 +1,3 @@
-
-import math
 import os
 from typing import Tuple, Union
 
@@ -43,17 +41,17 @@ SHAPES = {NETLOGO_FIGURE: ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
 KNOWN_FIGURES = sorted(list(SHAPES.keys()) + [CIRCLE, NODE])
 
 
-def polygon(sides):
-    points = []
-    arc = 2*math.pi/sides
-    for i in range(sides):
-        angle = i*arc + math.pi/4
-        xy = ((math.cos(angle), math.sin(angle)) + (0.5, 0.5)).round(2)
-        points.append(xy)
-    # print(sides, points)
-    return points
-
-
+# def polygon(sides):
+#     points = []
+#     arc = 2*math.pi/sides
+#     for i in range(sides):
+#         angle = i*arc + math.pi/4
+#         xy = ((math.cos(angle), math.sin(angle)) + (0.5, 0.5)).round(2)
+#         points.append(xy)
+#     # print(sides, points)
+#     return points
+#
+#
 def BLOCK_SPACING():
     return PATCH_SIZE + 1
 
@@ -104,6 +102,7 @@ def set_fps(val):
     gui_set('fps', value=new_val)
     return new_val
 
+
 # The WINDOW variable will be available to refer to the WINDOW object from elsewhere in the code.
 # Neither the WINDOW nor the SCREEN can be imported directly because imports occur before they are created.
 WINDOW: sg.PySimpleGUI.Window
@@ -151,6 +150,7 @@ class SimpleGUI:
         gui.PATCH_COLS = board_rows_cols[1] if board_rows_cols[1] % 2 == 1 else board_rows_cols[1] + 1
 
         self.EXIT = 'Exit'
+        self.FPS = 'fps'
         self.GO = 'go'
         self.GO_ONCE = 'go once'
         self.GOSTOP = 'GoStop'
@@ -197,10 +197,10 @@ class SimpleGUI:
 
         fps_combo_line = ''
         if fps:
-            fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', pad=((0, 10), (10, 0))),
+            fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', pad=((0, 10), (17, 0))),
                               sg.Combo(key='fps', values=FPS_VALUES,
                                        background_color='limegreen', default_value=fps,
-                                       tooltip='The maximum frames/second.', pad=((0, 0), (10, 0)))
+                                       tooltip='The maximum frames/second.', pad=((0, 0), (17, 0)))
                               ]
 
         setup_go_line = [
