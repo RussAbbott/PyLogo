@@ -169,6 +169,8 @@ class Braess_World(World):
 
     dist_unit = 100
 
+    prev_fps = 60
+
     # The system is in either of three states: series (1), animation (a), or parallel (2)
     state = None
 
@@ -237,7 +239,7 @@ class Braess_World(World):
         """
 
         # Move out by a small amount so that the two lines can be seen.
-        step = 0
+        step = 0 if not SimEngine.gui_get('Pause?') else 5
 
         self.top_spring.move_by_dxdy((step, 0))
         self.top_spring.set_target_by_dxdy((self.x_offset-step, 0))
@@ -294,7 +296,11 @@ class Braess_World(World):
         Agent.some_agent_changed = True
         Braess_World.state = 'a'
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
-        gui.WINDOW['GoStop'].click()
+        Braess_World.prev_fps = SimEngine.gui_get('fps')
+        if SimEngine.gui_get('Slow?'):
+            SimEngine.gui_set('fps', value=15)
+        if not SimEngine.gui_get('Pause?'):
+            gui.WINDOW['GoStop'].click()
 
     def step(self):
         # If there was a change during the previous step, see if additional changes are needed.
@@ -312,18 +318,20 @@ class Braess_World(World):
                     lnk.adjust_nodes()
         else:
             if Braess_World.state == 'a':
-                # Redefine the resting length of the two main cords.
+                # We have finished the animation that drops the weight.
+                # Redefine the resting lengths and colors of the two main cords.
                 self.top_cord.reset_length()
                 self.left_cord.reset_length()
                 self.top_cord.color = Color('white')
                 self.left_cord.color = Color('white')
 
+                # Switch the drivers for the two bars.
                 (self.bar_right.node_1, self.bar_right.node_2) = (self.bar_right.node_2, self.bar_right.node_1)
                 (self.bar_left.node_1, self.bar_left.node_2) = (self.bar_left.node_2, self.bar_left.node_1)
             else:
                 # If no agent changed changed on the previous step, we're done. "Click" the STOP button.
-                # But only if not finishing the animation phase.
                 gui.WINDOW['GoStop'].click()
+                SimEngine.gui_set('fps', value=Braess_World.prev_fps)
 
             # Enable/disable the Cut-cord button depending on whether we just finished state 1 or state 2.
             SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 1))
@@ -364,11 +372,14 @@ braess_left_upper = [
                               
                               pad=(None, (0, 10)))],
     
-                     [sg.Button(Braess_World.CUT_CORD)]
+                     [sg.Button(Braess_World.CUT_CORD),
+                      sg.Checkbox('Pause after cut?', default=True, key='Pause?'),
+                      sg.Checkbox('Cut in slow motion?', default=True, key='Slow?')
+                      ]
                      ]
 
 
 if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node,
-           fps=60)
+           fps=Braess_World.prev_fps)
