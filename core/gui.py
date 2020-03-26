@@ -30,6 +30,8 @@ NODE = 'node'
 SQUARE = 'square'
 STAR = 'star'
 
+FPS = 'fps'
+
 # Since it's used as a default value, can't be a list. A tuple works just as well.
 SHAPES = {NETLOGO_FIGURE: ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
           SQUARE: ((1, 1), (1, 0), (0, 0), (0, 1)),
@@ -99,7 +101,7 @@ def gui_set(key, **kwargs):
 def set_fps(val):
     # Select the value in FPS_VALUES closest to val.
     new_val = min(FPS_VALUES, key=lambda v: abs(v - val))
-    gui_set('fps', value=new_val)
+    gui_set(gui.FPS, value=new_val)
     return new_val
 
 
@@ -150,7 +152,7 @@ class SimpleGUI:
         gui.PATCH_COLS = board_rows_cols[1] if board_rows_cols[1] % 2 == 1 else board_rows_cols[1] + 1
 
         self.EXIT = 'Exit'
-        self.FPS = 'fps'
+        # self.FPS = 'fps'
         self.GO = 'go'
         self.GO_ONCE = 'go once'
         self.GOSTOP = 'GoStop'
@@ -195,13 +197,13 @@ class SimpleGUI:
 
         clear_line += bounce_checkbox_line
 
-        fps_combo_line = ''
-        if fps:
-            fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', pad=((0, 10), (17, 0))),
-                              sg.Combo(key='fps', values=FPS_VALUES,
-                                       background_color='limegreen', default_value=fps,
-                                       tooltip='The maximum frames/second.', pad=((0, 0), (17, 0)))
-                              ]
+        # Always an fps combo box, but make it visible only if the user specifies such a box.
+        # The box is necessary to allow the program to set fps even if the end user doesn't
+        fps_combo_line = [sg.Text('Frames/second', tooltip='The maximum frames/second.', visible=bool(fps),
+                                  pad=((0, 10), (17, 0))),
+                          sg.Combo(key=gui.FPS, values=FPS_VALUES, tooltip='The maximum frames/second.',
+                                   default_value=fps, visible=bool(fps), pad=((0, 0), (17, 0)))
+                          ]
 
         setup_go_line = [
             sg.Button(self.SETUP, pad=((0, 10), (10, 0))),

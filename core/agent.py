@@ -1,7 +1,7 @@
 
 # This file contains (a) the Agent class and (b) the PyLogo function, which starts a model run.
 
-from math import copysign, sqrt
+from math import sqrt
 from random import choice, randint
 from statistics import mean
 
@@ -47,6 +47,8 @@ class Agent(Block):
     half_patch_pixel = pairs.Pixel_xy((HALF_PATCH_SIZE(), HALF_PATCH_SIZE()))
 
     id = 0
+
+    key_step_done = True
 
     some_agent_changed = False
 
@@ -211,7 +213,7 @@ class Agent(Block):
                 self.set_velocity(new_velocity)
         self.move_by_dxdy(self.velocity)
 
-    def move_node(self, delta: Velocity):
+    def move_agent(self, delta: Velocity):
         Agent.some_agent_changed = True
         (capped_x, capped_y) = delta.cap_abs_value(1)   # copysign(min(1, abs(discrepancy)), discrepancy)
 
@@ -237,6 +239,15 @@ class Agent(Block):
     def out_links(self):
         return [lnk for lnk in World.links if lnk.directed and lnk.agent_1 is self]
 
+    @staticmethod
+    def run_an_animation_step():
+        Agent.key_step_done = True
+        visited_agents = set()
+        for node in World.agents:
+            if node.animation_target and node not in visited_agents:
+                visited_agents.add(node)
+                node.take_animation_step()
+
     def set_center_pixel(self, xy: Pixel_xy):
         self.center_pixel: Pixel_xy = xy.wrap()
         # Set the center point of this agent's rectangle.
@@ -258,9 +269,10 @@ class Agent(Block):
         if not self.animation_target:
             return
 
-        Agent.some_agent_changed = True
         delta = self.animation_target - self.center_pixel
-        self.move_node(delta)
+        if abs(delta.x) > 0 or abs(delta.y) > 0:
+            Agent.key_step_done = False
+        self.move_agent(delta)
 
         if abs(self.distance_to_pixel(self.animation_target)) < 0.5:
             self.move_to_xy(self.animation_target)

@@ -69,9 +69,9 @@ class SimEngine:
             if SimEngine.event in (None, self.simple_gui.EXIT):
                 return self.simple_gui.EXIT
 
-            fps = int(SimEngine.gui_get(self.simple_gui.FPS))
+            fps = SimEngine.gui_get(gui.FPS)
             if fps:
-                self.fps = gui.set_fps(fps)
+                self.fps = int(fps)  # gui.set_fps(int(fps))
 
             self.set_grab_anywhere(self.gui_get('Grab'))
 
