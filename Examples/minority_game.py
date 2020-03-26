@@ -250,7 +250,6 @@ class Minority_Game_World(World):
         if Minority_Game_World.nbr_agents % 2 == 0:
             Minority_Game_World.nbr_agents += (1 if Minority_Game_World.nbr_agents < gui.WINDOW[NBR_AGENTS].Range[1]
                                                else (-1))
-            # gui.WINDOW[NBR_AGENTS].update(value=Minority_Game_World.nbr_agents)
             SimEngine.gui_set(NBR_AGENTS, value=Minority_Game_World.nbr_agents)
         Minority_Game_World.random_agent_ids = {0, Minority_Game_World.nbr_agents - 1}
 

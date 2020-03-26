@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from typing import Tuple
 
@@ -6,7 +7,7 @@ from pygame.color import Color
 import core.gui as gui
 from core.agent import Agent
 from core.graph_framework import Graph_Node
-from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH
+from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH, set_fps
 from core.link import Link
 from core.pairs import Pixel_xy, Velocity
 from core.sim_engine import SimEngine
@@ -19,8 +20,8 @@ class Braess_Link(Link):
     There are special subclasses for rigid bars and cords.
     """
 
-    def __init__(self, *arags, **kwargs):
-        super().__init__(*arags, **kwargs)
+    def __init__(self, node_1: Braess_Node, node_2: Braess_Node, **kwargs):
+        super().__init__(node_1, node_2, **kwargs)
         # This is the resting length. All springs have this as their default length.
         self.resting_length = Braess_World.dist_unit
         if not (isinstance(self, Braess_Bar) or isinstance(self, Braess_Cord)):
@@ -32,16 +33,19 @@ class Braess_Link(Link):
 
     # This is a strange and sometimes convenient Python feature. The following define node_1 and node_2 to
     # be getters and setters for node_1 and node_2 respectively. When used, parentheses are not needed.
+
+    # noinspection PyTypeChecker
     @property
-    def node_1(self) -> Agent:
+    def node_1(self) -> Braess_Node:
         return self.agent_1
 
     @node_1.setter
     def node_1(self, new_agent: Agent):
         self.agent_1 = new_agent
 
+    # noinspection PyTypeChecker
     @property
-    def node_2(self) -> Agent:
+    def node_2(self) -> Braess_Node:
         return self.agent_2
 
     @node_2.setter
@@ -83,9 +87,9 @@ class Braess_Link(Link):
 
     def proper_length(self):
         """
-        Since we are using abstract units for weight and length so that weight is equal to
-        the amount a spring stretches, a spring should be as long as its resting length
-        plus the weight it is supporting.
+        We are using abstract units for weight and length in such a way that weight is
+        equal to the amount a spring stretches when supporting that weight. A spring
+        should be as long as its resting length plus the weight it is supporting.
         """
         return self.resting_length + Braess_World.mass()
 
@@ -156,9 +160,14 @@ class Braess_Node(Graph_Node):
 
     @property
     def label(self):
-        if self is not Braess_World.weight_node:
-            return None
-        return f'weight: 100; total dist: {str(int(Braess_World.weight_node.y - Braess_World.top))}'
+        if self is Braess_World.weight_node:
+            top_to_bottom = int(round(Braess_World.weight_node.y - Braess_World.top))
+            label = f'weight: 100; total dist: {str(top_to_bottom)}'
+            return label
+        return None
+
+    def move_node(self, delta):
+        self.move_agent(delta)
 
 
 class Braess_World(World):
@@ -228,18 +237,18 @@ class Braess_World(World):
 
         self.adjustable_links = [self.top_spring, self.top_cord, self.bottom_spring, self.weight_cord]
 
-        Agent.some_agent_changed = True
-        Braess_World.state = 1
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
+        Braess_World.state = 1
+        Agent.some_agent_changed = True
 
     # noinspection PyAttributeOutsideInit
     def setup_a(self):
         """
-        Set up for the cut-cord animation.
+        Set up for the drop weight animation.
         """
 
         # Move out by a small amount so that the two lines can be seen.
-        step = 0 if not SimEngine.gui_get('Pause?') else 5
+        step = 5 if SimEngine.gui_get('Pause?') else 0
 
         self.top_spring.move_by_dxdy((step, 0))
         self.top_spring.set_target_by_dxdy((self.x_offset-step, 0))
@@ -254,8 +263,10 @@ class Braess_World(World):
         right_bar_node = Braess_Node(Pixel_xy( (self.x, bar_y) ) )
 
         # By convention, the position of node_1 determines node_2's position.
-        self.bar_right = Braess_Bar(center_bar_node, right_bar_node)
-        self.bar_left = Braess_Bar(center_bar_node, left_bar_node)
+        # In this case, since we will be pulling the bar up by its ends,
+        # make the ends the controlling nodes.
+        self.bar_right = Braess_Bar(right_bar_node, center_bar_node)
+        self.bar_left = Braess_Bar(left_bar_node, center_bar_node)
 
         # Attach the bottom spring to the left end of the bar.
         self.bottom_spring.node_2 = left_bar_node
@@ -288,55 +299,65 @@ class Braess_World(World):
         World.agents.remove(self.bottom_spring.node_1)
         self.bottom_spring.node_1 = self.left_cord.node_2
 
-        #                            ## Done with the adjustments for state 2. ##                            #
-
-        # Add the new cord and bar nodes to the adjustable links.
+        # Add the new cord and bars to the adjustable links.
         self.adjustable_links.extend([self.left_cord, self.bar_right, self.bar_left])
 
-        Agent.some_agent_changed = True
-        Braess_World.state = 'a'
+        Agent.key_step_done = False
+
+        #                            ## Done with the setup for the animation. ##                            #
+
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
-        Braess_World.prev_fps = SimEngine.gui_get('fps')
         if SimEngine.gui_get('Slow?'):
-            SimEngine.gui_set('fps', value=15)
+            set_fps(15)
         if not SimEngine.gui_get('Pause?'):
             gui.WINDOW['GoStop'].click()
 
+    def setup_2(self):
+        """
+        We have finished the animation that drops the weight.
+        Redefine the resting lengths and colors of the two main cords
+        and switch the drivers for the two bars.
+        """
+        self.top_cord.reset_length()
+        self.left_cord.reset_length()
+        self.top_cord.color = Color('white')
+        self.left_cord.color = Color('white')
+
+        # If we did the animation step in slow motion, return to regular speed.
+        if SimEngine.gui_get('Slow?'):
+            set_fps(60)
+        SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
+        Braess_World.state = 2
+        Agent.some_agent_changed = True
+
     def step(self):
+
+        # If we are doing animation:
+        if Braess_World.state == 'a':
+            if not Agent.key_step_done:
+                Agent.run_an_animation_step()
+            else:
+                self.setup_2()
+            return
+
+        # We are not doing animation. We are in either state_1 or state_2. Process them normally.
         # If there was a change during the previous step, see if additional changes are needed.
         if Agent.some_agent_changed:
             # When a link changes length, Agent.some_agent_changed is set to True.
             Agent.some_agent_changed = False
-            if Braess_World.state == 'a':
-                visited_nodes = set()
-                for node in World.agents:
-                    if node.animation_target and node not in visited_nodes:
-                        visited_nodes.add(node)
-                        node.take_animation_step()
-            else:
-                for lnk in self.adjustable_links:
-                    lnk.adjust_nodes()
+            for lnk in self.adjustable_links:
+                lnk.adjust_nodes()
         else:
-            if Braess_World.state == 'a':
-                # We have finished the animation that drops the weight.
-                # Redefine the resting lengths and colors of the two main cords.
-                self.top_cord.reset_length()
-                self.left_cord.reset_length()
-                self.top_cord.color = Color('white')
-                self.left_cord.color = Color('white')
+            # Since no agent changed on the previous step, we're done with this state.
 
-                # Switch the drivers for the two bars.
-                (self.bar_right.node_1, self.bar_right.node_2) = (self.bar_right.node_2, self.bar_right.node_1)
-                (self.bar_left.node_1, self.bar_left.node_2) = (self.bar_left.node_2, self.bar_left.node_1)
-            else:
-                # If no agent changed changed on the previous step, we're done. "Click" the STOP button.
-                gui.WINDOW['GoStop'].click()
-                SimEngine.gui_set('fps', value=Braess_World.prev_fps)
+            # "Click" the STOP button.
+            gui.WINDOW['GoStop'].click()
 
-            # Enable/disable the Cut-cord button depending on whether we just finished state 1 or state 2.
-            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 1))
+            # Change to the next state.
             Braess_World.state = self.state_transitions[Braess_World.state]
-            Agent.some_agent_changed = True
+
+            # Enable/disable the Cut-cord button depending on whether we just entered state a.
+            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 'a'))
 
 
 # ############################################## Define GUI ############################################## #
@@ -346,27 +367,30 @@ import PySimpleGUI as sg
 The following appears at the top-left of the window. There is only one model-specific gui widget.
 """
 braess_left_upper = [
-                     [sg.Text('Two green springs (unstretched length 100 units) are connected by\n'
-                              'two white fixed-length 50 unit cords to a plum-colored weight.\n\n'
+                     [sg.Text('Two green springs (unstretched length 100 units) are connected by two\n'
+                              'white fixed-length 50 unit cords to a plum-colored weight.\n\n'
                               
                               "Click 'go' to allow the weight to pull on the springs.\n\n"
                               
                               "When a weight pulls on a spring, the spring extends in proportion to the\n"
-                              'weight. In this case the weight is 100 units. Each spring will stretch to 200\n'
-                              'units. See "total dist" on the weight label for the top to bottom distance.\n\n'
+                              'weight. Since the weight is 100 units, each spring will stretch to 200\n'
+                              'units. See "total dist" on the weight label for the top-to-bottom distance.\n\n'
                               
-                              "Now click 'Cut cord.' The weight drops by 25 units before being caught by\n"
-                              'two new cords (of length 275). (The cut cord is not shown.) Cutting the cord\n'
-                              'converts the system from a single support line to two lines, each of which\n'
-                              'uses a single spring. (There are still two springs holding up the weight.)\n\n'
+                              'Now click "Cut cord." If "Pause after cut" is checked, the weights are\n'
+                              'not allowed to drop until the "go" button is clicked. The two new cords\n'
+                              'are shown as length 250 and in yellow indicating that they are slack.\n'
+                              '(Their actual lengths are 275.) (The cut cord is not shown.)\n\n'
                               
-                              "Click 'go' to let the system reach a new equilibrium. The weight rises! Why?\n\n"
+                              'Cutting the cord converts the system from a single support line for the\n'
+                              'weights to two parallel lines. (There are still exactly two springs.)\n\n'
                               
-                              'In series, each spring bears 100 units (Why?) and stretches to 200 units.\n'
-                              'In parallel, each spring bears (50 units) (Why?) and stretches to 150 units.\n\n'
+                              "When released, the weight drops by 25 units before being caught by two\n"
+                              'new cords--and then bounces up! In the end, the weight is at 475 rather\n'
+                              'than 500, where it was before the cord was cut. So even though the\n'
+                              'cords add 25 units, the weight ends up 25 units higher!\n\n'
                                                             
-                              'Cutting the cord is equivalent to removing(!) the extra road in the Braess road \n'
-                              'paradox. It forces the weight (the "traffic") to be split between the two sides.\n\n'
+                              'Cutting the cord is equivalent to removing(!) the extra road in the Braess \n'
+                              'road paradox. It splits the weight (the "traffic") between the two sides.\n\n'
                               
                               'For a physical demo, see https://youtu.be/ekd2MeDBV8s.',
                               
@@ -381,5 +405,4 @@ braess_left_upper = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node,
-           fps=Braess_World.prev_fps)
+    PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node, fps=None)
