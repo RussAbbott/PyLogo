@@ -71,7 +71,7 @@ class SimEngine:
 
             fps = SimEngine.gui_get(gui.FPS)
             if fps:
-                self.fps = int(fps)  # gui.set_fps(int(fps))
+                self.fps = int(fps) 
 
             self.set_grab_anywhere(self.gui_get('Grab'))
 
