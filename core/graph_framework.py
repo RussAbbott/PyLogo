@@ -1,7 +1,7 @@
 
 from math import sqrt
 from random import choice, sample
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from pygame.color import Color
 from pygame.draw import circle
@@ -27,6 +27,7 @@ class Graph_Node(Agent):
             shape_name = SimEngine.gui_get(SHAPE)
             kwargs['shape_name'] = shape_name
         super().__init__(**kwargs)
+
         # Is the  node selected?
         self.selected = False
 
@@ -96,9 +97,9 @@ class Graph_Node(Agent):
         Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
         """
         direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
-        d = max(1, pixel_a.distance_to(pixel_b, wrap=False))
+        d = max(1, pixel_a.distance_to(pixel_b))  #, wrap=False))
         if repulsive:
-            dist = max(1, pixel_a.distance_to(pixel_b, wrap=False) / screen_distance_unit)
+            dist = max(1, pixel_a.distance_to(pixel_b) / screen_distance_unit)  #, wrap=False)
             rep_coefficient = SimEngine.gui_get(REP_COEFF)
             rep_exponent = SimEngine.gui_get(REP_EXPONENT)
             force = direction * ((10**rep_coefficient)/10) * dist**rep_exponent
@@ -114,13 +115,6 @@ class Graph_Node(Agent):
             final_force = force * 10**(att_coefficient-1)
             return final_force
 
-    def lnk_nbrs(self):
-        """
-        Return a list of links from this node and the nodes to which they attach.
-        """
-        lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
-        return lns
-
 
 class Graph_World(World):
 
@@ -129,7 +123,6 @@ class Graph_World(World):
         super().__init__(patch_class, agent_class)
         self.shortest_path_links = None
         self.selected_nodes = set()
-        self.disable_enable_buttons()
 
     # noinspection PyMethodMayBeStatic
     def average_path_length(self):
@@ -154,7 +147,7 @@ class Graph_World(World):
         # them in a ring. It returns a list of the nodes in ring-order.
         ring_node_list = self.create_ordered_agents(nbr_ring_nodes, shape_name=SimEngine.gui_get(SHAPE))
 
-        # Now, link the nodes according to the desired graph.
+        # Link the nodes to complete the desired graph.
         if nbr_nodes:
             self.link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list)
 
@@ -164,7 +157,7 @@ class Graph_World(World):
         # If there are exactly two selected nodes, find the shortest path between them.
         if len(self.selected_nodes) == 2:
             self.shortest_path_links = self.shortest_path()
-            # self.shortest_path_links will be either a list of links or []
+            # self.shortest_path_links will be either a list of links or None
             # If there is a path, highlight it.
             if self.shortest_path_links:
                 for lnk in self.shortest_path_links:
@@ -218,7 +211,7 @@ class Graph_World(World):
         for lnk_x in self.shortest_path_links:
             World.links.remove(lnk_x)
             path = self.shortest_path()
-            if len(path) > longest_path_len:
+            if path and len(path) > longest_path_len:
                 (longest_path_len, lnk) = (len(path), lnk_x)
             World.links.add(lnk_x)
 
@@ -227,7 +220,7 @@ class Graph_World(World):
         World.links.remove(lnk)
 
     def disable_enable_buttons(self):
-        # 'enabled' is a pseudo attribute. gui.gui_set replaces it with 'disabled' and negates the value.
+        # 'enabled' is a pseudo attribute. SimEngine.gui_set replaces it with 'disabled' and negates the value.
 
         SimEngine.gui_set(DELETE_RANDOM_NODE, enabled=bool(World.agents))
 
@@ -314,19 +307,21 @@ class Graph_World(World):
         return screen_distance_unit
 
     def setup(self):
+        self.disable_enable_buttons()
         self.build_graph()
         self.compute_metrics()
 
-    def shortest_path(self) -> List[Link]:
+    def shortest_path(self) -> Optional[List[Link]]:
         (node1, node2) = self.selected_nodes
         # Start with the node with the smaller number of neighbors.
         if len(node1.lnk_nbrs()) > len(node2.lnk_nbrs()):
             (node1, node2) = (node2, node1)
         visited = {node1}
-        # A path is a sequence of tuples (link, node) where the link
-        # attaches to the node preceding it and in its tuple.
-        # The first tuple in a path starts with a None link since
-        # there is no preceding node.
+
+        # A path is a sequence of tuples (link, node) where
+        # the link attaches to the node in the preceding
+        # tuple. The first tuple in a path starts with a
+        # None link since there is no preceding node.
 
         # The frontier is a list of paths, shortest first.
         frontier = [[(None, node1)]]
@@ -334,28 +329,35 @@ class Graph_World(World):
             current_path = frontier.pop(0)
             # The lnk_nbrs are tuples as in the paths. For a given node
             # they are all the node's links along with the nodes linked to.
-            # This is asking for the last node in the current path,
+
+            # This gets the last node in the current path,
             (_last_link, last_node) = current_path[-1]
+
             # This gets all the non-visited lnk_nbrs of the last node.
             # Each neighbor is a (link, node) pair. 
             lnk_nbrs = [(lnk, nbr) for (lnk, nbr) in last_node.lnk_nbrs() if nbr not in visited]
+
             # Do any of these continuations reach the target, node_2? If so, we've found the shortest path.
             lnks_to_node_2 = [(lnk, nbr) for (lnk, nbr) in lnk_nbrs if nbr == node2]
+
             # If lnks_to_node_2 is non-empty it will have one element: (lnk, node_2)
             if lnks_to_node_2:
                 path = current_path + lnks_to_node_2
                 # Extract the links, but drop the None at the beginning.
                 lnks = [lnk for (lnk, _nbr) in path[1:]]
                 return lnks
+
             # Not done. Add the newly reached nodes to visted.
             visited |= {nbr for (_lnk, nbr) in lnk_nbrs}
+
             # For each neighbor construct an extended version of the current path.
             extended_paths = [current_path + [lnk_nbr] for lnk_nbr in lnk_nbrs]
+
             # Add all those extended paths to the frontier.
             frontier += extended_paths
 
         # If we get out of the loop because the frontier is empty, there is no path from node_1 to node_2.
-        return []
+        return None
 
     def step(self):
         dist_unit = Graph_World.screen_distance_unit()

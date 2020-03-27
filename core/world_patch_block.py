@@ -36,7 +36,7 @@ class Block(Sprite):
         self.rect.center = sum_pixel
         self.image = Surface((self.rect.w, self.rect.h))
         self.color = self.base_color = color
-        self.label = None
+        self._label = None
         self.highlight = None
 
     def distance_to_xy(self, xy: Pixel_xy):
@@ -50,17 +50,34 @@ class Block(Sprite):
         if self.label:
             self.draw_label()
         if isinstance(self, Patch) or shape_name in SHAPES:
+            self.rect.center = self.center_pixel
+            # self.rect = Rect(center=self.rect.center)
             gui.blit(self.image, self.rect)
         else:
             gui.draw(self, shape_name=shape_name)
 
     def draw_label(self):
-        text = gui.FONT.render(self.label, True, Color('black'), Color('white'))
         offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
         text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
-        gui.blit(text, text_center)
         line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
-        gui.draw_line(start_pixel=self.rect.center, end_pixel=text_center, line_color=line_color)
+        obj_center = self.rect.center
+        gui.draw_label(self.label, text_center, obj_center, line_color)
+
+    # def draw_label(self):
+    #     text = gui.FONT.render(self.label, True, Color('black'), Color('white'))
+    #     offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
+    #     text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
+    #     gui.blit(text, text_center)
+    #     line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
+    #     gui.draw_line(start_pixel=self.rect.center, end_pixel=text_center, line_color=line_color)
+
+    @property
+    def label(self):
+        return self._label if self._label else None
+
+    @label.setter
+    def label(self, value):
+        self._label = value
 
     def set_color(self, color):
         self.color = color
@@ -199,11 +216,11 @@ class World:
         for patch in World.patches:
             patch.draw()
 
-        for agent in World.agents:
-            agent.draw()
-
         for link in World.links:
             link.draw()
+
+        for agent in World.agents:
+            agent.draw()
 
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """

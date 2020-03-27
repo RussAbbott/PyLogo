@@ -1,6 +1,4 @@
 
-# This file contains (a) the Agent class and (b) the PyLogo function, which starts a model run.
-
 from math import sqrt
 from random import choice, randint
 from statistics import mean
@@ -53,8 +51,8 @@ class Agent(Block):
     some_agent_changed = False
 
     def __init__(self, center_pixel=None, color=None, scale=1.4, shape_name='netlogo_figure'):
-        # Can't make this a default value because pairs.CENTER_PIXEL() isn't defined
-        # when the default values are compiled
+        # Can't make this a default value because pairs.CENTER_PIXEL()
+        # isn't defined when the default values are compiled
         if center_pixel is None:
             center_pixel = pairs.center_pixel()
 
@@ -71,7 +69,7 @@ class Agent(Block):
 
         self.id = Agent.id
         Agent.id += 1
-        # self._label = None
+
         World.agents.add(self)
         self.current_patch().add_agent(self)
 
@@ -136,9 +134,11 @@ class Agent(Block):
         return base_image
 
     def create_blank_base_image(self):
+
         # Give the agent a larger Surface (by sqrt(2)) to work with since it may rotate.
         surface_size = XY((self.rect.width, self.rect.height))*SQRT_2
         blank_base_image = Surface(surface_size)
+
         # This sets the rectangle to be transparent.
         # Otherwise it would be black and would cover nearby agents.
         # Even though it's a method of Surface, it can also take a Surface parameter.
@@ -215,10 +215,10 @@ class Agent(Block):
 
     def move_agent(self, delta: Velocity):
         Agent.some_agent_changed = True
-        (capped_x, capped_y) = delta.cap_abs_value(1)   # copysign(min(1, abs(discrepancy)), discrepancy)
+        (capped_x, capped_y) = delta.cap_abs_value(1)
 
         # Note that x and y have been defined to be getters for center pixels (x, y).
-        new_center_pixel = Pixel_xy((self.x + capped_x, self.y + capped_y))
+        new_center_pixel = Pixel_xy( (self.x + capped_x, self.y + capped_y) )
         self.move_to_xy(new_center_pixel)
 
     def move_to_patch(self, patch):
@@ -258,7 +258,7 @@ class Agent(Block):
         self.base_image = self.create_base_image()
 
     def set_heading(self, heading):
-        # Keep heading an int in range(360)
+        # Keep heading as an int in range(360)
         self.heading = int(round(heading))
 
     def set_target_by_dxdy(self, velocity):
