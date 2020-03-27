@@ -7,10 +7,10 @@ from pygame.color import Color
 import core.gui as gui
 from core.agent import Agent
 from core.graph_framework import Graph_Node
-from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH, set_fps
+from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH
 from core.link import Link
 from core.pairs import Pixel_xy, Velocity
-from core.sim_engine import SimEngine
+from core.sim_engine import GOSTOP, GO_ONCE, SimEngine
 from core.world_patch_block import World
 
 
@@ -22,6 +22,7 @@ class Braess_Link(Link):
 
     def __init__(self, node_1: Braess_Node, node_2: Braess_Node, **kwargs):
         super().__init__(node_1, node_2, **kwargs)
+
         # This is the resting length. All springs have this as their default length.
         self.resting_length = Braess_World.dist_unit
         if not (isinstance(self, Braess_Bar) or isinstance(self, Braess_Cord)):
@@ -148,7 +149,6 @@ class Braess_Cord(Braess_Link):
         self.resting_length = self.node_1.distance_to(self.node_2)
 
 
-
 class Braess_Node(Graph_Node):
 
     def __init__(self, location, shape_name=NODE, **kwargs):
@@ -241,6 +241,12 @@ class Braess_World(World):
         Braess_World.state = 1
         Agent.some_agent_changed = True
 
+        # In case we did the animation in slow motion and this is a second run.
+        # Can't do this when animation ends because we want to stay
+        # in slow motion as the springs contract and lift the weight.
+        SimEngine.fps = 60
+
+
     # noinspection PyAttributeOutsideInit
     def setup_a(self):
         """
@@ -307,10 +313,14 @@ class Braess_World(World):
         #                            ## Done with the setup for the animation. ##                            #
 
         SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
+        SimEngine.gui_set(GO_ONCE, enabled=True)
+        SimEngine.gui_set(GOSTOP, enabled=True)
         if SimEngine.gui_get('Slow?'):
-            set_fps(15)
+            SimEngine.fps = 15
         if not SimEngine.gui_get('Pause?'):
             gui.WINDOW['GoStop'].click()
+        Braess_World.state = 'a'
+
 
     def setup_2(self):
         """
@@ -323,10 +333,6 @@ class Braess_World(World):
         self.top_cord.color = Color('white')
         self.left_cord.color = Color('white')
 
-        # If we did the animation step in slow motion, return to regular speed.
-        if SimEngine.gui_get('Slow?'):
-            set_fps(60)
-        SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
         Braess_World.state = 2
         Agent.some_agent_changed = True
 
@@ -351,13 +357,10 @@ class Braess_World(World):
             # Since no agent changed on the previous step, we're done with this state.
 
             # "Click" the STOP button.
-            gui.WINDOW['GoStop'].click()
+            gui.WINDOW[GOSTOP].click()
 
-            # Change to the next state.
-            Braess_World.state = self.state_transitions[Braess_World.state]
-
-            # Enable/disable the Cut-cord button depending on whether we just entered state a.
-            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 'a'))
+            # Enable/disable the Cut-cord button depending on whether we are leaving state 1.
+            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 1))
 
 
 # ############################################## Define GUI ############################################## #
@@ -405,4 +408,4 @@ braess_left_upper = [
 
 if __name__ == '__main__':
     from core.agent import PyLogo
-    PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node, fps=None)
+    PyLogo(Braess_World, "Braess' spring paradox", gui_left_upper=braess_left_upper, agent_class=Braess_Node)
