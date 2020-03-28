@@ -200,4 +200,4 @@ gui_left_upper = [[sg.Text('density'),
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(SegregationWorld, "Schelling's segregation model", gui_left_upper, bounce=None)
+    PyLogo(SegregationWorld, "Schelling's segregation model", gui_left_upper)

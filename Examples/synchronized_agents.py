@@ -122,4 +122,4 @@ gui_left_upper = [[
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_left_upper, bounce=None)
+    PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_left_upper)
