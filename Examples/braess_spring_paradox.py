@@ -379,18 +379,18 @@ braess_left_upper = [
                               'weight. Since the weight is 100 units, each spring will stretch to 200\n'
                               'units. See "total dist" on the weight label for the top-to-bottom distance.\n\n'
                               
-                              'Now click "Cut cord." If "Pause after cut" is checked, the weights are\n'
-                              'not allowed to drop until the "go" button is clicked. The two new cords\n'
-                              'are shown as length 250 and in yellow indicating that they are slack.\n'
-                              '(Their actual lengths are 275.) (The cut cord is not shown.)\n\n'
+                              'Now click "Cut cord." Cutting the cord reveals two new cords, each of\n'
+                              'length 250. (The cut cord is not shown.) The cords are in yellow to indicate\n'
+                              'that they are slack. Each cord\'s actual length is 275. If "Pause after cut"\n'
+                              'is checked, the weights do not drop until the "go" button is clicked.\n\n'
                               
                               'Cutting the cord converts the system from a single support line for the\n'
-                              'weights to two parallel lines. (There are still exactly two springs.)\n\n'
+                              'weights to two parallel support lines. (There are still exactly two springs.)\n\n'
                               
-                              "When released, the weight drops by 25 units before being caught by two\n"
-                              'new cords--and then bounces up! In the end, the weight is at 475 rather\n'
-                              'than 500, where it was before the cord was cut. So even though the\n'
-                              'cords add 25 units, the weight ends up 25 units higher!\n\n'
+                              'When "go" is clicked, the weight drops by 25 units before being caught by\n'
+                              'two new cords. It then bounces up! In the end, the weight is at 475 rather\n'
+                              'than 500, where it was before the cord was cut. So even though the cords\n'
+                              'add 25 units, the weight ends up 25 units higher!\n\n'
                                                             
                               'Cutting the cord is equivalent to removing(!) the extra road in the Braess \n'
                               'road paradox. It splits the weight (the "traffic") between the two sides.\n\n'
