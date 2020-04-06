@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from random import choice, randint, sample
-from typing import Any, List, NewType, Tuple
+from typing import Any, List, NewType, Sequence, Tuple
 
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
@@ -23,9 +23,12 @@ class Individual:
     concerned, they are agents. They serve as chromosome in individuals.
     """
 
-    def __init__(self, chromosome: Chromosome):
-        self.chromosome: Chromosome = chromosome
+    def __init__(self, chromosome: Sequence[Gene]):
+        self.chromosome: Chromosome = chromosome if isinstance(chromosome, tuple) else \
+                                      GA_World.seq_to_chromosome(chromosome)
         # No need to compute fitness multiple times. Cache it here.
+        # if isinstance(self.chromosome, list):
+        #     print('list')
         self.fitness = self.compute_fitness()
 
     def compute_fitness(self):
@@ -49,12 +52,15 @@ class Individual:
         """
         # This ensures that the rotations are non-trivial.
         inner_indices = range(1, len(chromosome_1)-1) if len(chromosome_1) > 2 else range(len(chromosome_1))
-        chromosome_1_rotated = Individual.rotate_by(chromosome_1, choice(inner_indices))
-        chromosome_2_rotated = Individual.rotate_by(chromosome_2, choice(inner_indices))
+        chromosome_1_rotated: Chromosome = Individual.rotate_by(chromosome_1, choice(inner_indices))
+        chromosome_2_rotated: Chromosome = Individual.rotate_by(chromosome_2, choice(inner_indices))
         indx = choice(inner_indices)
 
-        child_chromosome = chromosome_1_rotated[: indx] + \
-                         [Gene for Gene in chromosome_2_rotated if Gene not in chromosome_1_rotated[: indx]]
+        child_chromosome_start: Chromosome = chromosome_1_rotated[:indx]
+        child_chromosome_end: Chromosome = GA_World.seq_to_chromosome([gene for gene in chromosome_2_rotated
+                                                                        if gene not in child_chromosome_start])
+
+        child_chromosome: Chromosome = Chromosome(child_chromosome_start + child_chromosome_end)
         return child_chromosome[:len(chromosome_1)]
 
     @property
@@ -68,31 +74,33 @@ class Individual:
     def mutate(self) -> Individual:
         pass
 
+    # @staticmethod
+    # def move_elt(chromosome: Chromosome):
+    #     """
+    #     This is our own mutation operator. It moves an Gene from one place to another in the list.
+    #     """
+    #     # Ensures that the two index positions are different.
+    #     (indx_1, indx_2) = sample(list(range(len(chromosome))), 2)
+    #     # Can't perform the next line on a tuple. So change it into
+    #     # a list and then change it back into a tuple. That way the
+    #     # original tuple is unchanged.
+    #     list_chromosome: List[Gene] = list(chromosome)
+    #     list_chromosome.insert(indx_2, list_chromosome.pop(indx_1))
+    #     return GA_World.seq_to_chromosome(list_chromosome)
+    #
     @staticmethod
-    def move_elt(chromosome: Chromosome):
-        """
-        This is our own mutation operator. It moves an Gene from one place to another in the list.
-        """
-        # Ensures that the two index positions are different.
-        (indx_1, indx_2) = sample(list(range(len(chromosome))), 2)
-        # Can't perform the next line on a tuple. So change it into
-        # a list and then change it back into a tuple. That way the
-        # original tuple is unchanged.
-        list_chromosome: List[Any] = list(chromosome)
-        list_chromosome.insert(indx_2, list_chromosome.pop(indx_1))
-        return tuple(list_chromosome)
-
-    @staticmethod
-    def reverse_sublist(chromosome):
+    def reverse_subseq(chromosome):
         """
         This mutation operator swaps two chromosome.
         """
         # Ensure that the two index positions are different.
         (indx_1, indx_2) = sorted(sample(list(range(len(chromosome))), 2))
-        chromosome[indx_1:indx_2] = reversed(chromosome[indx_1:indx_2])
+        list_chromosome = list(chromosome)
+        list_chromosome[indx_1:indx_2] = reversed(list_chromosome[indx_1:indx_2])
+        return GA_World.seq_to_chromosome(list_chromosome)
 
     @staticmethod
-    def rotate_by(chromosome, amt):
+    def rotate_by(chromosome: Chromosome, amt: int) -> Chromosome:
         return chromosome[amt:] + chromosome[:amt]
 
 
@@ -137,9 +145,13 @@ class GA_World(World):
     def gen_parent(self):
         if randint(0, 99) < SimEngine.gui_get('prob_random_parent'):
             parent = self.gen_individual()
+            # if isinstance(parent.chromosome, list):
+            #     print('list')
         else:
             parent_indx = self.select_gene_index(self.BEST, self.tournament_size)
             parent = self.individuals[parent_indx]
+            # if isinstance(parent.chromosome, list):
+            #     print('list')
         return parent
 
     def get_best_individual(self):
@@ -161,6 +173,10 @@ class GA_World(World):
         candidate_indices = sample(range(len(self.individuals)), tournament_size)
         selected_index = min_or_max(candidate_indices, key=lambda i: self.individuals[i].discrepancy)
         return selected_index
+
+    @staticmethod
+    def seq_to_chromosome(lst: Sequence[Gene]) -> Chromosome:
+        return Chromosome(tuple(lst))
 
     def set_results(self):
         self.generations += 1
@@ -220,18 +236,18 @@ gui_left_upper = [
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   [sg.Text('Prob move elt', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='move_elt_internally', range=(0, 100), default_value=20,
-                              orientation='horizontal', size=(10, 20))
-                    ],
-
+                   # [sg.Text('Prob move elt', pad=((0, 5), (20, 0))),
+                   #  sg.Slider(key='move_elt_internally', range=(0, 100), default_value=20,
+                   #            orientation='horizontal', size=(10, 20))
+                   #  ],
+                   #
                    [sg.Text('Prob reverse sublist', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='reverse_sublist', range=(0, 100), default_value=20,
+                    sg.Slider(key='reverse_subseq', range=(0, 100), default_value=20,
                               orientation='horizontal', size=(10, 20))
                     ],
 
                    [sg.Text('Prob random parent', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='prob_random_parent', range=(0, 100), default_value=5,
+                    sg.Slider(key='prob_random_parent', range=(0, 100), default_value=35,
                               orientation='horizontal', size=(10, 20))
                     ],
 
