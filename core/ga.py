@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 from random import choice, randint, sample
-from typing import Any, List, NewType, Sequence, Tuple
+from typing import Any, NewType, Optional, Sequence, Tuple
 
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
-
 
 Gene = NewType('Gene', Any)
 Chromosome = NewType('Chromosome', Tuple[Gene])
@@ -65,7 +64,7 @@ class Individual:
 
     @property
     def discrepancy(self):
-        discr = abs(round(self.fitness - GA_World.fitness_target, 1))
+        discr = abs(self.fitness - GA_World.fitness_target)
         return discr
 
     def mate_with(self, other) -> Tuple[Individual, Individual]:
@@ -114,7 +113,7 @@ class GA_World(World):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.best_ind = None
+        self.best_ind: Optional[Individual] = None
         self.generations = None
         self.mating_op = None
         self.pop_size = None
@@ -137,7 +136,6 @@ class GA_World(World):
         dest_2_indx = self.select_gene_index(self.WORST, self.tournament_size)
         self.individuals[dest_1_indx] = child_1_mutated
         self.individuals[dest_2_indx] = child_2_mutated
-
 
     def gen_individual(self):
         pass
@@ -179,32 +177,33 @@ class GA_World(World):
         return Chromosome(tuple(lst))
 
     def set_results(self):
-        self.generations += 1
-        best_ind = self.get_best_individual()
-        if self.best_ind is None or best_ind.discrepancy < self.best_ind.discrepancy:
-            self.best_ind = best_ind
-        SimEngine.gui_set('best_fitness', value=self.best_ind.fitness)
-        SimEngine.gui_set('discrepancy', value=self.best_ind.discrepancy)
+        current_best_ind = self.get_best_individual()
+        if self.best_ind is None or current_best_ind.discrepancy < self.best_ind.discrepancy:
+            self.best_ind = current_best_ind
+        SimEngine.gui_set('best_fitness', value=round(self.best_ind.fitness, 1))
+        SimEngine.gui_set('discrepancy', value=round(self.best_ind.discrepancy, 1))
         SimEngine.gui_set('generations', value=self.generations)
 
     # noinspection PyAttributeOutsideInit
     def setup(self):
         # Create a list of Individuals as the initial population.
-        self.generations = 0
         self.pop_size = SimEngine.gui_get('pop_size')
         self.tournament_size = SimEngine.gui_get('tourn_size')
-        self.individuals = self.initial_individuals()
         GA_World.fitness_target = SimEngine.gui_get('fitness_target')
+        self.individuals = self.initial_individuals()
         self.best_ind = None
+        self.generations = 0
         self.set_results()
 
     def step(self):
         if self.best_ind and self.best_ind.discrepancy == 0:
             return
 
-        for _ in range(self.pop_size//2):
+        for i in range(self.pop_size//2):
+            # print(i)
             self.generate_children()
 
+        self.generations += 1
         self.set_results()
 
 
@@ -215,7 +214,7 @@ gui_left_upper = [
                    [sg.Text('Best:', pad=(None, (0, 0))),
                     sg.Text('     0.0', key='best_fitness', pad=(None, (0, 0))),
                     sg.Text('Discrepancy:', pad=((20, 0), (0, 0))),
-                    sg.Text('     0', key='discrepancy', pad=(None, (0, 0)))],
+                    sg.Text('      .0', key='discrepancy', pad=(None, (0, 0)))],
 
                    [sg.Text('Generations:', pad=((0, 0), (0, 0))),
                     sg.Text('000000000', key='generations', pad=(None, (0, 0))),
