@@ -230,7 +230,7 @@ class Minority_Game_World(World):
         for agent in World.agents:
             starting_patch = self.get_starting_patch(agent.id, self.agent_vertical_separation)
             agent.init_agent(starting_patch)
-        World.done = False
+        self.done = False
 
     def setup(self):
         Agent.id = 0
@@ -273,7 +273,7 @@ class Minority_Game_World(World):
         self.history = self.history[1:] + [winner]
 
         if self.max_agent_right() >= Minority_Game_World.steps_to_win:
-            World.done = True
+            self.done = True
             # Keep the agents so that we can use them in the next game, if there is one.
             Minority_Game_World.copy_agents = World.agents
             self.print_final_scores()

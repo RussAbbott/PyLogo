@@ -179,7 +179,7 @@ class SegregationWorld(World):
         unhappy_count = len(self.unhappy_agents)
         percent_unhappy = round(100 * unhappy_count / len(World.agents), 2)
         print(f'nbr-unhappy: {unhappy_count:3};  %-unhappy: {percent_unhappy}.')
-        World.done = unhappy_count == 0
+        self.done = unhappy_count == 0
 
 
 # ############################################## Define GUI ############################################## #
