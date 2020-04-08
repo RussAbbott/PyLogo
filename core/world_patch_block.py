@@ -61,7 +61,8 @@ class Block(Sprite):
         text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
         line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
         obj_center = self.rect.center
-        gui.draw_label(self.label, text_center, obj_center, line_color)
+        label = self.label
+        gui.draw_label(label, text_center, obj_center, line_color)
 
     # def draw_label(self):
     #     text = gui.FONT.render(self.label, True, Color('black'), Color('white'))
