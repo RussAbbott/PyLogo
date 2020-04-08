@@ -87,7 +87,9 @@ class SimEngine:
                 break
 
             elif self.world.done:
-                SimEngine.gui_set(GOSTOP, enabled=False)
+                SimEngine.gui_set(GOSTOP, enabled=True)
+                SimEngine.gui_set(GO_ONCE, enabled=True)
+                # self.world.done = False
                 break
 
             elif SimEngine.event == '__TIMEOUT__':
@@ -118,8 +120,6 @@ class SimEngine:
         self.draw_world()
 
         # Keep setup enabled in case the user wants to change from the default setup.
-        # if auto_setup:
-        #     SimEngine.gui_set('setup', enabled=False)
 
         # Let events come through pygame to this level.
         pg.event.set_grab(False)

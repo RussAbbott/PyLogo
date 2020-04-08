@@ -1,12 +1,13 @@
 
 from __future__ import annotations
 
-from math import copysign, hypot
 from functools import lru_cache
+from math import copysign, hypot
+from random import randint
 
 import core.gui as gui
-from core.sim_engine import SimEngine
 import core.utils as utils
+from core.sim_engine import SimEngine
 
 
 class XY(tuple):
@@ -34,6 +35,9 @@ class XY(tuple):
     def as_int(self):
         int_tuple = (int(self.x), int(self.y))
         return self.restore_type(int_tuple)
+
+    def as_tuple(self):
+        return (self.x, self.y)
 
     def cap_abs_value(self, magnitude_max):
         new_x = copysign(min(magnitude_max, abs(self.x)), self.x)
@@ -81,7 +85,8 @@ class Pixel_xy(XY):
 
     def distance_to(self, other):
         # Try all ways to get there possibly including wrapping around.
-        wrap = not SimEngine.gui_get('Bounce?')
+        bounce = SimEngine.gui_get('Bounce?')
+        wrap = bounce is not None and not bounce
 
         # Can't do this directly since importing World would be circular
         end_pts = [(self, other)]
@@ -114,6 +119,12 @@ class Pixel_xy(XY):
         row = self.y // gui.BLOCK_SPACING()
         col = self.x // gui.BLOCK_SPACING()
         return RowCol((int(row), int(col)))
+
+    @staticmethod
+    def random_pixel():
+        x_random = randint(1, gui.SCREEN_PIXEL_WIDTH()-1)
+        y_random = randint(1, gui.SCREEN_PIXEL_HEIGHT()-1)
+        return Pixel_xy((x_random, y_random))
 
     def wrap(self):
         screen_rect = gui.SCREEN.get_rect()

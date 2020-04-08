@@ -160,7 +160,6 @@ class Agent(Block):
         return dist
 
     def distance_to_pixel(self, pxl):
-        # wrap = not SimEngine.gui_get('Bounce?')
         dist = (self.center_pixel).distance_to(pxl)
         return dist
 
@@ -188,6 +187,10 @@ class Agent(Block):
 
     def in_links(self):
         return [lnk for lnk in World.links if lnk.directed and lnk.agent_2 is self]
+
+    # @property
+    # def label(self):
+    #     return str(self.center_pixel.as_tuple())
 
     def lnk_nbrs(self):
         """
@@ -290,6 +293,10 @@ class Agent(Block):
 
     def undirected_links(self):
         return [lnk for lnk in self.all_links() if not lnk.directed]
+
+    @property
+    def x_y(self):
+        return self.center_pixel.as_tuple()
 
     @property
     def x(self):

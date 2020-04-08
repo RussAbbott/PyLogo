@@ -26,8 +26,6 @@ class Individual:
         self.chromosome: Chromosome = chromosome if isinstance(chromosome, tuple) else \
                                       GA_World.seq_to_chromosome(chromosome)
         # No need to compute fitness multiple times. Cache it here.
-        # if isinstance(self.chromosome, list):
-        #     print('list')
         self.fitness = self.compute_fitness()
 
     def compute_fitness(self):
@@ -73,20 +71,6 @@ class Individual:
     def mutate(self) -> Individual:
         pass
 
-    # @staticmethod
-    # def move_elt(chromosome: Chromosome):
-    #     """
-    #     This is our own mutation operator. It moves an Gene from one place to another in the list.
-    #     """
-    #     # Ensures that the two index positions are different.
-    #     (indx_1, indx_2) = sample(list(range(len(chromosome))), 2)
-    #     # Can't perform the next line on a tuple. So change it into
-    #     # a list and then change it back into a tuple. That way the
-    #     # original tuple is unchanged.
-    #     list_chromosome: List[Gene] = list(chromosome)
-    #     list_chromosome.insert(indx_2, list_chromosome.pop(indx_1))
-    #     return GA_World.seq_to_chromosome(list_chromosome)
-    #
     @staticmethod
     def reverse_subseq(chromosome):
         """
@@ -122,9 +106,9 @@ class GA_World(World):
         self.BEST = 'best'
         self.WORST = 'worst'
 
-    def generate_children(self):
-        parent_1 = self.gen_parent()
-        parent_2 = self.gen_parent()
+    def generate_2_children(self):
+        parent_1 = self.get_parent()
+        parent_2 = self.get_parent()
         (child_1, child_2) = parent_1.mate_with(parent_2)
         child_1_mutated: Individual = child_1.mutate()
         child_2_mutated: Individual = child_2.mutate()
@@ -134,28 +118,24 @@ class GA_World(World):
 
         dest_1_indx = self.select_gene_index(self.WORST, self.tournament_size)
         dest_2_indx = self.select_gene_index(self.WORST, self.tournament_size)
-        self.individuals[dest_1_indx] = child_1_mutated
-        self.individuals[dest_2_indx] = child_2_mutated
+        self.individuals[dest_1_indx] = min([child_1, child_1_mutated], key=lambda c: c.discrepancy)
+        self.individuals[dest_2_indx] = min([child_2, child_2_mutated], key=lambda c: c.discrepancy)
 
     def gen_individual(self):
         pass
-
-    def gen_parent(self):
-        if randint(0, 99) < SimEngine.gui_get('prob_random_parent'):
-            parent = self.gen_individual()
-            # if isinstance(parent.chromosome, list):
-            #     print('list')
-        else:
-            parent_indx = self.select_gene_index(self.BEST, self.tournament_size)
-            parent = self.individuals[parent_indx]
-            # if isinstance(parent.chromosome, list):
-            #     print('list')
-        return parent
 
     def get_best_individual(self):
         best_index = self.select_gene_index(self.BEST, len(self.individuals))
         best_individual = self.individuals[best_index]
         return best_individual
+
+    def get_parent(self):
+        if randint(0, 99) < SimEngine.gui_get('prob_random_parent'):
+            parent = self.gen_individual()
+        else:
+            parent_indx = self.select_gene_index(self.BEST, self.tournament_size)
+            parent = self.individuals[parent_indx]
+        return parent
 
     def handle_event(self, event):
         if event == 'fitness_target':
@@ -168,7 +148,7 @@ class GA_World(World):
 
     def select_gene_index(self, best_or_worst, tournament_size) -> int:
         min_or_max = min if best_or_worst == self.BEST else max
-        candidate_indices = sample(range(len(self.individuals)), tournament_size)
+        candidate_indices = sample(range(self.pop_size), min(tournament_size, self.pop_size))
         selected_index = min_or_max(candidate_indices, key=lambda i: self.individuals[i].discrepancy)
         return selected_index
 
@@ -187,7 +167,8 @@ class GA_World(World):
     # noinspection PyAttributeOutsideInit
     def setup(self):
         # Create a list of Individuals as the initial population.
-        self.pop_size = SimEngine.gui_get('pop_size')
+        # self.pop_size must be even since we generate children two at a time.
+        self.pop_size = (SimEngine.gui_get('pop_size')//2)*2
         self.tournament_size = SimEngine.gui_get('tourn_size')
         GA_World.fitness_target = SimEngine.gui_get('fitness_target')
         self.individuals = self.initial_individuals()
@@ -196,12 +177,13 @@ class GA_World(World):
         self.set_results()
 
     def step(self):
-        if self.best_ind and self.best_ind.discrepancy == 0:
+        if self.best_ind and self.best_ind.discrepancy < 0.05:
+            self.done = True
             return
 
+        # print('\n------------------------------------')
         for i in range(self.pop_size//2):
-            # print(i)
-            self.generate_children()
+            self.generate_2_children()
 
         self.generations += 1
         self.set_results()
@@ -220,8 +202,8 @@ gui_left_upper = [
                     sg.Text('000000000', key='generations', pad=(None, (0, 0))),
                     ],
 
-                   [sg.Text('Population size', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='pop_size', range=(10, 500), resolution=10, default_value=100,
+                   [sg.Text('Population size\n(must be even)', pad=((0, 5), (20, 0))),
+                    sg.Slider(key='pop_size', range=(4, 100), resolution=2, default_value=50,
                               orientation='horizontal', size=(10, 20))
                     ],
 
