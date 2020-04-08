@@ -52,11 +52,6 @@ class SimEngine:
         value = SimEngine.values.get(key, None) if not flip else not SimEngine.values.get('disabled', None)
         return int(value) if isinstance(value, float) and value == int(value) else value
 
-    # @staticmethod
-    # def gui_set(key, **kwargs):
-    #     # Replacement of 'enabled' with 'disabled' is done in gui.gui-set.
-    #     gui.gui_set(key, **kwargs)
-    #
     @staticmethod
     def gui_set(key, **kwargs):
         """
@@ -91,7 +86,7 @@ class SimEngine:
                 SimEngine.gui_set(GO_ONCE, enabled=True)
                 break
 
-            elif self.world._done():
+            elif self.world.done:
                 SimEngine.gui_set(GOSTOP, enabled=False)
                 break
 

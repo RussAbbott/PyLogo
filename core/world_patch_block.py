@@ -15,7 +15,7 @@ import core.gui as gui
 # noinspection PyUnresolvedReferences
 import core.world_patch_block as world
 from core.gui import SHAPES
-from core.pairs import Pixel_xy, RowCol
+from core.pairs import center_pixel, Pixel_xy, RowCol
 from core.utils import get_class_name
 
 
@@ -154,14 +154,15 @@ class Patch(Block):
 
 class World:
 
-    patches_array: np.ndarray = None
-    patches = None
     agents = None
     links = None
 
+    patches = None
+    patches_array: np.ndarray = None
+
     ticks = None
 
-    done = False
+    # done = False
 
     def __init__(self, patch_class, agent_class):
 
@@ -171,6 +172,7 @@ class World:
         self.create_patches_array()
 
         self.agent_class = agent_class
+        self.done = False
         self.reset_all()
 
     @staticmethod
@@ -184,12 +186,12 @@ class World:
         for _ in range(nbr_agents):
             self.agent_class()
 
-    def create_ordered_agents(self, n, shape_name='netlogo_figure', radius=140):
+    def create_ordered_agents(self, n, shape_name='netlogo_figure', scale=1.4, color=None, radius=140):
         """
         Create n Agents with headings evenly spaced from 0 to 360
         Return a list of the Agents in the order created.
         """
-        agent_list = [self.agent_class(shape_name=shape_name) for _ in range(n)]
+        agent_list = [self.agent_class(shape_name=shape_name, scale=scale, color=color) for _ in range(n)]
         for (i, agent) in enumerate(agent_list):
             heading = i * 360 / n
             agent.set_heading(heading)
@@ -204,9 +206,18 @@ class World:
         # .flat is an iterator. Can't use it more than once.
         World.patches = list(World.patches_array.flat)
 
-    @staticmethod
-    def _done():
-        return World.done
+    def create_random_agents(self, n, shape_name='netlogo_figure', color=None, scale=1.4):
+        """
+        Create n Agents placed randomly on the screen. They are all facing the screen's center pixel.
+        """
+        for _ in range(n):
+            agent = self.agent_class(color=color, shape_name=shape_name, scale=scale)
+            agent.move_to_xy(Pixel_xy.random_pixel())
+            agent.face_xy(center_pixel())
+
+    # @staticmethod
+    # def _done():
+    #     return self.done
 
     def draw(self):
         """ 
@@ -259,6 +270,7 @@ class World:
         return patch
 
     def reset_all(self):
+        self.done = False
         self.clear_all()
         self.reset_ticks()
 
