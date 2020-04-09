@@ -163,8 +163,6 @@ class World:
 
     ticks = None
 
-    # done = False
-
     def __init__(self, patch_class, agent_class):
 
         World.ticks = 0
@@ -215,10 +213,6 @@ class World:
             agent = self.agent_class(color=color, shape_name=shape_name, scale=scale)
             agent.move_to_xy(Pixel_xy.random_pixel())
             agent.face_xy(center_pixel())
-
-    # @staticmethod
-    # def _done():
-    #     return self.done
 
     def draw(self):
         """ 
