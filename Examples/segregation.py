@@ -45,9 +45,9 @@ class SegregationAgent(Agent):
         Returns 100 if no neighbors,
         """
         self.move_to_patch(patch)
-        agents_nearby_list = [tur for patch in self.current_patch().neighbors_8() for tur in patch.agents]
+        agents_nearby_list = [agent for patch in self.current_patch().neighbors_8() for agent in patch.agents]
         total_nearby_count = len(agents_nearby_list)
-        similar_nearby_count = len([tur for tur in agents_nearby_list if tur.color == self.color])
+        similar_nearby_count = len([agent for agent in agents_nearby_list if agent.color == self.color])
         # Isolated agents, i.e., with no neighbors, are considered
         # to have 100% similar neighbors, and are counted as happy.
         similar_here_pct = 100 if total_nearby_count == 0 else round(100 * similar_nearby_count / total_nearby_count)
@@ -56,8 +56,9 @@ class SegregationAgent(Agent):
     def pct_similarity_satisfied_here(self, patch) -> float:
         """
         Returns the degree to which the similarity here satisfies pct_similar_wanted.
-        Returns a fraction between 0 and 1.
-        Never more than 1. Doesn't favor more similar patches over sufficiently similar patches.
+        Returns a value between 0 and 1. (Never more than 1.)
+        Doesn't favor patches with more similar neighbors over patches with just a
+        sufficient number of similar neighbors.
         """
         return min(1.0, self.pct_similar_here(patch)/SegregationAgent.pct_similar_wanted)
 
@@ -83,7 +84,7 @@ class SegregationWorld(World):
         self.percent_unhappy = None
         self.unhappy_agents = None
         # This is an experimental number.
-        self.max_agents_per_step = 60
+        self.max_agents_per_step = None
         self.patch_color = Color('white')
         self.color_items = None
 
@@ -141,6 +142,7 @@ class SegregationWorld(World):
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
+        self.max_agents_per_step = SimEngine.gui_get('max_agent_per_step')
         # print('About to create agents')
         for patch in self.patches:
             patch.set_color(self.patch_color)
@@ -198,6 +200,11 @@ gui_left_upper = [[sg.Text('density'),
                            default_value=100,
                            tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
                                    'to make someone happy.')],
+
+                  [sg.Text('Max agents per step'),
+                   sg.Slider(key='max_agent_per_step', range=(10, 1000), resolution=10, size=(10, 20),
+                             default_value=100, orientation='horizontal', pad=((0, 0), (0, 20)),
+                             tooltip='Maximium number of unhappy agents to move each step.')],
                   ]
 
 if __name__ == "__main__":
