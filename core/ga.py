@@ -4,6 +4,8 @@ from __future__ import annotations
 from random import choice, randint, sample
 from typing import Any, NewType, Optional, Sequence, Tuple
 
+import core.gui as gui
+from core.gui import GO_ONCE, GOSTOP
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
 
@@ -140,11 +142,23 @@ class GA_World(World):
     def handle_event(self, event):
         if event == 'fitness_target':
             GA_World.fitness_target = SimEngine.gui_get('fitness_target')
+            self.resume_ga()
             return
         super().handle_event(event)
 
     def initial_individuals(self):
         pass
+
+    def resume_ga(self):
+        if self.done:
+            self.done = False
+            self.best_ind = None
+            SimEngine.gui_set('best_fitness', value=None)
+            go_stop_button = gui.WINDOW[GOSTOP]
+            SimEngine.gui_set(GOSTOP, enabled=True)
+            SimEngine.gui_set(GO_ONCE, enabled=True)
+            go_stop_button.click()
+        self.set_results()
 
     def select_gene_index(self, best_or_worst, tournament_size) -> int:
         min_or_max = min if best_or_worst == self.BEST else max
@@ -181,7 +195,6 @@ class GA_World(World):
             self.done = True
             return
 
-        # print('\n------------------------------------')
         for i in range(self.pop_size//2):
             self.generate_2_children()
 
@@ -217,11 +230,6 @@ gui_left_upper = [
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   # [sg.Text('Prob move elt', pad=((0, 5), (20, 0))),
-                   #  sg.Slider(key='move_elt_internally', range=(0, 100), default_value=20,
-                   #            orientation='horizontal', size=(10, 20))
-                   #  ],
-                   #
                    [sg.Text('Prob reverse sublist', pad=((0, 5), (20, 0))),
                     sg.Slider(key='reverse_subseq', range=(0, 100), default_value=20,
                               orientation='horizontal', size=(10, 20))
