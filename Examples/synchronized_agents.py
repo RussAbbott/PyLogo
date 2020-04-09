@@ -56,14 +56,22 @@ class Synchronized_Agent_World(World):
             agent.cached_heading = agent.heading
 
     def grow_shrink(self, grow_or_shrink):
+        """
+        Called when the agent gets to close to the center or too far away.
+        It is not a figure. The agents may be performing any figure. This
+        simple
+        """
         offset = choice([-30, 30])
         for agent in World.agents:
+
             # At each step, the agents start pointing to the center.
             if grow_or_shrink == 'grow':
                 agent.turn_right(180)
             agent.forward()
+
             # This is needed in case we are moving twitchily.
             agent.cached_heading = agent.heading + offset
+
             # Set the breathing phase in case we are currently breathing.
             self.breathing_phase = 'inhale' if grow_or_shrink == 'grow' else 'exhale'
 

@@ -2,7 +2,6 @@
 from itertools import cycle
 from random import random, uniform
 
-from core.agent import Agent
 from core.pairs import Velocity
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
@@ -17,9 +16,12 @@ class Starburst_World(World):
     def setup(self):
         nbr_agents = SimEngine.gui_get('nbr_agents')
         for _ in range(nbr_agents):
-            # When created, a agent adds itself to self.agents and to its patch's list of Agents.
-            # self.agent_class(scale=1)
-            Agent(scale=1)
+            # When created, a agent adds itself to World.agents and to its patch's list of Agents.
+
+            # To create an agent:
+            #         Agent(scale=1)
+            # More generallly, though, you can use the agent_class the system knows about.
+            self.agent_class(scale=1)
 
         initial_velocities = cycle([Velocity((-1, -1)), Velocity((-1, 1)),
                                     Velocity((0, 0)),
