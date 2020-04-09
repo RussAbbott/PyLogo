@@ -10,11 +10,13 @@ from core.world_patch_block import Patch, World
 
 class SegregationAgent(Agent):
 
+    pct_similar_wanted = None
+
     def __init__(self, color=None):
         super().__init__(color=color)
         self.is_happy = None
         self.pct_similar = None
-        self.pct_similar_wanted = None
+        # self.pct_similar_wanted = None
 
     def find_new_spot(self, empty_patches):
         """
@@ -24,7 +26,7 @@ class SegregationAgent(Agent):
 
         Keep track of the empty patches instead of wandering around looking for one.
         The original NetLogo code doesn't check to see if the agent would be happy in its new spot.
-        (Doing so doesn't guarantee that the formerly happy new neighbors in the new spot remain happy!)
+        (Doing so doesn't guarantee that the formerly happy neighbors in the new spot remain happy!)
         """
         # Keep track of the current patch. Will add to empty patches after this Agent moves.
         current_patch = self.current_patch()
@@ -57,7 +59,7 @@ class SegregationAgent(Agent):
         Returns a fraction between 0 and 1.
         Never more than 1. Doesn't favor more similar patches over sufficiently similar patches.
         """
-        return min(1.0, self.pct_similar_here(patch)/self.pct_similar_wanted)
+        return min(1.0, self.pct_similar_here(patch)/SegregationAgent.pct_similar_wanted)
 
 
     def update(self):
@@ -65,7 +67,7 @@ class SegregationAgent(Agent):
         Determine pct_similar and whether this agent is happy.
         """
         self.pct_similar = self.pct_similar_here(self.current_patch())
-        self.is_happy = self.pct_similar >= self.pct_similar_wanted
+        self.is_happy = self.pct_similar >= SegregationAgent.pct_similar_wanted
 
 
 class SegregationWorld(World):
@@ -134,20 +136,20 @@ class SegregationWorld(World):
 
     def setup(self):
         density = SimEngine.gui_get('density')
-        pct_similar_wanted = SimEngine.gui_get('% similar wanted')
+        SegregationAgent.pct_similar_wanted = SimEngine.gui_get('% similar wanted')
         self.color_items = self.select_the_colors()
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
         # print('About to create agents')
-        for patch in self.patches:   # .flat:.flat:
+        for patch in self.patches:
             patch.set_color(self.patch_color)
             patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
 
             # Create the Agents. The density is approximate.
             if randint(0, 100) <= density:
                 agent = SegregationAgent(color=choice([color_a, color_b]))
-                agent.pct_similar_wanted = pct_similar_wanted
+                # agent.pct_similar_wanted = pct_similar_wanted
                 agent.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
@@ -156,7 +158,7 @@ class SegregationWorld(World):
 
     def step(self):
         nbr_unhappy_agents = len(self.unhappy_agents)
-        # If there are small number of unhappy agents, move them carefully.
+        # If there is a small number of unhappy agents, move them carefully.
         # Otherwise move the smaller of self.max_agents_per_step and nbr_unhappy_agents
         sample_size = max(1, round(nbr_unhappy_agents/2)) if nbr_unhappy_agents <= 4 else \
                       min(self.max_agents_per_step, nbr_unhappy_agents)
