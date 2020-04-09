@@ -57,7 +57,7 @@ class Synchronized_Agent_World(World):
 
     def grow_shrink(self, grow_or_shrink):
         """
-        Called when the agent gets to close to the center or too far away.
+        Called when the agent gets to close too the center or too far away.
         It is not a figure. The agents may be performing any figure. This
         simple
         """
