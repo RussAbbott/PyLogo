@@ -142,7 +142,7 @@ class SegregationWorld(World):
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
-        self.max_agents_per_step = SimEngine.gui_get('max_agent_per_step')
+        self.max_agents_per_step = SimEngine.gui_get('max_agents_per_step')
         # print('About to create agents')
         for patch in self.patches:
             patch.set_color(self.patch_color)
@@ -160,7 +160,7 @@ class SegregationWorld(World):
 
     def step(self):
         nbr_unhappy_agents = len(self.unhappy_agents)
-        # If there is a small number of unhappy agents, move them carefully.
+        # If there are only a few unhappy agents, move them carefully.
         # Otherwise move the smaller of self.max_agents_per_step and nbr_unhappy_agents
         sample_size = max(1, round(nbr_unhappy_agents/2)) if nbr_unhappy_agents <= 4 else \
                       min(self.max_agents_per_step, nbr_unhappy_agents)
@@ -202,8 +202,8 @@ gui_left_upper = [[sg.Text('density'),
                                    'to make someone happy.')],
 
                   [sg.Text('Max agents per step'),
-                   sg.Slider(key='max_agent_per_step', range=(10, 1000), resolution=10, size=(10, 20),
-                             default_value=100, orientation='horizontal', pad=((0, 0), (0, 20)),
+                   sg.Slider(key='max_agents_per_step', range=(10, 2000), resolution=10, size=(10, 20),
+                             default_value=500, orientation='horizontal', pad=((0, 0), (0, 20)),
                              tooltip='Maximium number of unhappy agents to move each step.')],
                   ]
 
