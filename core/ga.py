@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from random import choice, randint, sample
-from typing import Any, NewType, Optional, Sequence, Tuple
+from typing import Any, List, NewType, Optional, Sequence, Tuple
 
 import core.gui as gui
 from core.gui import GO_ONCE, GOSTOP
@@ -27,10 +27,9 @@ class Individual:
     def __init__(self, chromosome: Sequence[Gene]):
         self.chromosome: Chromosome = chromosome if isinstance(chromosome, tuple) else \
                                       GA_World.seq_to_chromosome(chromosome)
-        # No need to compute fitness multiple times. Cache it here.
         self.fitness = self.compute_fitness()
 
-    def compute_fitness(self):
+    def compute_fitness(self) -> float:
         pass
 
     @staticmethod
@@ -69,6 +68,18 @@ class Individual:
 
     def mate_with(self, other) -> Tuple[Individual, Individual]:
         pass
+
+    @staticmethod
+    def move_gene(chromosome):
+        """
+        This mutation operator moves a gene from one place to another.
+        """
+        (from_index, to_index) = sorted(sample(list(range(len(chromosome))), 2))
+        list_chromosome: List[Gene] = list(chromosome)
+        gene_to_move: Gene = list_chromosome[from_index]
+        revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
+        revised_list.insert(to_index, gene_to_move)
+        return GA_World.seq_to_chromosome(revised_list)
 
     def mutate(self) -> Individual:
         pass
@@ -216,7 +227,7 @@ gui_left_upper = [
                     ],
 
                    [sg.Text('Population size\n(must be even)', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='pop_size', range=(4, 100), resolution=2, default_value=50,
+                    sg.Slider(key='pop_size', range=(4, 100), resolution=2, default_value=10,
                               orientation='horizontal', size=(10, 20))
                     ],
 
@@ -230,7 +241,12 @@ gui_left_upper = [
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   [sg.Text('Prob reverse sublist', pad=((0, 5), (20, 0))),
+                   [sg.Text('Prob move gene', pad=((0, 5), (20, 0))),
+                    sg.Slider(key='move_gene', range=(0, 100), default_value=20,
+                              orientation='horizontal', size=(10, 20))
+                    ],
+
+                   [sg.Text('Prob reverse subsequence', pad=((0, 5), (20, 0))),
                     sg.Slider(key='reverse_subseq', range=(0, 100), default_value=20,
                               orientation='horizontal', size=(10, 20))
                     ],
