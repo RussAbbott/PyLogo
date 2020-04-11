@@ -231,11 +231,6 @@ gui_left_upper = [
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   [sg.Text('Nbr points', pad=((0, 5), (10, 0))),
-                    sg.Slider(key='nbr_points', range=(10, 200), default_value=100,
-                              orientation='horizontal', size=(10, 20))
-                    ],
-
                    [sg.Text('Tournament size', pad=((0, 5), (10, 0))),
                     sg.Slider(key='tourn_size', range=(3, 15), resolution=1, default_value=7,
                               orientation='horizontal', size=(10, 20))
@@ -252,7 +247,7 @@ gui_left_upper = [
                     ],
 
                    [sg.Text('Prob random parent', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='prob_random_parent', range=(0, 100), default_value=35,
+                    sg.Slider(key='prob_random_parent', range=(0, 100), default_value=5,
                               orientation='horizontal', size=(10, 20))
                     ],
 

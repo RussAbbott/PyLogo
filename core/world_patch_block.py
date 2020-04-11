@@ -7,19 +7,18 @@ from typing import Tuple
 import numpy as np
 from pygame.color import Color
 from pygame.rect import Rect
-from pygame.sprite import Sprite
 from pygame.surface import Surface
 
 import core.gui as gui
-# Importing this file eliminates the need for a globals declaration
+# Importing the file itself eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
 import core.world_patch_block as world
 from core.gui import SHAPES
-from core.pairs import center_pixel, Pixel_xy, RowCol
+from core.pairs import Pixel_xy, RowCol, center_pixel
 from core.utils import get_class_name
 
 
-class Block(Sprite):
+class Block:  # (Sprite):
     """
     A generic patch/agent. Has a Pixel_xy but not necessarily a RowCol. Has a Color.
     """
@@ -63,14 +62,6 @@ class Block(Sprite):
         obj_center = self.rect.center
         label = self.label
         gui.draw_label(label, text_center, obj_center, line_color)
-
-    # def draw_label(self):
-    #     text = gui.FONT.render(self.label, True, Color('black'), Color('white'))
-    #     offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
-    #     text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
-    #     gui.blit(text, text_center)
-    #     line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
-    #     gui.draw_line(start_pixel=self.rect.center, end_pixel=text_center, line_color=line_color)
 
     @property
     def label(self):
