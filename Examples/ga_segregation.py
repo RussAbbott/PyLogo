@@ -80,17 +80,38 @@ class Segregation_Individual(Individual):
     def mate_with(self, other):
         return self.cx_all_diff(self, other)
 
+    @staticmethod
+    def move_ga_gene(chromosome, satisfactions):
+        """
+        This mutation operator moves a gene from one place to another.
+        This version selects a "bad" gene to move.
+        """
+        candidate_indices = Segregation_Individual.unhappy_elements_indices(satisfactions)
+        if not candidate_indices:
+            return chromosome
+        from_index = choice(candidate_indices)
+        to_index = choice(range(len(chromosome)))
+        list_chromosome: List[Gene] = list(chromosome)
+        gene_to_move: Gene = list_chromosome[from_index]
+        revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
+        revised_list.insert(to_index, gene_to_move)
+        return GA_World.seq_to_chromosome(revised_list)
+
     def mutate(self) -> Individual:
         if randint(0, 100) <= SimEngine.gui_get('exchange_genes'):
             (self.chromosome, self.fitness, self.satisfactions) = \
                 self.exchange_genes_in_chromosome(self.chromosome, self.satisfactions)
 
-        elif randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
-            self.chromosome = self.reverse_subseq(self.chromosome)
+        elif randint(0, 100) <= SimEngine.gui_get('move_ga_gene'):
+            self.chromosome = self.move_ga_gene(self.chromosome, self.satisfactions)
             (self.satisfactions, self.fitness) = self.compute_chromosome_fitness(self.chromosome)
 
         elif randint(0, 100) <= SimEngine.gui_get('move_gene'):
             self.chromosome = self.move_gene(self.chromosome)
+            (self.satisfactions, self.fitness) = self.compute_chromosome_fitness(self.chromosome)
+
+        elif randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
+            self.chromosome = self.reverse_subseq(self.chromosome)
             (self.satisfactions, self.fitness) = self.compute_chromosome_fitness(self.chromosome)
 
         return self
@@ -118,6 +139,11 @@ class Segregation_Individual(Individual):
         unhappy_indices = [i for i in range(length) if chromosome[i].val == value and not satisfactions[i]]
         return unhappy_indices
 
+    @staticmethod
+    def unhappy_elements_indices(satisfactions):
+        unhappy_indices = [i for i in range(len(satisfactions)) if not satisfactions[i]]
+        return unhappy_indices
+
 
 class Segregation_World(GA_World):
     
@@ -132,8 +158,8 @@ class Segregation_World(GA_World):
         self.insert_window()
 
     def gen_individual(self):
-        zeros = [0]*(self.chromosome_length//2)
-        ones = [1]*(self.chromosome_length//2)
+        zeros = [0]*(self.chromosome_length//2+2)
+        ones = [1]*(self.chromosome_length//2+2)
         mixture = sample(zeros + ones, self.chromosome_length)
         chromosome_list: Tuple[Gene] = tuple(Gene(id, val) for (id, val) in zip(count(), mixture))
         individual = Segregation_World.individual_class(Segregation_World.seq_to_chromosome(chromosome_list))
@@ -176,6 +202,11 @@ class Segregation_World(GA_World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 seg_gui_left_upper = gui_left_upper + [
+                      [sg.Text('Move unhappy gene', pad=((0, 5), (20, 0))),
+                       sg.Slider(key='move_ga_gene', range=(0, 100), default_value=30,
+                                 orientation='horizontal', size=(10, 20))
+                       ],
+
                       [sg.Text('Exchange two genes', pad=((0, 5), (20, 0))),
                        sg.Slider(key='exchange_genes', range=(0, 100), default_value=0,
                                  orientation='horizontal', size=(10, 20))
@@ -187,7 +218,7 @@ seg_gui_left_upper = gui_left_upper + [
                        ],
 
                       [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                       sg.Slider(key='chrom_length', range=(10, 50), default_value=50, pad=((10, 0), (0, 0)),
+                       sg.Slider(key='chrom_length', range=(10, 250), default_value=200, pad=((10, 0), (0, 0)),
                                  orientation='horizontal', size=(10, 20), enable_events=True)
                        ],
 
@@ -196,4 +227,5 @@ seg_gui_left_upper = gui_left_upper + [
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Segregation_World, 'GA Segregation', seg_gui_left_upper)
+    PyLogo(Segregation_World, 'GA Segregation', seg_gui_left_upper,
+           patch_size=3, board_rows_cols=(200, 200))
