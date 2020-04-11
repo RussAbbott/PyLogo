@@ -4,8 +4,12 @@ from itertools import count
 from random import choice, randint, sample
 from typing import List, Tuple
 
+from pygame.color import Color
 from core.ga import Chromosome, GA_World, Individual, gui_left_upper
+import core.gui as gui
 from core.sim_engine import SimEngine
+from core.world_patch_block import World
+
 
 Gene = namedtuple('Gene', ['id', 'val'])
 
@@ -17,12 +21,14 @@ class Segregation_Individual(Individual):
         super().__init__(*args, **kwargs)
 
     def __str__(self):
-        sats = self.satisfactions
-        return f'{self.fitness}: {Segregation_Individual.chrom_to_string(self.chromosome)}\n' \
-               f'{" "*len(str(self.fitness))}  {"".join([" " if sats[i] else "^" for i in range(len(sats))])}'
+        # sats = self.satisfactions
+        return f'{self.fitness}: ' \
+               f'{Segregation_Individual.chromosome_string(self.chromosome)}' \
+               f'\n' \
+               f'{" "*len(str(self.fitness))}  {Segregation_Individual.satisfactions_string(self.satisfactions)}'
 
     @staticmethod
-    def chrom_to_string(chromosome):
+    def chromosome_string(chromosome):
         return ''.join([str(gene.val) for gene in chromosome])
 
     def compute_fitness(self) -> float:
@@ -38,15 +44,20 @@ class Segregation_Individual(Individual):
         return (satisfactions, fitness)
 
     @staticmethod
+    def element_indices(value, chromosome, length):
+        unhappy_indices = [i for i in range(length) if chromosome[i].val == value]
+        return unhappy_indices
+
+    @staticmethod
     def exchange_genes_in_chromosome(chromosome, satisfactions) -> Tuple[Chromosome, int, List[bool]]:
         len_chrom = len(chromosome)
-        unhappy_zero_indices = Segregation_Individual.unhappy_elements(0, chromosome, satisfactions, len_chrom)
-        unhappy_one_indices = Segregation_Individual.unhappy_elements(1, chromosome, satisfactions, len_chrom)
-        if not unhappy_zero_indices:
-            unhappy_zero_indices = list(range(len_chrom))
-        if not unhappy_one_indices:
-            unhappy_one_indices = list(range(len_chrom))
-        (zero_index, one_index) = (choice(unhappy_zero_indices), choice(unhappy_one_indices))
+        candidate_zero_indices = Segregation_Individual.unhappy_element_indices(0, chromosome, satisfactions, len_chrom)
+        candidate_one_indices = Segregation_Individual.unhappy_element_indices(1, chromosome, satisfactions, len_chrom)
+        if not candidate_zero_indices:
+            candidate_zero_indices = Segregation_Individual.element_indices(0, chromosome, len_chrom)
+        if not candidate_one_indices:
+            candidate_one_indices = Segregation_Individual.element_indices(1, chromosome, len_chrom)
+        (zero_index, one_index) = (choice(candidate_zero_indices), choice(candidate_one_indices))
         c_list: List[int] = list(chromosome)
         (c_list[zero_index], c_list[one_index]) = (c_list[one_index], c_list[zero_index])
         # noinspection PyTypeChecker
@@ -85,7 +96,25 @@ class Segregation_Individual(Individual):
         return self
 
     @staticmethod
-    def unhappy_elements(value, chromosome, satisfactions, length):
+    def satisfactions_string(satisfactions: List[bool]):
+        return f'{"".join([" " if satisfactions[i] else "^" for i in range(len(satisfactions))])}'
+
+    def set_best_rotation(self):
+        best_rotation = self.chromosome
+        best_chrom_string = Segregation_Individual.chromosome_string(best_rotation)
+        rotation_amt = 0
+        for i in range(1, len(best_rotation)):
+            rotation = Individual.rotate_by(self.chromosome, i)
+            chrom_string_r = Segregation_Individual.chromosome_string(rotation)
+            if chrom_string_r < best_chrom_string:
+                best_rotation = rotation
+                best_chrom_string = chrom_string_r
+                rotation_amt = i
+        self.chromosome = best_rotation
+        self.satisfactions = Individual.rotate_by(self.satisfactions, rotation_amt)
+
+    @staticmethod
+    def unhappy_element_indices(value, chromosome, satisfactions, length):
         unhappy_indices = [i for i in range(length) if chromosome[i].val == value and not satisfactions[i]]
         return unhappy_indices
 
@@ -95,6 +124,12 @@ class Segregation_World(GA_World):
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
         self.chromosome_length = None
+
+    def display_best_ind(self):
+        best_ind = self.best_ind
+        best_ind.set_best_rotation()
+        print(str(best_ind))
+        self.insert_window()
 
     def gen_individual(self):
         zeros = [0]*(self.chromosome_length//2)
@@ -109,9 +144,27 @@ class Segregation_World(GA_World):
         # Individual.count = self.pop_size
         return individuals
 
+    def insert_window(self, window_rows=3):
+        for i in range(0, gui.PATCH_ROWS, window_rows):
+            for r in range(window_rows):
+                if i + r + window_rows < gui.PATCH_ROWS:
+                    for c in range(gui.PATCH_COLS):
+                        World.patches_array[i+r, c].set_color(World.patches_array[i+r+window_rows, c].color)
+
+        chrom_string = Segregation_Individual.chromosome_string(self.best_ind.chromosome)
+        blue = Color('slateblue2')
+        yellow = Color('yellow')
+        for c in range(len(chrom_string)):
+            World.patches_array[gui.PATCH_ROWS-3, c].set_color(yellow if chrom_string[c] == '1' else blue)
+        sats = self.best_ind.satisfactions
+        red = Color('red')
+        black = Color('black')
+        for c in range(len(sats)):
+            World.patches_array[gui.PATCH_ROWS-2, c].set_color(black if sats[c] else red)
+
     def set_results(self):
         super().set_results()
-        print(str(self.best_ind))
+        self.display_best_ind()
 
     def setup(self):
         GA_World.individual_class = Segregation_Individual
@@ -124,7 +177,7 @@ class Segregation_World(GA_World):
 import PySimpleGUI as sg
 seg_gui_left_upper = gui_left_upper + [
                       [sg.Text('Exchange two genes', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='exchange_genes', range=(0, 100), default_value=95,
+                       sg.Slider(key='exchange_genes', range=(0, 100), default_value=0,
                                  orientation='horizontal', size=(10, 20))
                        ],
 
@@ -134,7 +187,7 @@ seg_gui_left_upper = gui_left_upper + [
                        ],
 
                       [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                       sg.Slider(key='chrom_length', range=(10, 500), default_value=100, pad=((10, 0), (0, 0)),
+                       sg.Slider(key='chrom_length', range=(10, 50), default_value=50, pad=((10, 0), (0, 0)),
                                  orientation='horizontal', size=(10, 20), enable_events=True)
                        ],
 

@@ -161,9 +161,8 @@ class SegregationWorld(World):
     def step(self):
         nbr_unhappy_agents = len(self.unhappy_agents)
         # If there are only a few unhappy agents, move them carefully.
-        # Otherwise move the smaller of self.max_agents_per_step and nbr_unhappy_agents
-        sample_size = max(1, round(nbr_unhappy_agents/2)) if nbr_unhappy_agents <= 4 else \
-                      min(self.max_agents_per_step, nbr_unhappy_agents)
+        # Otherwise move the smaller of self.max_agents_per_step and nbr_unhappy_agents/2
+        sample_size = min(self.max_agents_per_step, max(1, nbr_unhappy_agents//2))
         for agent in sample(self.unhappy_agents, sample_size):
             agent.find_new_spot(self.empty_patches)
         self.update_all()

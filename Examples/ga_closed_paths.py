@@ -190,6 +190,11 @@ loop_gui_left_upper = gui_left_upper + [
                                  orientation='horizontal', size=(10, 20))
                        ],
 
+                      [sg.Text('Nbr points', pad=((0, 5), (10, 0))),
+                       sg.Slider(key='nbr_points', range=(10, 200), default_value=100,
+                                 orientation='horizontal', size=(10, 20))
+                       ],
+
                       [sg.Text('fitness_target', pad=(None, (20, 0))),
                        sg.Combo(key='fitness_target', default_value=1500, pad=((10, 0), (20, 0)), enable_events=True,
                                 values=[0, 100, 500, 700, 900, 1200, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000])

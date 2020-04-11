@@ -35,7 +35,7 @@ class Starburst_World(World):
         """
         for agent in World.agents:
             agent.move_by_velocity()
-            if World.ticks > 125 and random() < 0.01:
+            if World.ticks >= 190 and (World.ticks == 190 or random() < 0.01):
                 agent.set_velocity(Velocity((uniform(-2, 2), uniform(-2, 2))))
 
 
