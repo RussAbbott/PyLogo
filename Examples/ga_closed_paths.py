@@ -144,12 +144,6 @@ class Loop_World(GA_World):
             return
         super().handle_event(event)
 
-    def initial_individuals(self) -> List[Loop_Individual]:
-        self.cycle_length = SimEngine.gui_get('cycle_length')
-        individuals = [self.gen_individual() for _ in range(self.pop_size)]
-        Individual.count = self.pop_size
-        return individuals
-
     @staticmethod
     def link_best_chromosome(best_chromosome):
         for i in range(len(best_chromosome)):
@@ -164,12 +158,13 @@ class Loop_World(GA_World):
         GA_World.individual_class = Loop_Individual
         nbr_points = SimEngine.gui_get('nbr_points')
         self.create_random_agents(nbr_points, color=Color('white'), shape_name='node')
+        self.cycle_length = SimEngine.gui_get('cycle_length')
 
         self.mating_op = Individual.cx_all_diff
         super().setup()
 
     def update_cycle_lengths(self, cycle_length):
-        for ind in self.individuals:
+        for ind in self.population:
             chromosome = ind.chromosome
             if cycle_length < len(chromosome):
                 ind.chromosome = chromosome[:cycle_length]
@@ -213,4 +208,4 @@ loop_gui_left_upper = gui_left_upper + [
 if __name__ == "__main__":
     from core.agent import PyLogo
     # gui_left_upper is from core.ga
-    PyLogo(Loop_World, 'Loops', loop_gui_left_upper, agent_class=Loop_Agent)
+    PyLogo(Loop_World, 'Closed paths', loop_gui_left_upper, agent_class=Loop_Agent)
