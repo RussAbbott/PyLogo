@@ -1,29 +1,28 @@
 
+# This allows us to use the type Individual within the Individual class.
 from __future__ import annotations
 
 from random import choice, randint, sample
-from typing import Any, List, NewType, Optional, Sequence, Tuple
+from typing import Any, List, NewType, Sequence, Tuple
 
 import core.gui as gui
-from core.gui import GO_ONCE, GOSTOP
+from core.gui import GOSTOP, GO_ONCE
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
 
+# These create new types.
 Gene = NewType('Gene', Any)
 Chromosome = NewType('Chromosome', Tuple[Gene])
 
 
 class Individual:
     """
-    Note: An individual is NOT an agent. Individual is a separate, stand-alone class.
+    Note: An Individual is NOT an agent. Individual is a separate, stand-alone class.
 
-    An individual is a sequence of chromosome. The chromosome are typically all of the same type, e.g.,
-    a integer, a pixel, etc. The sequence is stored as a tuple to ensure that it is immutable.
-
-    In loop.py points on the screen, i.e., Pixel_xy objects, are the chromosome. As far as PyLogo is
-    concerned, they are agents. They serve as chromosome in individuals.
+    An Individual consists of a chromosome and a fitness. 
+    The chromosome is a sequence of Genes. (See type definitions above.) 
+    A chromosomes is stored as a tuple (reather than a list) to ensure that it is immutable.
     """
-
     def __init__(self, chromosome: Sequence[Gene]):
         self.chromosome: Chromosome = chromosome if isinstance(chromosome, tuple) else \
                                       GA_World.seq_to_chromosome(chromosome)
@@ -62,7 +61,7 @@ class Individual:
         return child_chromosome[:len(chromosome_1)]
 
     @property
-    def discrepancy(self):
+    def discrepancy(self) -> float:
         discr = abs(self.fitness - GA_World.fitness_target)
         return discr
 
@@ -70,7 +69,7 @@ class Individual:
         pass
 
     @staticmethod
-    def move_gene(chromosome):
+    def move_gene(chromosome: Chromosome) -> Chromosome:
         """
         This mutation operator moves a gene from one place to another.
         """
@@ -85,10 +84,8 @@ class Individual:
         pass
 
     @staticmethod
-    def reverse_subseq(chromosome):
-        """
-        This mutation operator swaps two chromosome.
-        """
+    def reverse_subseq(chromosome: Chromosome) -> Chromosome:
+        """ Reverse a subsequence of this chromosome. """
         # Ensure that the two index positions are different.
         (indx_1, indx_2) = sorted(sample(list(range(len(chromosome))), 2))
         list_chromosome = list(chromosome)
@@ -110,16 +107,22 @@ class GA_World(World):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.best_ind: Optional[Individual] = None
+        # noinspection PyTypeChecker
+        self.best_ind: Individual = None
         self.generations = None
-        self.mating_op = None
         self.pop_size = None
+        # noinspection PyTypeChecker
+        self.population: List[Individual] = None
+
+        self.mating_op = None
         self.tournament_size = None
 
         self.BEST = 'best'
         self.WORST = 'worst'
 
+    # noinspection PyNoneFunctionAssignment
     def generate_2_children(self):
+        """ Generate two children and put them into the population. """
         parent_1 = self.get_parent()
         parent_2 = self.get_parent()
         (child_1, child_2) = parent_1.mate_with(parent_2)
@@ -129,25 +132,28 @@ class GA_World(World):
         child_1_mutated.compute_fitness()
         child_2_mutated.compute_fitness()
 
-        dest_1_indx = self.select_gene_index(self.WORST, self.tournament_size)
-        dest_2_indx = self.select_gene_index(self.WORST, self.tournament_size)
-        self.individuals[dest_1_indx] = min([child_1, child_1_mutated], key=lambda c: c.discrepancy)
-        self.individuals[dest_2_indx] = min([child_2, child_2_mutated], key=lambda c: c.discrepancy)
+        dest_1_indx: int = self.select_gene_index(self.WORST, self.tournament_size)
+        dest_2_indx: int = self.select_gene_index(self.WORST, self.tournament_size)
+        # noinspection PyTypeChecker
+        self.population[dest_1_indx] = min([child_1, child_1_mutated], key=lambda c: c.discrepancy)
+        # noinspection PyTypeChecker
+        self.population[dest_2_indx] = min([child_2, child_2_mutated], key=lambda c: c.discrepancy)
 
-    def gen_individual(self):
+    def gen_individual(self) -> Individual:
         pass
 
-    def get_best_individual(self):
-        best_index = self.select_gene_index(self.BEST, len(self.individuals))
-        best_individual = self.individuals[best_index]
+    def get_best_individual(self) -> Individual:
+        best_index = self.select_gene_index(self.BEST, len(self.population))
+        best_individual = self.population[best_index]
         return best_individual
 
-    def get_parent(self):
+    def get_parent(self) -> Individual:
         if randint(0, 99) < SimEngine.gui_get('prob_random_parent'):
             parent = self.gen_individual()
         else:
             parent_indx = self.select_gene_index(self.BEST, self.tournament_size)
-            parent = self.individuals[parent_indx]
+            parent = self.population[parent_indx]
+        # noinspection PyTypeChecker
         return parent
 
     def handle_event(self, event):
@@ -157,10 +163,18 @@ class GA_World(World):
             return
         super().handle_event(event)
 
-    def initial_individuals(self):
-        pass
+    def initial_individuals(self) -> List[Individual]:
+        """
+        Generate the initial population. Use gen_individual from the subclass.
+        """
+        individuals = [self.gen_individual() for _ in range(self.pop_size)]
+        return individuals
 
     def resume_ga(self):
+        """ 
+        This is used when one of the parameters changes dynamically. 
+        It is called from handle_event. (See ga_closed_paths.)
+        """
         if self.done:
             self.done = False
             self.best_ind = None
@@ -172,16 +186,20 @@ class GA_World(World):
         self.set_results()
 
     def select_gene_index(self, best_or_worst, tournament_size) -> int:
+        """ Run a tournament to select the index of a best or worst individual in a sample. """
         min_or_max = min if best_or_worst == self.BEST else max
         candidate_indices = sample(range(self.pop_size), min(tournament_size, self.pop_size))
-        selected_index = min_or_max(candidate_indices, key=lambda i: self.individuals[i].discrepancy)
+        selected_index = min_or_max(candidate_indices, key=lambda i: self.population[i].discrepancy)
         return selected_index
 
     @staticmethod
     def seq_to_chromosome(lst: Sequence[Gene]) -> Chromosome:
+        """ Converts a list to a tuple (and a Chromosome). """
         return Chromosome(tuple(lst))
 
     def set_results(self):
+        """ Find and display the best individual. """
+        # noinspection PyNoneFunctionAssignment
         current_best_ind = self.get_best_individual()
         if self.best_ind is None or current_best_ind.discrepancy < self.best_ind.discrepancy:
             self.best_ind = current_best_ind
@@ -189,14 +207,13 @@ class GA_World(World):
         SimEngine.gui_set('discrepancy', value=round(self.best_ind.discrepancy, 1))
         SimEngine.gui_set('generations', value=self.generations)
 
-    # noinspection PyAttributeOutsideInit
     def setup(self):
         # Create a list of Individuals as the initial population.
         # self.pop_size must be even since we generate children two at a time.
         self.pop_size = (SimEngine.gui_get('pop_size')//2)*2
         self.tournament_size = SimEngine.gui_get('tourn_size')
         GA_World.fitness_target = SimEngine.gui_get('fitness_target')
-        self.individuals = self.initial_individuals()
+        self.population = self.initial_individuals()
         self.best_ind = None
         self.generations = 0
         self.set_results()

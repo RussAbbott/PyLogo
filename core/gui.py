@@ -156,17 +156,11 @@ class SimpleGUI:
         gui.PATCH_COLS = board_rows_cols[1] if board_rows_cols[1] % 2 == 1 else board_rows_cols[1] + 1
 
         self.EXIT = 'Exit'
-        # self.FPS = 'fps'
-        # self.GO = 'go'
-        # self.GO_ONCE = 'go once'
-        # self.GOSTOP = 'GoStop'
         self.GRAPH = '-GRAPH-'
         self.SETUP = 'setup'
         self.STOP = 'Stop'
 
         self.clock = pg.time.Clock()
-        # self.fps = fps if fps else 60
-        # self.idle_fps = 10
 
         self.caption = caption
 
@@ -237,7 +231,7 @@ class SimpleGUI:
         # graph is a drawing area, a screen on which the model is portrayed, i.e., the patches and the agents.
         # It consists mainly of a TKCanvas.
         graph = sg.Graph(self.screen_shape_width_height, lower_left_pixel_xy, upper_right_pixel_xy,
-                         background_color='black', key='-GRAPH-', enable_events=True)
+                         background_color='black', key='-GRAPH-', enable_events=True, drag_submits=True)
         col2 = gui_right_upper + [[graph]]
 
         # layout is the actual layout of the window. The stuff above organizes it into component parts.
