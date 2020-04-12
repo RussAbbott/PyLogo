@@ -163,17 +163,17 @@ class GA_World(World):
             return
         super().handle_event(event)
 
-    def initial_individuals(self) -> List[Individual]:
+    def initial_population(self) -> List[Individual]:
         """
         Generate the initial population. Use gen_individual from the subclass.
         """
-        individuals = [self.gen_individual() for _ in range(self.pop_size)]
-        return individuals
+        population = [self.gen_individual() for _ in range(self.pop_size)]
+        return population
 
     def resume_ga(self):
         """ 
         This is used when one of the parameters changes dynamically. 
-        It is called from handle_event. (See ga_closed_paths.)
+        It is called from handle_event. (See above.)
         """
         if self.done:
             self.done = False
@@ -213,7 +213,7 @@ class GA_World(World):
         self.pop_size = (SimEngine.gui_get('pop_size')//2)*2
         self.tournament_size = SimEngine.gui_get('tourn_size')
         GA_World.fitness_target = SimEngine.gui_get('fitness_target')
-        self.population = self.initial_individuals()
+        self.population = self.initial_population()
         self.best_ind = None
         self.generations = 0
         self.set_results()
