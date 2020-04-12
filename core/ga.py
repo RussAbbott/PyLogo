@@ -254,12 +254,12 @@ gui_left_upper = [
                     ],
 
                    [sg.Text('Prob move gene', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='move_gene', range=(0, 100), default_value=20,
+                    sg.Slider(key='move_gene', range=(0, 100), default_value=5,
                               orientation='horizontal', size=(10, 20))
                     ],
 
                    [sg.Text('Prob reverse subsequence', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='reverse_subseq', range=(0, 100), default_value=20,
+                    sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
                               orientation='horizontal', size=(10, 20))
                     ],
 
