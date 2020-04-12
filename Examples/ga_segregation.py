@@ -52,11 +52,12 @@ class Segregation_Individual(Individual):
     def exchange_genes_in_chromosome(chromosome, satisfactions) -> Tuple[Chromosome, int, List[bool]]:
         len_chrom = len(chromosome)
         candidate_zero_indices = Segregation_Individual.unhappy_value_indices(0, chromosome, satisfactions, len_chrom)
-        candidate_one_indices = Segregation_Individual.unhappy_value_indices(1, chromosome, satisfactions, len_chrom)
         if not candidate_zero_indices:
-            candidate_zero_indices = Segregation_Individual.element_indices(0, chromosome, len_chrom)
+            return chromosome
+        candidate_one_indices = Segregation_Individual.unhappy_value_indices(1, chromosome, satisfactions, len_chrom)
         if not candidate_one_indices:
-            candidate_one_indices = Segregation_Individual.element_indices(1, chromosome, len_chrom)
+            return chromosome
+
         (zero_index, one_index) = (choice(candidate_zero_indices), choice(candidate_one_indices))
 
         c_list: List[int] = list(chromosome)
@@ -65,8 +66,6 @@ class Segregation_Individual(Individual):
         # noinspection PyTypeChecker
         new_chrom: Chromosome = Chromosome(tuple(c_list))
         return new_chrom
-        # (new_satisfactions, new_fitness) = Segregation_Individual.compute_chromosome_fitness(new_chrom)
-        # return (new_chrom, new_fitness, new_satisfactions)
 
     @staticmethod
     def is_happy(i, chrom, len_chrom):
@@ -120,19 +119,19 @@ class Segregation_Individual(Individual):
     def satisfactions_string(satisfactions: List[bool]):
         return f'{"".join([" " if satisfactions[i] else "^" for i in range(len(satisfactions))])}'
 
-    def set_best_rotation(self):
-        best_rotation = self.chromosome
-        best_chrom_string = Segregation_Individual.chromosome_string(best_rotation)
-        rotation_amt = 0
-        for i in range(1, len(best_rotation)):
-            rotation = Individual.rotate_by(self.chromosome, i)
-            chrom_string_r = Segregation_Individual.chromosome_string(rotation)
-            if chrom_string_r < best_chrom_string:
-                best_rotation = rotation
-                best_chrom_string = chrom_string_r
-                rotation_amt = i
-        self.chromosome = best_rotation
-        self.satisfactions = Individual.rotate_by(self.satisfactions, rotation_amt)
+    # def set_best_rotation(self):
+    #     best_rotation = self.chromosome
+    #     best_chrom_string = Segregation_Individual.chromosome_string(best_rotation)
+    #     rotation_amt = 0
+    #     for i in range(1, len(best_rotation)):
+    #         rotation = Individual.rotate_by(self.chromosome, i)
+    #         chrom_string_r = Segregation_Individual.chromosome_string(rotation)
+    #         if chrom_string_r < best_chrom_string:
+    #             best_rotation = rotation
+    #             best_chrom_string = chrom_string_r
+    #             rotation_amt = i
+    #     self.chromosome = best_rotation
+    #     self.satisfactions = Individual.rotate_by(self.satisfactions, rotation_amt)
 
     @staticmethod
     def unhappy_element_indices(satisfactions):
@@ -153,7 +152,7 @@ class Segregation_World(GA_World):
 
     @staticmethod
     def display_best_ind(best_ind: Segregation_Individual):
-        best_ind.set_best_rotation()
+        # best_ind.set_best_rotation()
         # print(str(best_ind))
         Segregation_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfactions)
 
@@ -214,12 +213,12 @@ board_size = 201 if demo == 'large' else 51
 import PySimpleGUI as sg
 seg_gui_left_upper = gui_left_upper + [
                       [sg.Text('Move unhappy gene', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='move_ga_gene', range=(0, 100), default_value=30,
+                       sg.Slider(key='move_ga_gene', range=(0, 100), default_value=5,
                                  orientation='horizontal', size=(10, 20))
                        ],
 
                       [sg.Text('Exchange two genes', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='exchange_genes', range=(0, 100), default_value=0,
+                       sg.Slider(key='exchange_genes', range=(0, 100), default_value=5,
                                  orientation='horizontal', size=(10, 20))
                        ],
 
