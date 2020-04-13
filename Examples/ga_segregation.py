@@ -69,8 +69,7 @@ class Segregation_Chromosome(Chromosome):
         gene_to_move: Gene = self[from_index]
         list_chromosome: List[Gene] = list(self)
         revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
-        # Subtract 1 because the insertion is done after the Gene was removed.
-        to_index = choice(range(len(self)-1))
+        to_index = choice(range(len(revised_list)))
         revised_list.insert(to_index, gene_to_move)
         return revised_list
 
