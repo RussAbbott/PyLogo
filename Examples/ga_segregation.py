@@ -27,7 +27,7 @@ class Segregation_Chromosome(Chromosome):
     def chromosome_string(self):
         return ''.join([str(gene.val) for gene in self])
 
-    def exchange_genes_in_chromosome(self, satisfactions) -> Tuple[Chromosome, int, List[bool]]:
+    def exchange_genes(self, satisfactions) -> Tuple[Chromosome, int, List[bool]]:
         len_chrom = len(self)
         candidate_zero_indices = self.unhappy_value_indices(0, satisfactions, len_chrom)
         if not candidate_zero_indices:
@@ -60,6 +60,23 @@ class Segregation_Chromosome(Chromosome):
         happy = sum(matches) >= 0
         return happy
 
+    def move_ga_gene(self, satisfactions):
+        """
+        This mutation operator moves a gene from one place to another.
+        This version selects an unhappy gene to move.
+        """
+        candidate_indices = Segregation_Individual.unhappy_gene_value_indices(satisfactions)
+        if not candidate_indices:
+            return self
+        from_index = choice(candidate_indices)
+        to_index = choice(range(len(self)))
+        list_chromosome: List[Gene] = list(self)
+        gene_to_move: Gene = list_chromosome[from_index]
+        revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
+        revised_list.insert(to_index, gene_to_move)
+        # return GA_World.chromosome_class(revised_list)
+        return revised_list
+
     def unhappy_value_indices(self, value, satisfactions, length):
         unhappy_indices = [i for i in range(length) if self[i].val == value and not satisfactions[i]]
         return unhappy_indices
@@ -85,38 +102,20 @@ class Segregation_Individual(Individual):
     def mate_with(self, other):
         return self.cx_all_diff(self, other)
 
-    @staticmethod
-    def move_ga_gene(chromosome, satisfactions):
-        """
-        This mutation operator moves a gene from one place to another.
-        This version selects an unhappy gene to move.
-        """
-        candidate_indices = Segregation_Individual.unhappy_gene_value_indices(satisfactions)
-        if not candidate_indices:
-            return chromosome
-        from_index = choice(candidate_indices)
-        to_index = choice(range(len(chromosome)))
-        list_chromosome: List[Gene] = list(chromosome)
-        gene_to_move: Gene = list_chromosome[from_index]
-        revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
-        revised_list.insert(to_index, gene_to_move)
-        # return GA_World.chromosome_class(revised_list)
-        return revised_list
-
     def mutate(self) -> Individual:
         chromosome = self.chromosome
         if randint(0, 100) <= SimEngine.gui_get('exchange_genes'):
             assert isinstance(self.chromosome, Segregation_Chromosome)
-            chromosome = chromosome.exchange_genes_in_chromosome(self.satisfactions)
+            chromosome = chromosome.exchange_genes(self.satisfactions)
 
         elif randint(0, 100) <= SimEngine.gui_get('move_ga_gene'):
-            chromosome = Segregation_Individual.move_ga_gene(chromosome, self.satisfactions)
+            chromosome = chromosome.move_ga_gene(self.satisfactions)
 
         elif randint(0, 100) <= SimEngine.gui_get('move_gene'):
-            chromosome = Individual.move_gene(chromosome)
+            chromosome = chromosome.move_gene()
 
         elif randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
-            chromosome = Individual.reverse_subseq(chromosome)
+            chromosome = chromosome.reverse_subseq()
 
         self.chromosome = GA_World.chromosome_class(chromosome)
 
