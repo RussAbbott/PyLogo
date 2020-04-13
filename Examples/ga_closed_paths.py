@@ -1,5 +1,5 @@
 
-from random import randint, sample
+from random import randint, random, sample, uniform
 from typing import List, Tuple
 
 from pygame import Color
@@ -7,6 +7,7 @@ from pygame import Color
 from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
 from core.link import Link
+from core.pairs import Velocity
 from core.sim_engine import SimEngine
 from core.world_patch_block import World
 
@@ -26,7 +27,7 @@ class Loop_Link(Link):
         label is defined as a getter. No parentheses needed.
         Returns the length of the link.
         """
-        return str(round(self.agent_1.distance_to(self.agent_2), 1))
+        return str(round(self.agent_1.distance_to(self.agent_2), 1)) if SimEngine.gui_get('show_lengths') else None
 
 
 class Loop_Chromosome(Chromosome):
@@ -108,8 +109,6 @@ class Loop_Chromosome(Chromosome):
         return (new_chrom, new_fitness, new_discr)
 
 
-
-
 # noinspection PyTypeChecker
 class Loop_Individual(Individual):
 
@@ -158,6 +157,10 @@ class Loop_World(GA_World):
             return
         super().handle_event(event)
 
+    @staticmethod
+    def random_velocity(limit=0.0001):
+        return Velocity((uniform(-limit, limit), uniform(-limit, limit)))
+
     def set_results(self):
         super().set_results()
         World.links = set()
@@ -169,12 +172,30 @@ class Loop_World(GA_World):
     def setup(self):
         GA_World.individual_class = Loop_Individual
         GA_World.chromosome_class = Loop_Chromosome
+
         nbr_points = SimEngine.gui_get('nbr_points')
         self.create_random_agents(nbr_points, color=Color('white'), shape_name='node')
+        for agent in World.agents:
+            agent.set_velocity(Loop_World.random_velocity())
+
         self.cycle_length = SimEngine.gui_get('cycle_length')
 
         self.mating_op = Individual.cx_all_diff
         super().setup()
+
+    def step(self):
+        """
+        Update the world by moving the agents.
+        """
+        if SimEngine.gui_get('move_points'):   # and random() < 0.5:
+            for agent in World.agents:
+                agent.move_by_velocity()
+                if self.best_ind:
+                    self.best_ind.fitness = self.best_ind.compute_fitness()
+                if random() < 0.001:
+                    agent.set_velocity(Loop_World.random_velocity())
+        super().step()
+        self.done = False
 
     def update_cycle_lengths(self, cycle_length):
         for ind in self.population:
@@ -208,7 +229,7 @@ loop_gui_left_upper = gui_left_upper + [
                                  orientation='horizontal', size=(10, 20))
                        ],
 
-                      [sg.Text('fitness_target', pad=(None, (20, 0))),
+                      [sg.Text('fitness target', pad=(None, (20, 0))),
                        sg.Combo(key='fitness_target', default_value=1500, pad=((10, 0), (20, 0)), enable_events=True,
                                 values=[0, 100, 500, 700, 900, 1200, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000])
                        ],
@@ -216,6 +237,10 @@ loop_gui_left_upper = gui_left_upper + [
                       [sg.Text('Cycle length', pad=(None, (20, 0))),
                        sg.Slider(key='cycle_length', range=(2, 20), default_value=10, pad=((10, 0), (0, 0)),
                                  orientation='horizontal', size=(10, 20), enable_events=True)
+                       ],
+
+                      [sg.Checkbox('Move points', key='move_points', pad=(None, (20, 0)), default=False),
+                       sg.Checkbox('Show lengths', key='show_lengths', pad=((20, 0), (20, 0)), default=True),
                        ],
 
                       [sg.Checkbox('Show pixel positions', key='show_positions', default=False, pad=((0, 0), (10, 0)))]
