@@ -113,11 +113,6 @@ class Individual:
     def mutate(self) -> Individual:
         pass
 
-    # @staticmethod
-    # def rotate_by(chromosome: Chromosome, amt: int) -> Chromosome:
-    #     return chromosome[amt:] + chromosome[:amt]
-    #
-
 
 class GA_World(World):
     """
