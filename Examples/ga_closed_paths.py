@@ -1,6 +1,6 @@
 
 from random import randint, sample
-from typing import List
+from typing import List, Tuple
 
 from pygame import Color
 
@@ -29,97 +29,186 @@ class Loop_Link(Link):
         return str(round(self.agent_1.distance_to(self.agent_2), 1))
 
 
+class Loop_Chromosome(Chromosome):
+    """
+    An individual consists primarily of a sequence of Genes, called
+    a chromosome. We create a class for it simply because it's a
+    convenient place to store methods.
+
+    """
+
+    def add_gene_to_chromosome(self, orig_fitness: float, gene: Gene) -> \
+                                                                                       Tuple[Chromosome, int, float]:
+        """ Add gene to the chromosome to minimize the resulting discrepancy. """
+        (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
+        len_chrom = len(self)
+        for i in sample(range(len_chrom), min(3, len_chrom)):
+            (new_chrom, new_fitness, new_discr) = \
+                self.trial_insertion(orig_fitness, i, gene)
+            if not best_new_discr or new_discr < best_new_discr:
+                (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
+        return (best_new_chrom, best_new_fitness, best_new_discr)
+
+    def chromosome_fitness(self) -> float:
+        len_chrom = len(self)
+        # A chromosome is a tuple of Genes, each of which is a Pixel_xy. We use mod (%)
+        # so that we can include the distance from chromosome[len_chrom - 1] to chromosome[0]
+        distances = [self[i].distance_to(self[(i + 1) % len_chrom]) for i in range(len_chrom)]
+        fitness = sum(distances)
+        return fitness
+
+    def link_chromosome(self):
+        for i in range(len(self)):
+            Loop_Link(self[i], self[(i+1) % len(self)])
+
+    def replace_gene_in_chromosome(self, original_fitness: float) -> Tuple[Chromosome, int, float]:
+        (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
+        len_chrom = len(self)
+        for i in sample(range(len_chrom), min(3, len_chrom)):
+            gene_before = self[i-1]
+            removed_gene = self[i]
+            # i_p_1 is: (i+1) mod len_chrom
+            i_p_1 = (i+1) % len_chrom
+            gene_after = self[i_p_1]
+            fitness_after_removal = original_fitness - gene_before.distance_to(removed_gene) \
+                                                     - removed_gene.distance_to(gene_after)  \
+                                                     + gene_before.distance_to(gene_after)
+            # Make the removed gene not available because we will add it in explicitly 3 lines down.
+            available_genes = GA_World.agents - set(self)
+            sample_size = min(5 if len_chrom == 2 else 4, len(available_genes))
+            # Include the removed gene as one of the ones to try.
+            sampled_available_genes = sample(available_genes, sample_size) + [self[i]]
+            # Don't want i_p_1 here since if i is the the last position, i_p_1 is 0,
+            # and we would then be adding the entire chromosome back in a second time.
+            partial_chromosome: Loop_Chromosome = Loop_Chromosome(self[:i] + self[i+1:])
+            for gene in sampled_available_genes:
+                (new_chrom, new_fitness, new_discr) = \
+                    partial_chromosome.add_gene_to_chromosome(fitness_after_removal, gene)
+                if not best_new_discr or new_discr < best_new_discr:
+                    (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
+
+        return (best_new_chrom, best_new_fitness, best_new_discr)
+
+    def trial_insertion(self, current_fitness: float, pos: int, new_gene: Gene) -> Tuple[Chromosome, int, float]:
+        """
+        Return what the discrepancy would be if gene were placed
+        between positions pos and pos+1
+        """
+        gene_at_pos = self[pos]
+        # This works even if the chromosome has only one element. In that case,
+        # both pos and (pos+1) % len(chromosome) will be 0. The gene at
+        # these two positions will be chromosome[0]. In that case also,
+        # current_fitness will be 0.
+        gene_at_pos_plus_1 = self[(pos+1) % len(self)]
+        new_fitness = current_fitness - gene_at_pos.distance_to(gene_at_pos_plus_1) \
+                                      + gene_at_pos.distance_to(new_gene) \
+                                      + new_gene.distance_to(gene_at_pos_plus_1)
+        new_chrom = self[:pos] + (new_gene, ) + self[pos:]
+        new_discr = abs(GA_World.fitness_target - new_fitness)
+        return (new_chrom, new_fitness, new_discr)
+
+
+
+
 # noinspection PyTypeChecker
 class Loop_Individual(Individual):
 
     def __str__(self):
         return f'{self.fitness}: {[str(gene) for gene in self.chromosome]}'
 
-    @staticmethod
-    def add_gene_to_chromosome(orig_fitness: float, gene: Gene, chromosome: Chromosome) -> Chromosome:
-        """ Add gene to the chromosome to minimize the resulting discrepancy. """
-        (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
-        len_chrom = len(chromosome)
-        for i in sample(range(len_chrom), min(3, len_chrom)):
-            (new_chrom, new_fitness, new_discr) = \
-                Loop_Individual.trial_insertion(orig_fitness, chromosome, i, gene)
-            if not best_new_discr or new_discr < best_new_discr:
-                (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
-        return (best_new_chrom, best_new_fitness, best_new_discr)
-
+    # @staticmethod
+    # def add_gene_to_chromosome(orig_fitness: float, gene: Gene, chromosome: Chromosome) -> \
+    #                                                                                    Tuple[Chromosome, int, float]:
+    #     """ Add gene to the chromosome to minimize the resulting discrepancy. """
+    #     (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
+    #     len_chrom = len(chromosome)
+    #     for i in sample(range(len_chrom), min(3, len_chrom)):
+    #         (new_chrom, new_fitness, new_discr) = \
+    #             Loop_Individual.trial_insertion(orig_fitness, chromosome, i, gene)
+    #         if not best_new_discr or new_discr < best_new_discr:
+    #             (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
+    #     return (best_new_chrom, best_new_fitness, best_new_discr)
+    #
     def compute_fitness(self) -> float:
-        return Loop_Individual.compute_chromosome_fitness(self.chromosome)
+        return self.chromosome.chromosome_fitness()
 
-    @staticmethod
-    def compute_chromosome_fitness(chromosome) -> float:
-        len_chrom = len(chromosome)
-        # Recall that a chromosome is a tuple of Genes, each of which is a Pixel_xy.
-        # We use mod (%) so that we include the distance from chromosome[len_chrom - 1] to chromosome[0]
-        distances = [chromosome[i].distance_to(chromosome[(i+1) % len_chrom]) for i in range(len_chrom)]
-        fitness = sum(distances)
-        return fitness
+    # def link_chromosome(self):
+    #     for i in range(len(self)):
+    #         Loop_Link(self[i], self[(i+1) % len(self)])
+
+    # @staticmethod
+    # def compute_chromosome_fitness(chromosome) -> float:
+    #     len_chrom = len(chromosome)
+    #     # A chromosome is a tuple of Genes, each of which is a Pixel_xy. We use mod (%)
+    #     # so that we can include the distance from chromosome[len_chrom - 1] to chromosome[0]
+    #     distances = [chromosome[i].distance_to(chromosome[(i+1) % len_chrom]) for i in range(len_chrom)]
+    #     fitness = sum(distances)
+    #     return fitness
 
     def mate_with(self, other):
         return self.cx_all_diff(self, other)
 
     def mutate(self) -> Individual:
+        chromosome = self.chromosome
         if randint(0, 100) <= SimEngine.gui_get('replace_gene'):
-            (self.chromosome, self.fitness, _) = self.replace_gene_in_chromosome(self.fitness, self.chromosome)
+            (chromosome, self.fitness, _) = chromosome.replace_gene_in_chromosome(self.fitness)
 
         if randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
-            self.chromosome = self.reverse_subseq(self.chromosome)
+            chromosome = self.reverse_subseq(chromosome)
             self.fitness = self.compute_fitness()
 
+        self.chromosome: Chromosome = GA_World.chromosome_class(chromosome)
         return self
 
-    @staticmethod
-    def replace_gene_in_chromosome(original_fitness: float, chromosome: Chromosome) -> Chromosome:
-        (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
-        len_chrom = len(chromosome)
-        for i in sample(range(len_chrom), min(3, len_chrom)):
-            gene_before = chromosome[i-1]
-            removed_gene = chromosome[i]
-            # i_p_1 is: (i+1) mod len_chrom
-            i_p_1 = (i+1) % len_chrom
-            gene_after = chromosome[i_p_1]
-            fitness_after_removal = original_fitness - gene_before.distance_to(removed_gene) \
-                                                     - removed_gene.distance_to(gene_after)  \
-                                                     + gene_before.distance_to(gene_after)
-            # Make the removed gene not available because we will add it in explicitly 3 lines down.
-            available_genes = GA_World.agents - set(chromosome)
-            sample_size = min(5 if len_chrom == 2 else 4, len(available_genes))
-            # Include the removed gene as one of the ones to try.
-            sampled_available_genes = sample(available_genes, sample_size) + [chromosome[i]]
-            # Don't want i_p_1 here since if i is the the last position, i_p_1 is 0,
-            # and we would then be adding the entire chromosome back in a second time.
-            remaining_genes = chromosome[:i] + chromosome[i+1:]
-            for gene in sampled_available_genes:
-                (new_chrom, new_fitness, new_discr) = \
-                    Loop_Individual.add_gene_to_chromosome(fitness_after_removal, gene, remaining_genes)
-                if not best_new_discr or new_discr < best_new_discr:
-                    (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
-
-        return (best_new_chrom, best_new_fitness, best_new_discr)
-
-    @staticmethod
-    def trial_insertion(current_fitness: float, chromosome: Chromosome, pos: int, new_gene: Gene):
-        """
-        Return what the discrepancy would be if gene were placed
-        between positions pos and pos+1
-        """
-        gene_at_pos = chromosome[pos]
-        # This works even if the chromosome has only one element. In that case,
-        # both pos and (pos+1) % len(chromosome) will be 0. The gene at
-        # these two positions will be chromosome[0]. In that case also,
-        # current_fitness will be 0.
-        gene_at_pos_plus_1 = chromosome[(pos+1) % len(chromosome)]
-        new_fitness = current_fitness - gene_at_pos.distance_to(gene_at_pos_plus_1) \
-                                      + gene_at_pos.distance_to(new_gene) \
-                                      + new_gene.distance_to(gene_at_pos_plus_1)
-        new_chrom = chromosome[:pos] + (new_gene, ) + chromosome[pos:]
-        new_discr = abs(GA_World.fitness_target - new_fitness)
-        return (new_chrom, new_fitness, new_discr)
-
+    # @staticmethod
+    # def replace_gene_in_chromosome(original_fitness: float, chromosome: Chromosome) -> Tuple[Chromosome, int, float]:
+    #     (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
+    #     len_chrom = len(chromosome)
+    #     for i in sample(range(len_chrom), min(3, len_chrom)):
+    #         gene_before = chromosome[i-1]
+    #         removed_gene = chromosome[i]
+    #         # i_p_1 is: (i+1) mod len_chrom
+    #         i_p_1 = (i+1) % len_chrom
+    #         gene_after = chromosome[i_p_1]
+    #         fitness_after_removal = original_fitness - gene_before.distance_to(removed_gene) \
+    #                                                  - removed_gene.distance_to(gene_after)  \
+    #                                                  + gene_before.distance_to(gene_after)
+    #         # Make the removed gene not available because we will add it in explicitly 3 lines down.
+    #         available_genes = GA_World.agents - set(chromosome)
+    #         sample_size = min(5 if len_chrom == 2 else 4, len(available_genes))
+    #         # Include the removed gene as one of the ones to try.
+    #         sampled_available_genes = sample(available_genes, sample_size) + [chromosome[i]]
+    #         # Don't want i_p_1 here since if i is the the last position, i_p_1 is 0,
+    #         # and we would then be adding the entire chromosome back in a second time.
+    #         partial_chromosome = chromosome[:i] + chromosome[i+1:]
+    #         for gene in sampled_available_genes:
+    #             (new_chrom, new_fitness, new_discr) = \
+    #                 Loop_Individual.add_gene_to_chromosome(fitness_after_removal, gene, partial_chromosome)
+    #             if not best_new_discr or new_discr < best_new_discr:
+    #                 (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
+    #
+    #     return (best_new_chrom, best_new_fitness, best_new_discr)
+    #
+    # @staticmethod
+    # def trial_insertion(current_fitness: float, chromosome: Chromosome, pos: int, new_gene: Gene) -> \
+    #                                                                                      Tuple[Chromosome, int, float]:
+    #     """
+    #     Return what the discrepancy would be if gene were placed
+    #     between positions pos and pos+1
+    #     """
+    #     gene_at_pos = chromosome[pos]
+    #     # This works even if the chromosome has only one element. In that case,
+    #     # both pos and (pos+1) % len(chromosome) will be 0. The gene at
+    #     # these two positions will be chromosome[0]. In that case also,
+    #     # current_fitness will be 0.
+    #     gene_at_pos_plus_1 = chromosome[(pos+1) % len(chromosome)]
+    #     new_fitness = current_fitness - gene_at_pos.distance_to(gene_at_pos_plus_1) \
+    #                                   + gene_at_pos.distance_to(new_gene) \
+    #                                   + new_gene.distance_to(gene_at_pos_plus_1)
+    #     new_chrom = chromosome[:pos] + (new_gene, ) + chromosome[pos:]
+    #     new_discr = abs(GA_World.fitness_target - new_fitness)
+    #     return (new_chrom, new_fitness, new_discr)
+    #
 
 class Loop_World(GA_World):
     
@@ -130,7 +219,7 @@ class Loop_World(GA_World):
 
     def gen_individual(self):
         chromosome_list: List = sample(World.agents, self.cycle_length)
-        individual = GA_World.individual_class(GA_World.seq_to_chromosome(chromosome_list))
+        individual = GA_World.individual_class(GA_World.chromosome_class(chromosome_list))
         return individual
 
     def handle_event(self, event):
@@ -144,18 +233,22 @@ class Loop_World(GA_World):
             return
         super().handle_event(event)
 
-    @staticmethod
-    def link_best_chromosome(best_chromosome):
-        for i in range(len(best_chromosome)):
-            Loop_Link(best_chromosome[i], best_chromosome[(i+1) % len(best_chromosome)])
-
+    # @staticmethod
+    # def link_chromosome(best_chromosome):
+    #     for i in range(len(best_chromosome)):
+    #         Loop_Link(best_chromosome[i], best_chromosome[(i+1) % len(best_chromosome)])
+    #
     def set_results(self):
         super().set_results()
         World.links = set()
-        Loop_World.link_best_chromosome(self.best_ind.chromosome)
+        best_chromosome = self.best_ind.chromosome
+
+        assert isinstance(best_chromosome, Loop_Chromosome)
+        best_chromosome.link_chromosome()
 
     def setup(self):
         GA_World.individual_class = Loop_Individual
+        GA_World.chromosome_class = Loop_Chromosome
         nbr_points = SimEngine.gui_get('nbr_points')
         self.create_random_agents(nbr_points, color=Color('white'), shape_name='node')
         self.cycle_length = SimEngine.gui_get('cycle_length')
@@ -165,16 +258,21 @@ class Loop_World(GA_World):
 
     def update_cycle_lengths(self, cycle_length):
         for ind in self.population:
-            chromosome = ind.chromosome
+            # To keep PyCharm's type checker happy
+            assert isinstance(ind.chromosome, Loop_Chromosome)
+            chromosome: Loop_Chromosome = ind.chromosome
             if cycle_length < len(chromosome):
-                ind.chromosome = chromosome[:cycle_length]
+                new_chromosome = chromosome[:cycle_length]
                 ind.fitness = ind.compute_fitness()
             else:
-                available_genes = GA_World.agents - set(ind.chromosome)
-                new_genes = sample(available_genes, cycle_length - len(ind.chromosome))
+                available_genes = GA_World.agents - set(chromosome)
+                new_genes = sample(available_genes, cycle_length - len(chromosome))
+                new_chromosome = chromosome
                 for gene in new_genes:
-                    (ind.chromosome, ind.fitness, _) = \
-                        Loop_Individual.add_gene_to_chromosome(ind.fitness, gene, ind.chromosome)
+                    (new_chromosome, ind.fitness, _) = \
+                        chromosome.add_gene_to_chromosome(ind.fitness, gene)
+
+            ind.chromosome = GA_World.chromosome_class(new_chromosome)
 
 
 # ############################################## Define GUI ############################################## #
