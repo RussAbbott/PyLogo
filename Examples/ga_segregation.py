@@ -60,21 +60,18 @@ class Segregation_Chromosome(Chromosome):
         happy = sum(matches) >= 0
         return happy
 
-    def move_ga_gene(self, satisfactions):
+    def move_unhappy_gene(self, candidate_indices) -> Sequence[Gene]:
         """
         This mutation operator moves a gene from one place to another.
         This version selects an unhappy gene to move.
         """
-        candidate_indices = Segregation_Individual.unhappy_gene_value_indices(satisfactions)
-        if not candidate_indices:
-            return self
         from_index = choice(candidate_indices)
-        to_index = choice(range(len(self)))
+        gene_to_move: Gene = self[from_index]
         list_chromosome: List[Gene] = list(self)
-        gene_to_move: Gene = list_chromosome[from_index]
         revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
+        # Subtract 1 because the insertion is done after the Gene was removed.
+        to_index = choice(range(len(self)-1))
         revised_list.insert(to_index, gene_to_move)
-        # return GA_World.chromosome_class(revised_list)
         return revised_list
 
     def unhappy_value_indices(self, value, satisfactions, length):
@@ -108,8 +105,11 @@ class Segregation_Individual(Individual):
             assert isinstance(self.chromosome, Segregation_Chromosome)
             chromosome = chromosome.exchange_genes(self.satisfactions)
 
-        elif randint(0, 100) <= SimEngine.gui_get('move_ga_gene'):
-            chromosome = chromosome.move_ga_gene(self.satisfactions)
+        elif randint(0, 100) <= SimEngine.gui_get('move_unhappy_gene'):
+            candidate_indices = Segregation_Individual.unhappy_gene_value_indices(self.satisfactions)
+            if not candidate_indices:
+                return self
+            chromosome = chromosome.move_unhappy_gene(candidate_indices)
 
         elif randint(0, 100) <= SimEngine.gui_get('move_gene'):
             chromosome = chromosome.move_gene()
@@ -130,7 +130,6 @@ class Segregation_Individual(Individual):
     def unhappy_gene_value_indices(satisfactions):
         unhappy_indices = [i for i in range(len(satisfactions)) if not satisfactions[i]]
         return unhappy_indices
-
 
 
 class Segregation_World(GA_World):
@@ -203,7 +202,7 @@ board_size = 201 if demo == 'large' else 51
 import PySimpleGUI as sg
 seg_gui_left_upper = gui_left_upper + [
                       [sg.Text('Move unhappy gene', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='move_ga_gene', range=(0, 100), default_value=5,
+                       sg.Slider(key='move_unhappy_gene', range=(0, 100), default_value=5,
                                  orientation='horizontal', size=(10, 20))
                        ],
 
