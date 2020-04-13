@@ -153,8 +153,8 @@ class Loop_Individual(Individual):
         if randint(0, 100) <= SimEngine.gui_get('replace_gene'):
             (chromosome, self.fitness, _) = chromosome.replace_gene_in_chromosome(self.fitness)
 
-        if randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
-            chromosome = self.reverse_subseq(chromosome)
+        elif randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
+            chromosome = chromosome.reverse_subseq()
             self.fitness = self.compute_fitness()
 
         self.chromosome: Chromosome = GA_World.chromosome_class(chromosome)
