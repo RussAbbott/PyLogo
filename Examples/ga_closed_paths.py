@@ -158,7 +158,7 @@ class Loop_World(GA_World):
         super().handle_event(event)
 
     @staticmethod
-    def random_velocity(limit=0.0001):
+    def random_velocity(limit=0.05):
         return Velocity((uniform(-limit, limit), uniform(-limit, limit)))
 
     def set_results(self):
@@ -187,12 +187,12 @@ class Loop_World(GA_World):
         """
         Update the world by moving the agents.
         """
-        if SimEngine.gui_get('move_points'):   # and random() < 0.5:
+        if SimEngine.gui_get('move_points'):
             for agent in World.agents:
                 agent.move_by_velocity()
                 if self.best_ind:
                     self.best_ind.fitness = self.best_ind.compute_fitness()
-                if random() < 0.001:
+                if random() < 0.0001:
                     agent.set_velocity(Loop_World.random_velocity())
         super().step()
         self.done = False
@@ -240,7 +240,7 @@ loop_gui_left_upper = gui_left_upper + [
                        ],
 
                       [sg.Checkbox('Move points', key='move_points', pad=(None, (20, 0)), default=False),
-                       sg.Checkbox('Show lengths', key='show_lengths', pad=((20, 0), (20, 0)), default=True),
+                       sg.Checkbox('Show lengths', key='show_lengths', pad=((20, 0), (20, 0)), default=False),
                        ],
 
                       [sg.Checkbox('Show pixel positions', key='show_positions', default=False, pad=((0, 0), (10, 0)))]
