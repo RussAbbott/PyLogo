@@ -53,34 +53,26 @@ class Chromosome(tuple):
         child_chromosome: Chromosome = GA_World.chromosome_class(child_chromosome_start + child_chromosome_end)
         return child_chromosome[:len(self)]
 
-    # def replace_gene_in_chromosome(self, original_fitness: float) -> Tuple[Chromosome, int, float]:
-    #     (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
-    #     len_chrom = len(self)
-    #     for i in sample(range(len_chrom), min(3, len_chrom)):
-    #         gene_before = self[i-1]
-    #         removed_gene = self[i]
-    #         # i_p_1 is: (i+1) mod len_chrom
-    #         i_p_1 = (i+1) % len_chrom
-    #         gene_after = self[i_p_1]
-    #         # fitness_after_removal = original_fitness - gene_before.distance_to(removed_gene) \
-    #         #                                          - removed_gene.distance_to(gene_after)  \
-    #         #                                          + gene_before.distance_to(gene_after)
-    #         # Make the removed gene not available because we will add it in explicitly 3 lines down.
-    #         available_genes = GA_World.agents - set(self)
-    #         sample_size = min(5 if len_chrom == 2 else 4, len(available_genes))
-    #         # Include the removed gene as one of the ones to try.
-    #         sampled_available_genes = sample(available_genes, sample_size) + [self[i]]
-    #         # Don't want i_p_1 here since if i is the the last position, i_p_1 is 0,
-    #         # and we would then be adding the entire self back in a second time.
-    #         remaining_genes = self[:i] + self[i+1:]
-    #         fitness_after_removal = GA_World.individual_class.compute_chromosome_fitness(remaining_genes)
-    #         for gene in sampled_available_genes:
-    #             (new_chrom, new_fitness, new_discr) = \
-    #                 GA_World.individual_class.add_gene_to_chromosome(fitness_after_removal, gene, remaining_genes)
-    #             if not best_new_discr or new_discr < best_new_discr:
-    #                 (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
-    #
-    #     return (best_new_chrom, best_new_fitness, best_new_discr)
+    def move_gene(self) -> Sequence:
+        """
+        This mutation operator moves a gene from one place to another.
+        """
+        (from_index, to_index) = sorted(sample(list(range(len(self))), 2))
+        list_chromosome: List[Gene] = list(self)
+        gene_to_move: Gene = list_chromosome[from_index]
+        revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
+        revised_list.insert(to_index, gene_to_move)
+        # return GA_World.chromosome_class(revised_list)
+        return revised_list
+
+    def reverse_subseq(self: Chromosome) -> Sequence:
+        """ Reverse a subsequence of this chromosome. """
+        # Ensure that the two index positions are different.
+        (indx_1, indx_2) = sorted(sample(list(range(len(self))), 2))
+        list_chromosome = list(self)
+        list_chromosome[indx_1:indx_2] = reversed(list_chromosome[indx_1:indx_2])
+        # return GA_World.chromosome_class(list_chromosome)
+        return list_chromosome
 
     def rotate_by(self, amt: int) -> Chromosome:
         return GA_World.chromosome_class(self[amt:] + self[:amt])
@@ -110,26 +102,6 @@ class Individual:
         child_2 = GA_World.individual_class((ind_2.chromosome).cx_all_diff_chromosome(ind_1.chromosome))
         return (child_1, child_2)
 
-    # @staticmethod
-    # def cx_all_diff_chromosome(chromosome_1: Chromosome, chromosome_2: Chromosome) -> Chromosome:
-    #     """
-    #     chromosome_1 and chromosome_2 are the same length
-    #
-    #     Returns: a selection from chromosome_1 and chromosome_2 preserving all_different
-    #     """
-    #     # This ensures that the rotations are non-trivial.
-    #     inner_indices = range(1, len(chromosome_1)-1) if len(chromosome_1) > 2 else range(len(chromosome_1))
-    #     chromosome_1_rotated: Chromosome = chromosome_1.rotate_by(choice(inner_indices))
-    #     chromosome_2_rotated: Chromosome = chromosome_2.rotate_by(choice(inner_indices))
-    #     indx = choice(inner_indices)
-    #
-    #     child_chromosome_start: Chromosome = chromosome_1_rotated[:indx]
-    #     child_chromosome_end: Chromosome = GA_World.chromosome_class(gene for gene in chromosome_2_rotated
-    #                                                                     if gene not in child_chromosome_start)
-    #
-    #     child_chromosome: Chromosome = GA_World.chromosome_class(child_chromosome_start + child_chromosome_end)
-    #     return child_chromosome[:len(chromosome_1)]
-
     @property
     def discrepancy(self) -> float:
         discr = abs(self.fitness - GA_World.fitness_target)
@@ -138,31 +110,8 @@ class Individual:
     def mate_with(self, other) -> Tuple[Individual, Individual]:
         pass
 
-    @staticmethod
-    def move_gene(chromosome: Chromosome) -> Sequence:
-        """
-        This mutation operator moves a gene from one place to another.
-        """
-        (from_index, to_index) = sorted(sample(list(range(len(chromosome))), 2))
-        list_chromosome: List[Gene] = list(chromosome)
-        gene_to_move: Gene = list_chromosome[from_index]
-        revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
-        revised_list.insert(to_index, gene_to_move)
-        # return GA_World.chromosome_class(revised_list)
-        return revised_list
-
     def mutate(self) -> Individual:
         pass
-
-    @staticmethod
-    def reverse_subseq(chromosome: Chromosome) -> Sequence:
-        """ Reverse a subsequence of this chromosome. """
-        # Ensure that the two index positions are different.
-        (indx_1, indx_2) = sorted(sample(list(range(len(chromosome))), 2))
-        list_chromosome = list(chromosome)
-        list_chromosome[indx_1:indx_2] = reversed(list_chromosome[indx_1:indx_2])
-        # return GA_World.chromosome_class(list_chromosome)
-        return list_chromosome
 
     # @staticmethod
     # def rotate_by(chromosome: Chromosome, amt: int) -> Chromosome:
