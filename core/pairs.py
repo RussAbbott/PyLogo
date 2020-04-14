@@ -49,18 +49,11 @@ class XY(tuple):
         return cls(tuple)
 
     def round(self, prec=0):
-        # rounded_tuple = (round(self.x, prec), round(self.y, prec))
-        # return self.restore_type(rounded)
         return self.restore_type( (round(self.x, prec), round(self.y, prec)) )
-        # clas = type(self)
-        # return clas((round(self.x, prec), round(self.y, prec)))
 
     def wrap3(self, x_limit, y_limit):
         wrapped_tuple = (self.x % x_limit, self.y % y_limit)
         return self.restore_type(wrapped_tuple)
-        # xx = self.x % x_limit
-        # yy = self.y % y_limit
-        # return self.restore_type((xx, yy))
 
     @property
     def x(self):

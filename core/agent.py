@@ -296,7 +296,7 @@ class Agent(Block):
 
     @property
     def x_y(self):
-        return self.center_pixel.as_tuple()
+        return self.center_pixel.round().as_tuple()
 
     @property
     def x(self):

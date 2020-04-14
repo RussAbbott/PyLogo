@@ -53,6 +53,11 @@ class Chromosome(tuple):
         child_chromosome: Chromosome = GA_World.chromosome_class(child_chromosome_start + child_chromosome_end)
         return child_chromosome[:len(self)]
 
+    def cx_uniform(self: Chromosome, other_chromosome: Chromosome) -> Chromosome:
+        new_c_list = [choice(pair) for pair in zip(self, other_chromosome)]
+        new_chromosome = GA_World.chromosome_class(new_c_list)
+        return new_chromosome
+
     def move_gene(self) -> Sequence:
         """
         This mutation operator moves a gene from one place to another.
@@ -93,14 +98,16 @@ class Individual:
     def compute_fitness(self) -> float:
         pass
 
-    @staticmethod
-    def cx_all_diff(ind_1, ind_2) -> Tuple[Individual, Individual]:
+    def cx_all_diff(self, other: Individual) -> Tuple[Individual, Individual]:
         """
         Perform crossover between self and other while preserving all_different.
         """
-        child_1 = GA_World.individual_class((ind_1.chromosome).cx_all_diff_chromosome(ind_2.chromosome))
-        child_2 = GA_World.individual_class((ind_2.chromosome).cx_all_diff_chromosome(ind_1.chromosome))
+        child_1 = GA_World.individual_class((self.chromosome).cx_all_diff_chromosome(other.chromosome))
+        child_2 = GA_World.individual_class((other.chromosome).cx_all_diff_chromosome(self.chromosome))
         return (child_1, child_2)
+
+    def cx_uniform(self, other: Individual) -> Chromosome:
+        return self.chromosome.cx_uniform((other.chromosome))
 
     @property
     def discrepancy(self) -> float:
@@ -121,6 +128,7 @@ class GA_World(World):
     fitness_target = None
     individual_class = Individual
     chromosome_class = Chromosome
+    mating_op = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,15 +151,19 @@ class GA_World(World):
         """ Generate two children and put them into the population. """
         parent_1 = self.get_parent()
         parent_2 = self.get_parent()
-        (child_1, child_2) = parent_1.mate_with(parent_2)
+        # Some percent of the time, mutate the parents without mating them.
+        # This lets the better individuals get mutated directly.
+        (child_1, child_2) = (parent_1, parent_2) if randint(0, 100) < SimEngine.gui_get('no_mating') else \
+                             parent_1.mate_with(parent_2)
         child_1_mutated: Individual = child_1.mutate()
         child_2_mutated: Individual = child_2.mutate()
 
         child_1_mutated.compute_fitness()
         child_2_mutated.compute_fitness()
 
-        dest_1_indx: int = self.select_gene_index(self.WORST, self.tournament_size)
-        dest_2_indx: int = self.select_gene_index(self.WORST, self.tournament_size)
+        tour_size = SimEngine.gui_get('tourn_size')
+        dest_1_indx: int = self.select_gene_index(self.WORST, tour_size)
+        dest_2_indx: int = self.select_gene_index(self.WORST, tour_size)
         # noinspection PyTypeChecker
         self.population[dest_1_indx] = min([child_1, child_1_mutated], key=lambda c: c.discrepancy)
         # noinspection PyTypeChecker
@@ -166,12 +178,13 @@ class GA_World(World):
         return best_individual
 
     def get_parent(self) -> Individual:
-        if randint(0, 99) < SimEngine.gui_get('prob_random_parent'):
+        if randint(0, 100) < SimEngine.gui_get('prob_random_parent'):
             parent = self.gen_individual()
         else:
-            parent_indx = self.select_gene_index(self.BEST, self.tournament_size)
+            parent_indx = self.select_gene_index(self.BEST, SimEngine.gui_get('tourn_size'))
             parent = self.population[parent_indx]
-        # noinspection PyTypeChecker
+            # if parent is self.best_ind:
+            #     print('best in as parent')
         return parent
 
     def handle_event(self, event):
@@ -205,9 +218,14 @@ class GA_World(World):
 
     def select_gene_index(self, best_or_worst, tournament_size) -> int:
         """ Run a tournament to select the index of a best or worst individual in a sample. """
-        min_or_max = min if best_or_worst == self.BEST else max
         candidate_indices = sample(range(self.pop_size), min(tournament_size, self.pop_size))
+        # min_or_max is min if we're looking for the best
+        # because we are looking for the smallest discrepancy.
+        min_or_max = min if best_or_worst == self.BEST else max
         selected_index = min_or_max(candidate_indices, key=lambda i: self.population[i].discrepancy)
+        # if best_or_worst == self.BEST and self.best_ind:
+        #     best = self.population[selected_index]
+        #     print(best == self.best_ind, best.fitness, self.best_ind.fitness)
         return selected_index
 
     @staticmethod
@@ -220,7 +238,7 @@ class GA_World(World):
         """ Find and display the best individual. """
         # noinspection PyNoneFunctionAssignment
         current_best_ind = self.get_best_individual()
-        if self.best_ind is None or current_best_ind.discrepancy < self.best_ind.discrepancy:
+        if self.best_ind is None or current_best_ind.discrepancy <= self.best_ind.discrepancy:
             self.best_ind = current_best_ind
         SimEngine.gui_set('best_fitness', value=round(self.best_ind.fitness, 1))
         SimEngine.gui_set('discrepancy', value=round(self.best_ind.discrepancy, 1))
@@ -229,10 +247,10 @@ class GA_World(World):
     def setup(self):
         # Create a list of Individuals as the initial population.
         # self.pop_size must be even since we generate children two at a time.
-        self.pop_size = (SimEngine.gui_get('pop_size')//2)*2
+        self.pop_size = SimEngine.gui_get('pop_size')
+        self.population = self.initial_population()
         self.tournament_size = SimEngine.gui_get('tourn_size')
         GA_World.fitness_target = SimEngine.gui_get('fitness_target')
-        self.population = self.initial_population()
         self.best_ind = None
         self.generations = 0
         self.set_results()
@@ -242,6 +260,8 @@ class GA_World(World):
             self.done = True
             return
 
+        # self.pop_size = SimEngine.gui_get('pop_size')
+        # self.population = self.initial_population()
         for i in range(self.pop_size//2):
             self.generate_2_children()
 
@@ -255,10 +275,11 @@ gui_left_upper = [
 
                    [sg.Text('Best:', pad=(None, (0, 0))),
                     sg.Text('     0.0', key='best_fitness', pad=(None, (0, 0))),
-                    sg.Text('Discrepancy:', pad=((20, 0), (0, 0))),
-                    sg.Text('      .0', key='discrepancy', pad=(None, (0, 0)))],
 
-                   [sg.Text('Generations:', pad=((0, 0), (0, 0))),
+                    sg.Text('Discrepancy:', pad=((10, 0), (0, 0))),
+                    sg.Text('      .0', key='discrepancy', pad=(None, (0, 0))),
+
+                    sg.Text('Gens:', pad=((10, 0), (0, 0))),
                     sg.Text('000000000', key='generations', pad=(None, (0, 0))),
                     ],
 
@@ -272,17 +293,12 @@ gui_left_upper = [
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   [sg.Text('Prob move gene', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='move_gene', range=(0, 100), default_value=5,
+                   [sg.Text('Prob no mating', pad=((0, 5), (10, 0))),
+                    sg.Slider(key='no_mating', range=(1, 100), resolution=1, default_value=10,
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   [sg.Text('Prob reverse subsequence', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
-                              orientation='horizontal', size=(10, 20))
-                    ],
-
-                   [sg.Text('Prob random parent', pad=((0, 5), (20, 0))),
+                   [sg.Text('Prob random parent', pad=((0, 5), (10, 0))),
                     sg.Slider(key='prob_random_parent', range=(0, 100), default_value=5,
                               orientation='horizontal', size=(10, 20))
                     ],
