@@ -119,7 +119,7 @@ class Loop_Individual(Individual):
         return self.chromosome.chromosome_fitness()
 
     def mate_with(self, other):
-        return self.cx_all_diff(self, other)
+        return self.cx_all_diff(other)
 
     def mutate(self) -> Individual:
         chromosome = self.chromosome
@@ -130,8 +130,12 @@ class Loop_Individual(Individual):
             chromosome = chromosome.reverse_subseq()
             self.fitness = self.compute_fitness()
 
-        self.chromosome: Chromosome = GA_World.chromosome_class(chromosome)
-        return self
+        if chromosome is self.chromosome:
+            return self
+
+        new_individual = GA_World.individual_class(chromosome)
+        # self.chromosome: Chromosome = GA_World.chromosome_class(chromosome)
+        return new_individual
 
 
 class Loop_World(GA_World):
@@ -172,6 +176,7 @@ class Loop_World(GA_World):
     def setup(self):
         GA_World.individual_class = Loop_Individual
         GA_World.chromosome_class = Loop_Chromosome
+        # GA_World.mating_op = Individual.cx_all_diff
 
         nbr_points = SimEngine.gui_get('nbr_points')
         self.create_random_agents(nbr_points, color=Color('white'), shape_name='node')
@@ -180,7 +185,6 @@ class Loop_World(GA_World):
 
         self.cycle_length = SimEngine.gui_get('cycle_length')
 
-        self.mating_op = Individual.cx_all_diff
         super().setup()
 
     def step(self):
@@ -221,6 +225,11 @@ import PySimpleGUI as sg
 loop_gui_left_upper = gui_left_upper + [
                       [sg.Text('Prob replace elt', pad=((0, 5), (20, 0))),
                        sg.Slider(key='replace_gene', range=(0, 100), default_value=95,
+                                 orientation='horizontal', size=(10, 20))
+                       ],
+
+                      [sg.Text('Prob reverse subseq', pad=((0, 5), (20, 0))),
+                       sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
                                  orientation='horizontal', size=(10, 20))
                        ],
 

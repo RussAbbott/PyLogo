@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from collections import namedtuple
 from itertools import count
@@ -20,19 +21,19 @@ class Segregation_Chromosome(Chromosome):
     def compute_chromosome_fitness(self) -> Tuple[List[bool], int]:
         len_chrom = len(self)
         # A chromosome is a tuple of Genes, each of which is a Gene(id, val), where val 0 or 1.
-        satisfactions = [self.is_happy(i, len_chrom) for i in range(len_chrom)]
-        fitness = len_chrom - sum(satisfactions)
-        return (satisfactions, fitness)
+        satisfied = [self.is_satisfied(i, len_chrom) for i in range(len_chrom)]
+        fitness = len_chrom - sum(satisfied)
+        return (satisfied, fitness)
 
     def chromosome_string(self):
         return ''.join([str(gene.val) for gene in self])
 
-    def exchange_genes(self, satisfactions) -> Tuple[Chromosome, int, List[bool]]:
+    def exchange_genes(self, satisfied) -> Sequence[int]:
         len_chrom = len(self)
-        candidate_zero_indices = self.unhappy_value_indices(0, satisfactions, len_chrom)
+        candidate_zero_indices = self.unsatisfied_value_indices(0, satisfied, len_chrom)
         if not candidate_zero_indices:
             return self
-        candidate_one_indices = self.unhappy_value_indices(1, satisfactions, len_chrom)
+        candidate_one_indices = self.unsatisfied_value_indices(1, satisfied, len_chrom)
         if not candidate_one_indices:
             return self
 
@@ -41,47 +42,49 @@ class Segregation_Chromosome(Chromosome):
         c_list: List[int] = list(self)
         (c_list[zero_index], c_list[one_index]) = (c_list[one_index], c_list[zero_index])
 
-        # noinspection PyTypeChecker
-        # new_chrom: Chromosome = GA_World.chromosome_class(c_list)
         return c_list
 
     def gene_value_indices(self, value, length):
         indices = [i for i in range(length) if self[i].val == value]
         return indices
 
-    def is_happy(self, i, len_chrom):
+    def is_satisfied(self, i, len_chrom):
         """
-        Is chrom[i] happy?
-        It is happy if at least 2 of the four elements on either side (2 on each side) have the same value.
+        Is chrom[i] satisfied?
+        It is satisfied if at least 2 of the four elements on either side (2 on each side) have the same value.
         """
         neigh_indices = [p for p in range(i-2, i+3) if p != i]
         # Use mod (%) so that we can wrap around. (Negatve wrap-around is automatic!)
         matches = [1 if self[p % len_chrom].val == self[i].val else -1 for p in neigh_indices]
-        happy = sum(matches) >= 0
-        return happy
+        satisfied = sum(matches) >= 0
+        return satisfied
 
-    def move_unhappy_gene(self, candidate_indices) -> Sequence[Gene]:
+    def move_unsatisfied_gene(self, candidate_indices) -> Sequence[Gene]:
         """
         This mutation operator moves a gene from one place to another.
-        This version selects an unhappy gene to move.
+        This version selects an unsatisfied gene to move.
         """
+        # (sats, fit) = self.compute_chromosome_fitness()
         from_index = choice(candidate_indices)
         gene_to_move: Gene = self[from_index]
         list_chromosome: List[Gene] = list(self)
         revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
-        to_index = choice(range(len(revised_list)))
+        indices = list(range(len(revised_list)))
+        if from_index in indices:
+            indices.remove(from_index)
+        to_index = choice(indices)
         revised_list.insert(to_index, gene_to_move)
         return revised_list
 
-    def unhappy_value_indices(self, value, satisfactions, length):
-        unhappy_indices = [i for i in range(length) if self[i].val == value and not satisfactions[i]]
-        return unhappy_indices
+    def unsatisfied_value_indices(self, value, satisfied, length):
+        unsatisfied_indices = [i for i in range(length) if self[i].val == value and not satisfied[i]]
+        return unsatisfied_indices
 
 
 class Segregation_Individual(Individual):
 
     def __init__(self, chromosome: Sequence[Gene]):
-        self.satisfactions = None
+        self.satisfied = None
         self.chromosome: Segregation_Chromosome = Segregation_Chromosome(chromosome)
         super().__init__(self.chromosome)
 
@@ -89,49 +92,60 @@ class Segregation_Individual(Individual):
         return f'{self.fitness}: ' \
                f'{self.chromosome.chromosome_string()}' \
                f'\n' \
-               f'{" "*len(str(self.fitness))}  {Segregation_Individual.satisfactions_string(self.satisfactions)}'
+               f'{" "*len(str(self.fitness))}  {Segregation_Individual.satisfied_string(self.satisfied)}'
 
     def compute_fitness(self) -> float:
-        (self.satisfactions, fitness) = self.chromosome.compute_chromosome_fitness()
+        (self.satisfied, fitness) = self.chromosome.compute_chromosome_fitness()
         return fitness
 
     def mate_with(self, other):
-        return self.cx_all_diff(self, other)
+        return self.cx_all_diff(other)
 
     def mutate(self) -> Individual:
+        if self is Segregation_World.world.best_ind:
+            print('best ind')
         chromosome = self.chromosome
-        if randint(0, 100) <= SimEngine.gui_get('exchange_genes'):
-            assert isinstance(self.chromosome, Segregation_Chromosome)
-            chromosome = chromosome.exchange_genes(self.satisfactions)
+        satisfied = self.satisfied
 
-        elif randint(0, 100) <= SimEngine.gui_get('move_unhappy_gene'):
-            candidate_indices = Segregation_Individual.unhappy_gene_value_indices(self.satisfactions)
-            if not candidate_indices:
+        no_mutation = SimEngine.gui_get('no_mutation')
+        move_unsatisfied = SimEngine.gui_get('move_unsatisfied_gene')
+        exchange_genes = SimEngine.gui_get('exchange_genes')
+        move_gene = SimEngine.gui_get('move_gene')
+        reverse_subseq = SimEngine.gui_get('reverse_subseq')
+
+        mutations_options = move_unsatisfied + exchange_genes + move_gene + reverse_subseq + no_mutation
+        mutation_choice = randint(0, mutations_options)
+
+        if mutation_choice <= move_unsatisfied:
+            unsatisfied_indices = [i for i in range(len(satisfied)) if not satisfied[i]]
+            if not unsatisfied_indices:
                 return self
-            chromosome = chromosome.move_unhappy_gene(candidate_indices)
+            new_chromosome = chromosome.move_unsatisfied_gene(unsatisfied_indices)
 
-        elif randint(0, 100) <= SimEngine.gui_get('move_gene'):
-            chromosome = chromosome.move_gene()
+        elif mutation_choice <= move_unsatisfied + exchange_genes:
+            assert isinstance(self.chromosome, Segregation_Chromosome)
+            new_chromosome = chromosome.exchange_genes(satisfied)
 
-        elif randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
-            chromosome = chromosome.reverse_subseq()
+        elif mutation_choice <= move_unsatisfied + exchange_genes + move_gene:
+            new_chromosome = chromosome.move_gene()
 
-        self.chromosome = GA_World.chromosome_class(chromosome)
+        elif mutation_choice <= move_unsatisfied + exchange_genes + move_gene + reverse_subseq:
+            new_chromosome = chromosome.reverse_subseq()
 
-        (self.satisfactions, self.fitness) = self.chromosome.compute_chromosome_fitness()
-        return self
+        else:
+            return self
+
+        new_individual = GA_World.individual_class(new_chromosome)
+        return new_individual
 
     @staticmethod
-    def satisfactions_string(satisfactions: List[bool]):
-        return f'{"".join([" " if satisfactions[i] else "^" for i in range(len(satisfactions))])}'
-
-    @staticmethod
-    def unhappy_gene_value_indices(satisfactions):
-        unhappy_indices = [i for i in range(len(satisfactions)) if not satisfactions[i]]
-        return unhappy_indices
+    def satisfied_string(satisfied: List[bool]):
+        return f'{"".join([" " if satisfied[i] else "^" for i in range(len(satisfied))])}'
 
 
 class Segregation_World(GA_World):
+
+    world = None
 
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
@@ -139,9 +153,7 @@ class Segregation_World(GA_World):
 
     @staticmethod
     def display_best_ind(best_ind: Segregation_Individual):
-        # best_ind.set_best_rotation()
-        # print(str(best_ind))
-        Segregation_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfactions)
+        Segregation_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfied)
 
     def gen_individual(self):
         # Use ceil to ensure we have enough genes.
@@ -153,8 +165,8 @@ class Segregation_World(GA_World):
         return individual
 
     @staticmethod
-    def insert_chrom_and_sats(chromosome, satisfactions, window_rows=2):
-        """ Scroll the screen and insert the current best chromosome with unhappy genes indicated. """
+    def insert_chrom_and_sats(chromosome, satisfied, window_rows=2):
+        """ Scroll the screen and insert the current best chromosome with unsatisfied genes indicated. """
         Segregation_World.scroll_window(window_rows)
 
         chrom_string = chromosome.chromosome_string()
@@ -165,8 +177,8 @@ class Segregation_World(GA_World):
             World.patches_array[gui.PATCH_ROWS-2, indentation+c].set_color(yellow if chrom_string[c] == '1' else green)
         red = Color('red')
         black = Color('black')
-        for c in range(len(satisfactions)):
-            World.patches_array[gui.PATCH_ROWS-1, indentation+c].set_color(black if satisfactions[c] else red)
+        for c in range(len(satisfied)):
+            World.patches_array[gui.PATCH_ROWS-1, indentation+c].set_color(black if satisfied[c] else red)
 
     @staticmethod
     def scroll_window(window_rows):
@@ -186,8 +198,9 @@ class Segregation_World(GA_World):
     def setup(self):
         GA_World.individual_class = Segregation_Individual
         GA_World.chromosome_class = Segregation_Chromosome
+        Segregation_World.world = self
+        # GA_World.mating_op = Individual.cx_all_diff
         self.chromosome_length = SimEngine.gui_get('chrom_length')
-        self.mating_op = Individual.cx_all_diff
         super().setup()
 
 
@@ -199,28 +212,44 @@ board_size = 201 if demo == 'large' else 51
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-seg_gui_left_upper = gui_left_upper + [
-                      [sg.Text('Move unhappy gene', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='move_unhappy_gene', range=(0, 100), default_value=5,
-                                 orientation='horizontal', size=(10, 20))
-                       ],
+seg_gui_left_upper = gui_left_upper \
+                     + [
+                        [sg.Text('Prob no mutation', pad=((0, 5), (10, 0))),
+                         sg.Slider(key='no_mutation', range=(0, 100), resolution=1, default_value=10,
+                                   orientation='horizontal', size=(10, 20))
+                         ],
 
-                      [sg.Text('Exchange two genes', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='exchange_genes', range=(0, 100), default_value=5,
-                                 orientation='horizontal', size=(10, 20))
-                       ],
+                         [sg.Text('Prob move unsatisfied gene', pad=((0, 5), (20, 0))),
+                          sg.Slider(key='move_unsatisfied_gene', range=(0, 100), default_value=5,
+                                    orientation='horizontal', size=(10, 20))
+                          ],
 
-                      [sg.Text('Fitness target', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='fitness_target', default_value=0, enable_events=True,
-                                 orientation='horizontal', size=(10, 20), range=(0, 10))
-                       ],
+                        [sg.Text('Prob exchange two genes', pad=((0, 5), (20, 0))),
+                         sg.Slider(key='exchange_genes', range=(0, 100), default_value=5,
+                                   orientation='horizontal', size=(10, 20))
+                         ],
 
-                      [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                       sg.Slider(key='chrom_length', range=(10, board_size), enable_events=True, size=(10, 20),
-                                 pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size)
-                       ],
+                        [sg.Text('Prob move gene', pad=((0, 5), (20, 0))),
+                         sg.Slider(key='move_gene', range=(0, 100), default_value=5,
+                                   orientation='horizontal', size=(10, 20))
+                         ],
 
-                         ]
+                        [sg.Text('Prob reverse subseq', pad=((0, 5), (20, 0))),
+                         sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
+                                   orientation='horizontal', size=(10, 20))
+                         ],
+
+                        [sg.Text('Fitness target', pad=((0, 5), (20, 0))),
+                         sg.Slider(key='fitness_target', default_value=0, enable_events=True,
+                                   orientation='horizontal', size=(10, 20), range=(0, 10))
+                         ],
+
+                        [sg.Text('Chromosome length', pad=(None, (20, 0))),
+                         sg.Slider(key='chrom_length', range=(10, board_size), enable_events=True, size=(10, 20),
+                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size)
+                         ],
+
+                        ]
 
 
 if __name__ == "__main__":
