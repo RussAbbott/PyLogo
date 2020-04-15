@@ -20,18 +20,10 @@ class Chromosome(tuple):
     An individual consists primarily of a sequence of Genes, called
     a chromosome. We create a class for it simply because it's a
     convenient place to store methods.
-
     """
 
     def chromosome_fitness(self) -> float:
         pass
-
-        # len_chrom = len(self)
-        # # A chromosome is a tuple of Genes, each of which is a Pixel_xy. We use mod (%)
-        # # so that we can include the distance from chromosome[len_chrom - 1] to chromosome[0]
-        # distances = [self[i].distance_to(self[(i+1) % len_chrom]) for i in range(len_chrom)]
-        # fitness = sum(distances)
-        # return fitness
 
     def cx_all_diff_chromosome(self: Chromosome, other_chromosome: Chromosome) -> Chromosome:
         """
@@ -51,6 +43,8 @@ class Chromosome(tuple):
                                                                      if gene not in child_chromosome_start)
 
         child_chromosome: Chromosome = GA_World.chromosome_class(child_chromosome_start + child_chromosome_end)
+        # if len(child_chromosome) > len(self):
+        #     print(len(child_chromosome), len(self))
         return child_chromosome[:len(self)]
 
     def cx_uniform(self: Chromosome, other_chromosome: Chromosome) -> Chromosome:
@@ -125,10 +119,10 @@ class GA_World(World):
     """
     The Population holds the collection of Individuals that will undergo evolution.
     """
-    fitness_target = None
-    individual_class = Individual
     chromosome_class = Chromosome
-    mating_op = None
+    fitness_target = None
+    gene_pool = None
+    individual_class = Individual
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -140,7 +134,6 @@ class GA_World(World):
         # noinspection PyTypeChecker
         self.population: List[Individual] = None
 
-        self.mating_op = None
         self.tournament_size = None
 
         self.BEST = 'best'
@@ -169,6 +162,9 @@ class GA_World(World):
         # noinspection PyTypeChecker
         self.population[dest_2_indx] = min([child_2, child_2_mutated], key=lambda c: c.discrepancy)
 
+    def gen_gene_pool(self):
+        pass
+
     def gen_individual(self) -> Individual:
         pass
 
@@ -183,8 +179,6 @@ class GA_World(World):
         else:
             parent_indx = self.select_gene_index(self.BEST, SimEngine.gui_get('tourn_size'))
             parent = self.population[parent_indx]
-            # if parent is self.best_ind:
-            #     print('best in as parent')
         return parent
 
     def handle_event(self, event):
@@ -198,6 +192,7 @@ class GA_World(World):
         """
         Generate the initial population. Use gen_individual from the subclass.
         """
+        self.gen_gene_pool()
         population = [self.gen_individual() for _ in range(self.pop_size)]
         return population
 
@@ -223,9 +218,6 @@ class GA_World(World):
         # because we are looking for the smallest discrepancy.
         min_or_max = min if best_or_worst == self.BEST else max
         selected_index = min_or_max(candidate_indices, key=lambda i: self.population[i].discrepancy)
-        # if best_or_worst == self.BEST and self.best_ind:
-        #     best = self.population[selected_index]
-        #     print(best == self.best_ind, best.fitness, self.best_ind.fitness)
         return selected_index
 
     @staticmethod
@@ -260,8 +252,6 @@ class GA_World(World):
             self.done = True
             return
 
-        # self.pop_size = SimEngine.gui_get('pop_size')
-        # self.population = self.initial_population()
         for i in range(self.pop_size//2):
             self.generate_2_children()
 
@@ -274,13 +264,13 @@ import PySimpleGUI as sg
 gui_left_upper = [
 
                    [sg.Text('Best:', pad=(None, (0, 0))),
-                    sg.Text('     0.0', key='best_fitness', pad=(None, (0, 0))),
+                    sg.Text('   0.0', key='best_fitness', pad=(None, (0, 0))),
 
-                    sg.Text('Discrepancy:', pad=((10, 0), (0, 0))),
-                    sg.Text('      .0', key='discrepancy', pad=(None, (0, 0))),
+                    sg.Text('Discrepancy:', pad=((5, 0), (0, 0))),
+                    sg.Text('  .0', key='discrepancy', pad=(None, (0, 0))),
 
-                    sg.Text('Gens:', pad=((10, 0), (0, 0))),
-                    sg.Text('000000000', key='generations', pad=(None, (0, 0))),
+                    sg.Text('Gens:', pad=((5, 0), (0, 0))),
+                    sg.Text('00000', key='generations', pad=(None, (0, 0))),
                     ],
 
                    [sg.Text('Population size\n(must be even)', pad=((0, 5), (20, 0))),
