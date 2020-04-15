@@ -75,7 +75,7 @@ class Loop_Chromosome(Chromosome):
                                                      - removed_gene.distance_to(gene_after)  \
                                                      + gene_before.distance_to(gene_after)
             # Make the removed gene not available because we will add it in explicitly 3 lines down.
-            available_genes = GA_World.agents - set(self)
+            available_genes = GA_World.gene_pool - set(self)
             sample_size = min(5 if len_chrom == 2 else 4, len(available_genes))
             # Include the removed gene as one of the ones to try.
             sampled_available_genes = sample(available_genes, sample_size) + [self[i]]
@@ -144,9 +144,14 @@ class Loop_World(GA_World):
         super().__init__(*arga, **kwargs)
         self.cycle_length = SimEngine.gui_get('cycle_length')
 
+    def gen_gene_pool(self):
+        # The gene_pool in this case are the point on the grid, which are agents.
+        nbr_points = SimEngine.gui_get('nbr_points')
+        self.create_random_agents(nbr_points, color=Color('white'), shape_name='node')
+        GA_World.gene_pool = World.agents
 
     def gen_individual(self):
-        chromosome_list: List = sample(World.agents, self.cycle_length)
+        chromosome_list: List = sample(GA_World.gene_pool, self.cycle_length)
         individual = GA_World.individual_class(GA_World.chromosome_class(chromosome_list))
         return individual
 
@@ -176,23 +181,20 @@ class Loop_World(GA_World):
     def setup(self):
         GA_World.individual_class = Loop_Individual
         GA_World.chromosome_class = Loop_Chromosome
-        # GA_World.mating_op = Individual.cx_all_diff
+        super().setup()
 
-        nbr_points = SimEngine.gui_get('nbr_points')
-        self.create_random_agents(nbr_points, color=Color('white'), shape_name='node')
-        for agent in World.agents:
+        for agent in GA_World.gene_pool:
             agent.set_velocity(Loop_World.random_velocity())
 
         self.cycle_length = SimEngine.gui_get('cycle_length')
 
-        super().setup()
 
     def step(self):
         """
         Update the world by moving the agents.
         """
         if SimEngine.gui_get('move_points'):
-            for agent in World.agents:
+            for agent in GA_World.gene_pool:
                 agent.move_by_velocity()
                 if self.best_ind:
                     self.best_ind.fitness = self.best_ind.compute_fitness()
@@ -210,7 +212,7 @@ class Loop_World(GA_World):
                 new_chromosome = chromosome[:cycle_length]
                 ind.fitness = ind.compute_fitness()
             else:
-                available_genes = GA_World.agents - set(chromosome)
+                available_genes = GA_World.gene_pool - set(chromosome)
                 new_genes = sample(available_genes, cycle_length - len(chromosome))
                 new_chromosome = chromosome
                 for gene in new_genes:

@@ -48,15 +48,21 @@ class Segregation_Chromosome(Chromosome):
         indices = [i for i in range(length) if self[i].val == value]
         return indices
 
-    def is_satisfied(self, i, len_chrom):
+    def is_satisfied(self, i, len_chrom) -> bool:
         """
         Is chrom[i] satisfied?
         It is satisfied if at least 2 of the four elements on either side (2 on each side) have the same value.
         """
+        if self[i].val == ' ':
+            return True
         neigh_indices = [p for p in range(i-2, i+3) if p != i]
         # Use mod (%) so that we can wrap around. (Negatve wrap-around is automatic!)
-        matches = [1 if self[p % len_chrom].val == self[i].val else -1 for p in neigh_indices]
-        satisfied = sum(matches) >= 0
+        matches = [1 if self[p % len_chrom].val == self[i].val else
+                   0 if self[p % len_chrom].val == ' ' else
+                   -1
+                   for p in neigh_indices]
+        sum_matches = sum(matches)
+        satisfied = sum_matches < 0 if SimEngine.gui_get('div_or_seg') == 'Diversity' else sum_matches > 0
         return satisfied
 
     def move_unsatisfied_gene(self, candidate_indices) -> Sequence[Gene]:
@@ -64,7 +70,6 @@ class Segregation_Chromosome(Chromosome):
         This mutation operator moves a gene from one place to another.
         This version selects an unsatisfied gene to move.
         """
-        # (sats, fit) = self.compute_chromosome_fitness()
         from_index = choice(candidate_indices)
         gene_to_move: Gene = self[from_index]
         list_chromosome: List[Gene] = list(self)
@@ -102,8 +107,6 @@ class Segregation_Individual(Individual):
         return self.cx_all_diff(other)
 
     def mutate(self) -> Individual:
-        if self is Segregation_World.world.best_ind:
-            print('best ind')
         chromosome = self.chromosome
         satisfied = self.satisfied
 
@@ -155,12 +158,17 @@ class Segregation_World(GA_World):
     def display_best_ind(best_ind: Segregation_Individual):
         Segregation_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfied)
 
-    def gen_individual(self):
+    def gen_gene_pool(self):
         # Use ceil to ensure we have enough genes.
-        zeros = [0]*ceil(self.chromosome_length/2)
-        ones = [1]*ceil(self.chromosome_length/2)
-        mixture = sample(zeros + ones, self.chromosome_length)
-        chromosome_tuple: Tuple[Gene] = GA_World.chromosome_class(Gene(id, val) for (id, val) in zip(count(), mixture))
+        zeros_ones = ceil(self.chromosome_length/2) - 2
+        zeros = [0] * zeros_ones
+        ones = [1] * zeros_ones
+        blanks = [' '] * (self.chromosome_length - 2 * zeros_ones)
+        GA_World.gene_pool = sample(zeros + ones + blanks, self.chromosome_length)
+
+    def gen_individual(self):
+        chromosome_tuple: Tuple[Gene] = GA_World.chromosome_class(Gene(id, val)
+                                                                  for (id, val) in zip(count(), GA_World.gene_pool))
         individual = GA_World.individual_class(chromosome_tuple)
         return individual
 
@@ -172,9 +180,11 @@ class Segregation_World(GA_World):
         chrom_string = chromosome.chromosome_string()
         green = Color('springgreen3')
         yellow = Color('yellow')
+        blue = Color('lightblue')
         indentation = (gui.PATCH_COLS - len(chrom_string))//2
         for c in range(len(chrom_string)):
-            World.patches_array[gui.PATCH_ROWS-2, indentation+c].set_color(yellow if chrom_string[c] == '1' else green)
+            World.patches_array[gui.PATCH_ROWS-2, indentation+c].set_color(yellow if chrom_string[c] == '1' else
+                                                                           green if chrom_string[c] == '0' else blue)
         red = Color('red')
         black = Color('black')
         for c in range(len(satisfied)):
@@ -199,16 +209,15 @@ class Segregation_World(GA_World):
         GA_World.individual_class = Segregation_Individual
         GA_World.chromosome_class = Segregation_Chromosome
         Segregation_World.world = self
-        # GA_World.mating_op = Individual.cx_all_diff
         self.chromosome_length = SimEngine.gui_get('chrom_length')
         super().setup()
 
 
 # ########################################## Parameters for demos ######################################## #
-demo = 'large'
-# demo = 'small'
+# demo = 'large'
+demo = 'small'
 patch_size = 3 if demo == 'large' else 11
-board_size = 201 if demo == 'large' else 51
+board_size = 201 if demo == 'large' else 55
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
@@ -237,6 +246,10 @@ seg_gui_left_upper = gui_left_upper \
                         [sg.Text('Prob reverse subseq', pad=((0, 5), (20, 0))),
                          sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
                                    orientation='horizontal', size=(10, 20))
+                         ],
+
+                        [sg.Combo(values=['Diversity', 'Segregation'], key='div_or_seg', default_value='Segregation',
+                                  pad=(None, (10, 0)))
                          ],
 
                         [sg.Text('Fitness target', pad=((0, 5), (20, 0))),
