@@ -83,7 +83,8 @@ class Segregation_Chromosome(Chromosome):
 
     def unsatisfied_value_indices(self, value, satisfied, length):
         unsatisfied_indices = [i for i in range(length) if self[i].val == value and not satisfied[i]]
-        return unsatisfied_indices
+        space_indices = [i for i in range(length) if self[i].val == ' ']
+        return unsatisfied_indices + space_indices
 
 
 class Segregation_Individual(Individual):
@@ -160,10 +161,12 @@ class Segregation_World(GA_World):
 
     def gen_gene_pool(self):
         # Use ceil to ensure we have enough genes.
-        zeros_ones = ceil(self.chromosome_length/2) - 2
+        blanks_nbr = max(ceil(0.05*self.chromosome_length), 4)
+        zeros_ones = ceil((self.chromosome_length - blanks_nbr)/2)
+        # zeros_ones = ceil(self.chromosome_length/2) - 2
+        blanks = [' '] * blanks_nbr   # (self.chromosome_length - 2*zeros_ones)
         zeros = [0] * zeros_ones
         ones = [1] * zeros_ones
-        blanks = [' '] * (self.chromosome_length - 2 * zeros_ones)
         GA_World.gene_pool = sample(zeros + ones + blanks, self.chromosome_length)
 
     def gen_individual(self):
@@ -214,8 +217,8 @@ class Segregation_World(GA_World):
 
 
 # ########################################## Parameters for demos ######################################## #
-# demo = 'large'
-demo = 'small'
+demo = 'large'
+# demo = 'small'
 patch_size = 3 if demo == 'large' else 11
 board_size = 201 if demo == 'large' else 55
 
