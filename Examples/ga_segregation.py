@@ -62,7 +62,9 @@ class Segregation_Chromosome(Chromosome):
                    -1
                    for p in neigh_indices]
         sum_matches = sum(matches)
-        satisfied = sum_matches < 0 if SimEngine.gui_get('div_or_seg') == 'Diversity' else sum_matches > 0
+        satisfied = sum_matches < 0 if SimEngine.gui_get('div_or_seg') == 'Diversity' else \
+                    sum_matches > 0 if SimEngine.gui_get('div_or_seg') == 'Segregation' else \
+                    sum_matches == 0
         return satisfied
 
     def move_unsatisfied_gene(self, candidate_indices) -> Sequence[Gene]:
@@ -164,9 +166,9 @@ class Segregation_World(GA_World):
         blanks_nbr = max(ceil(0.05*self.chromosome_length), 4)
         zeros_ones = ceil((self.chromosome_length - blanks_nbr)/2)
         # zeros_ones = ceil(self.chromosome_length/2) - 2
-        blanks = [' '] * blanks_nbr   # (self.chromosome_length - 2*zeros_ones)
-        zeros = [0] * zeros_ones
-        ones = [1] * zeros_ones
+        blanks = [' '] * blanks_nbr
+        zeros = ['0'] * zeros_ones
+        ones = ['1'] * zeros_ones
         GA_World.gene_pool = sample(zeros + ones + blanks, self.chromosome_length)
 
     def gen_individual(self):
@@ -180,14 +182,15 @@ class Segregation_World(GA_World):
         """ Scroll the screen and insert the current best chromosome with unsatisfied genes indicated. """
         Segregation_World.scroll_window(window_rows)
 
-        chrom_string = chromosome.chromosome_string()
+        # chrom_string = chromosome.chromosome_string()
         green = Color('springgreen3')
         yellow = Color('yellow')
         blue = Color('lightblue')
-        indentation = (gui.PATCH_COLS - len(chrom_string))//2
-        for c in range(len(chrom_string)):
-            World.patches_array[gui.PATCH_ROWS-2, indentation+c].set_color(yellow if chrom_string[c] == '1' else
-                                                                           green if chrom_string[c] == '0' else blue)
+        indentation = (gui.PATCH_COLS - len(chromosome))//2
+        val_to_color = {'1': yellow, '0': green, ' ': blue}
+        for c in range(len(chromosome)):
+            patch_color = val_to_color[chromosome[c].val]
+            World.patches_array[gui.PATCH_ROWS-2, indentation+c].set_color(patch_color)
         red = Color('red')
         black = Color('black')
         for c in range(len(satisfied)):
@@ -217,11 +220,11 @@ class Segregation_World(GA_World):
 
 
 # ########################################## Parameters for demos ######################################## #
-demo = 'large'
-# demo = 'small'
-patch_size = 3 if demo == 'large' else 11
-board_size = 201 if demo == 'large' else 55
+# patch_size = 5
+# patch_size = 8
+patch_size = 11
 
+board_size = (70//patch_size)*10
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 seg_gui_left_upper = gui_left_upper \
@@ -251,8 +254,8 @@ seg_gui_left_upper = gui_left_upper \
                                    orientation='horizontal', size=(10, 20))
                          ],
 
-                        [sg.Combo(values=['Diversity', 'Segregation'], key='div_or_seg', default_value='Segregation',
-                                  pad=(None, (10, 0)))
+                        [sg.Combo(values=['Diversity', 'Equality', 'Segregation'], key='div_or_seg',
+                                  default_value='Segregation', pad=(None, (10, 0)))
                          ],
 
                         [sg.Text('Fitness target', pad=((0, 5), (20, 0))),
@@ -261,8 +264,8 @@ seg_gui_left_upper = gui_left_upper \
                          ],
 
                         [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                         sg.Slider(key='chrom_length', range=(10, board_size), enable_events=True, size=(10, 20),
-                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size)
+                         sg.Slider(key='chrom_length', range=(10, board_size+1), enable_events=True, size=(10, 20),
+                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size+1)
                          ],
 
                         ]
