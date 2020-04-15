@@ -16,7 +16,7 @@ from core.world_patch_block import World
 Gene = namedtuple('Gene', ['id', 'val'])
 
 
-class Segregation_Chromosome(Chromosome):
+class Parentheses_Chromosome(Chromosome):
 
     def compute_chromosome_fitness(self) -> Tuple[List[bool], int]:
         len_chrom = len(self)
@@ -89,18 +89,18 @@ class Segregation_Chromosome(Chromosome):
         return unsatisfied_indices + space_indices
 
 
-class Segregation_Individual(Individual):
+class Parentheses_Individual(Individual):
 
     def __init__(self, chromosome: Sequence[Gene]):
         self.satisfied = None
-        self.chromosome: Segregation_Chromosome = Segregation_Chromosome(chromosome)
+        self.chromosome: Parentheses_Chromosome = Parentheses_Chromosome(chromosome)
         super().__init__(self.chromosome)
 
     def __str__(self):
         return f'{self.fitness}: ' \
                f'{self.chromosome.chromosome_string()}' \
                f'\n' \
-               f'{" "*len(str(self.fitness))}  {Segregation_Individual.satisfied_string(self.satisfied)}'
+               f'{" "*len(str(self.fitness))}  {Parentheses_Individual.satisfied_string(self.satisfied)}'
 
     def compute_fitness(self) -> float:
         (self.satisfied, fitness) = self.chromosome.compute_chromosome_fitness()
@@ -129,7 +129,7 @@ class Segregation_Individual(Individual):
             new_chromosome = chromosome.move_unsatisfied_gene(unsatisfied_indices)
 
         elif mutation_choice <= move_unsatisfied + exchange_genes:
-            assert isinstance(self.chromosome, Segregation_Chromosome)
+            assert isinstance(self.chromosome, Parentheses_Chromosome)
             new_chromosome = chromosome.exchange_genes(satisfied)
 
         elif mutation_choice <= move_unsatisfied + exchange_genes + move_gene:
@@ -149,7 +149,7 @@ class Segregation_Individual(Individual):
         return f'{"".join([" " if satisfied[i] else "^" for i in range(len(satisfied))])}'
 
 
-class Segregation_World(GA_World):
+class Parentheses_World(GA_World):
 
     world = None
 
@@ -158,8 +158,8 @@ class Segregation_World(GA_World):
         self.chromosome_length = None
 
     @staticmethod
-    def display_best_ind(best_ind: Segregation_Individual):
-        Segregation_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfied)
+    def display_best_ind(best_ind: Parentheses_Individual):
+        Parentheses_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfied)
 
     def gen_gene_pool(self):
         # Use ceil to ensure we have enough genes.
@@ -180,7 +180,7 @@ class Segregation_World(GA_World):
     @staticmethod
     def insert_chrom_and_sats(chromosome, satisfied, window_rows=2):
         """ Scroll the screen and insert the current best chromosome with unsatisfied genes indicated. """
-        Segregation_World.scroll_window(window_rows)
+        Parentheses_World.scroll_window(window_rows)
 
         # chrom_string = chromosome.chromosome_string()
         green = Color('springgreen3')
@@ -209,12 +209,12 @@ class Segregation_World(GA_World):
         """ Find and display the best individual. """
         super().set_results()
         # noinspection PyTypeChecker
-        Segregation_World.display_best_ind(self.best_ind)
+        Parentheses_World.display_best_ind(self.best_ind)
 
     def setup(self):
-        GA_World.individual_class = Segregation_Individual
-        GA_World.chromosome_class = Segregation_Chromosome
-        Segregation_World.world = self
+        GA_World.individual_class = Parentheses_Individual
+        GA_World.chromosome_class = Parentheses_Chromosome
+        Parentheses_World.world = self
         self.chromosome_length = SimEngine.gui_get('chrom_length')
         super().setup()
 
@@ -273,5 +273,5 @@ seg_gui_left_upper = gui_left_upper \
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Segregation_World, 'GA Segregation', seg_gui_left_upper,
+    PyLogo(Parentheses_World, 'GA Segregation', seg_gui_left_upper,
            patch_size=patch_size, board_rows_cols=(board_size, board_size))
