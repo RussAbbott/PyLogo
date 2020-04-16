@@ -213,18 +213,16 @@ class Parentheses_World(GA_World):
         GA_World.individual_class = Parentheses_Individual
         GA_World.chromosome_class = Parentheses_Chromosome
         Parentheses_World.world = self
-        # Block.patch_text_offset = 10
-        # chromosome_length = SimEngine.gui_get('chrom_length')
-        # print('_'*(2*SimEngine.gui_get('chrom_length')+5))
+        print('---')
         super().setup()
 
 
 # ########################################## Parameters for demos ######################################## #
-patch_sizes =                   (5,   8,  11, 14, 19, 25, 50)
-# chromosome length             (140, 80, 60, 50, 30, 20, 10)
+chromo_lengths = (140, 80, 60, 50, 30, 20, 10)
+chromo_length = chromo_lengths[3]
 
-patch_size = patch_sizes[3]
-board_size = (70//patch_size)*10
+# patch_size = patch_sizes[3]      # chromosome length -> 50
+# board_size = (70//patch_size)*10
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
@@ -261,8 +259,8 @@ seg_gui_left_upper = gui_left_upper \
                          ],
 
                         [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                         sg.Slider(key='chrom_length', range=(2, board_size), enable_events=True, size=(10, 20),
-                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size,
+                         sg.Slider(key='chrom_length', range=(2, chromo_length), enable_events=True, size=(10, 20),
+                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=chromo_length,
                                    resolution=2)
                          ],
 
@@ -271,5 +269,4 @@ seg_gui_left_upper = gui_left_upper \
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Parentheses_World, 'GA Segregation', seg_gui_left_upper,
-           patch_size=patch_size, board_rows_cols=(board_size, board_size))
+    PyLogo(Parentheses_World, 'GA Segregation', seg_gui_left_upper, patch_size=10, board_rows_cols=(10, 10))
