@@ -43,8 +43,6 @@ class Chromosome(tuple):
                                                                      if gene not in child_chromosome_start)
 
         child_chromosome: Chromosome = GA_World.chromosome_class(child_chromosome_start + child_chromosome_end)
-        # if len(child_chromosome) > len(self):
-        #     print(len(child_chromosome), len(self))
         return child_chromosome[:len(self)]
 
     def cx_uniform(self: Chromosome, other_chromosome: Chromosome) -> Chromosome:
@@ -100,8 +98,9 @@ class Individual:
         child_2 = GA_World.individual_class((other.chromosome).cx_all_diff_chromosome(self.chromosome))
         return (child_1, child_2)
 
-    def cx_uniform(self, other: Individual) -> Chromosome:
-        return self.chromosome.cx_uniform((other.chromosome))
+    def cx_uniform(self, other: Individual) -> Tuple[Individual, Individual]:
+        return (GA_World.individual_class(self.chromosome.cx_uniform(other.chromosome)),
+                GA_World.individual_class(other.chromosome.cx_uniform(self.chromosome)))
 
     @property
     def discrepancy(self) -> float:
@@ -186,6 +185,16 @@ class GA_World(World):
             GA_World.fitness_target = SimEngine.gui_get('fitness_target')
             self.resume_ga()
             return
+        if event == 'pop_size':
+            new_pop_size = SimEngine.gui_get('pop_size')
+            if new_pop_size <= self.pop_size:
+                self.population = self.population[:new_pop_size]
+            else:
+                for i in range(self.pop_size, new_pop_size):
+                    self.population.append(self.gen_individual())
+            self.pop_size = new_pop_size
+            self.resume_ga()
+            return
         super().handle_event(event)
 
     def initial_population(self) -> List[Individual]:
@@ -264,10 +273,10 @@ import PySimpleGUI as sg
 gui_left_upper = [
 
                    [sg.Text('Best:', pad=(None, (0, 0))),
-                    sg.Text('   0.0', key='best_fitness', pad=(None, (0, 0))),
+                    sg.Text('000000.0', key='best_fitness', pad=(None, (0, 0))),
 
-                    sg.Text('Discrepancy:', pad=((5, 0), (0, 0))),
-                    sg.Text('  .0', key='discrepancy', pad=(None, (0, 0))),
+                    sg.Text('Discrep:', pad=((5, 0), (0, 0))),
+                    sg.Text('00000.0', key='discrepancy', pad=(None, (0, 0))),
 
                     sg.Text('Gens:', pad=((5, 0), (0, 0))),
                     sg.Text('00000', key='generations', pad=(None, (0, 0))),
@@ -275,7 +284,7 @@ gui_left_upper = [
 
                    [sg.Text('Population size\n(must be even)', pad=((0, 5), (20, 0))),
                     sg.Slider(key='pop_size', range=(4, 100), resolution=2, default_value=10,
-                              orientation='horizontal', size=(10, 20))
+                              orientation='horizontal', size=(10, 20), enable_events=True)
                     ],
 
                    [sg.Text('Tournament size', pad=((0, 5), (10, 0))),

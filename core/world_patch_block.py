@@ -44,7 +44,7 @@ class Block:  # (Sprite):
         dist = sqrt(x_dist * x_dist + y_dist*y_dist)
         return dist
 
-    # Note that the actual drawing (blit and draw_line) takes place in core.gui.
+    # The actual drawing (blit and draw_line) takes place in core.gui.
     def draw(self, shape_name=None):
         if self.label:
             self.draw_label()
@@ -58,7 +58,8 @@ class Block:  # (Sprite):
     def draw_label(self):
         offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
         text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
-        line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
+        line_color = None if offset == 0 else \
+                     Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
         obj_center = self.rect.center
         label = self.label
         gui.draw_label(label, text_center, obj_center, line_color)
