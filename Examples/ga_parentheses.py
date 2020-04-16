@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -21,12 +22,21 @@ class Parentheses_Chromosome(Chromosome):
     def compute_chromosome_fitness(self) -> Tuple[List[bool], int]:
         len_chrom = len(self)
         # A chromosome is a tuple of Genes, each of which is a Gene(id, val), where val 0 or 1.
-        satisfied = [self.is_satisfied(i, len_chrom) for i in range(len_chrom)]
-        fitness = len_chrom - sum(satisfied)
+        errors = 0
+        balance = 0
+        balance_value = {'(': 1, ' ': 0, ')': -1}
+        satisfied = [True]*len_chrom
+        for i in range(len_chrom):
+            balance += balance_value[self[i].val]
+            if balance < 0:
+                errors += 1
+                balance = 0
+                satisfied[i] = False
+        fitness = errors
         return (satisfied, fitness)
 
     def chromosome_string(self):
-        return ''.join([str(gene.val) for gene in self])
+        return ' '.join([str(gene.val) for gene in self])
 
     def exchange_genes(self, satisfied) -> Sequence[int]:
         len_chrom = len(self)
@@ -107,7 +117,7 @@ class Parentheses_Individual(Individual):
         return fitness
 
     def mate_with(self, other):
-        return self.cx_all_diff(other)
+        return self.cx_uniform(other)
 
     def mutate(self) -> Individual:
         chromosome = self.chromosome
@@ -146,7 +156,8 @@ class Parentheses_Individual(Individual):
 
     @staticmethod
     def satisfied_string(satisfied: List[bool]):
-        return f'{"".join([" " if satisfied[i] else "^" for i in range(len(satisfied))])}'
+        sat_str = f'{" ".join([" " if satisfied[i] else "^" for i in range(len(satisfied))])}'
+        return sat_str
 
 
 class Parentheses_World(GA_World):
@@ -155,21 +166,19 @@ class Parentheses_World(GA_World):
 
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
-        self.chromosome_length = None
+        # self.chromosome_length = None
 
     @staticmethod
     def display_best_ind(best_ind: Parentheses_Individual):
-        Parentheses_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfied)
+        # Parentheses_World.insert_chrom_and_sats(best_ind, best_ind.chromosome, best_ind.satisfied)
+        print(str(best_ind))
 
     def gen_gene_pool(self):
-        # Use ceil to ensure we have enough genes.
-        blanks_nbr = max(ceil(0.05*self.chromosome_length), 4)
-        zeros_ones = ceil((self.chromosome_length - blanks_nbr)/2)
-        # zeros_ones = ceil(self.chromosome_length/2) - 2
-        blanks = [' '] * blanks_nbr
-        zeros = ['0'] * zeros_ones
-        ones = ['1'] * zeros_ones
-        GA_World.gene_pool = sample(zeros + ones + blanks, self.chromosome_length)
+        chromosome_length = SimEngine.gui_get('chrom_length')
+        lefts_rights = chromosome_length//2
+        lefts = ['('] * lefts_rights
+        rights = [')'] * lefts_rights
+        GA_World.gene_pool = sample(lefts + rights, chromosome_length)
 
     def gen_individual(self):
         chromosome_tuple: Tuple[Gene] = GA_World.chromosome_class(Gene(id, val)
@@ -178,23 +187,30 @@ class Parentheses_World(GA_World):
         return individual
 
     @staticmethod
-    def insert_chrom_and_sats(chromosome, satisfied, window_rows=2):
+    def insert_chrom_and_sats(best_ind, chromosome, satisfied, window_rows=2):
         """ Scroll the screen and insert the current best chromosome with unsatisfied genes indicated. """
         Parentheses_World.scroll_window(window_rows)
 
         # chrom_string = chromosome.chromosome_string()
-        green = Color('springgreen3')
-        yellow = Color('yellow')
-        blue = Color('lightblue')
-        indentation = (gui.PATCH_COLS - len(chromosome))//2
-        val_to_color = {'1': yellow, '0': green, ' ': blue}
-        for c in range(len(chromosome)):
-            patch_color = val_to_color[chromosome[c].val]
-            World.patches_array[gui.PATCH_ROWS-2, indentation+c].set_color(patch_color)
-        red = Color('red')
-        black = Color('black')
-        for c in range(len(satisfied)):
-            World.patches_array[gui.PATCH_ROWS-1, indentation+c].set_color(black if satisfied[c] else red)
+        # green = Color('springgreen3')
+        # yellow = Color('yellow')
+        # blue = Color('lightblue')
+        # val_to_color = {'(': yellow, ')': green}
+        indentation = ceil((gui.PATCH_COLS - len(chromosome))/2)
+        # print(indentation, len(chromosome), gui.PATCH_COLS)
+        chrom_str = f'{chromosome.chromosome_string()}'
+        sats_str = f'{Parentheses_Individual.satisfied_string(satisfied)}'
+
+        # best_str = str(best_ind)
+        World.patches_array[gui.PATCH_ROWS - 2, indentation].label = chrom_str
+        World.patches_array[gui.PATCH_ROWS - 1, indentation].label = sats_str
+        # for c in range(len(chromosome)):
+        #     # patch_color = val_to_color[chromosome[c].val]
+        #     World.patches_array[gui.PATCH_ROWS-2, indentation+c].label = chromosome[c].val
+        # red = Color('red')
+        # black = Color('black')
+        # for c in range(len(satisfied)):
+        #     World.patches_array[gui.PATCH_ROWS-1, indentation+c].set_color(black if satisfied[c] else red)
 
     @staticmethod
     def scroll_window(window_rows):
@@ -215,7 +231,9 @@ class Parentheses_World(GA_World):
         GA_World.individual_class = Parentheses_Individual
         GA_World.chromosome_class = Parentheses_Chromosome
         Parentheses_World.world = self
-        self.chromosome_length = SimEngine.gui_get('chrom_length')
+        # Block.patch_text_offset = 10
+        # chromosome_length = SimEngine.gui_get('chrom_length')
+        # print('_'*(2*SimEngine.gui_get('chrom_length')+5))
         super().setup()
 
 
@@ -254,18 +272,15 @@ seg_gui_left_upper = gui_left_upper \
                                    orientation='horizontal', size=(10, 20))
                          ],
 
-                        [sg.Combo(values=['Diversity', 'Equality', 'Segregation'], key='div_or_seg',
-                                  default_value='Segregation', pad=(None, (10, 0)))
-                         ],
-
                         [sg.Text('Fitness target', pad=((0, 5), (20, 0))),
                          sg.Slider(key='fitness_target', default_value=0, enable_events=True,
                                    orientation='horizontal', size=(10, 20), range=(0, 10))
                          ],
 
                         [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                         sg.Slider(key='chrom_length', range=(10, board_size+1), enable_events=True, size=(10, 20),
-                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size+1)
+                         sg.Slider(key='chrom_length', range=(2, board_size), enable_events=True, size=(10, 20),
+                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size,
+                                   resolution=2)
                          ],
 
                         ]

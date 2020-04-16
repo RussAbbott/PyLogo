@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -146,7 +147,8 @@ class Segregation_Individual(Individual):
 
     @staticmethod
     def satisfied_string(satisfied: List[bool]):
-        return f'{"".join([" " if satisfied[i] else "^" for i in range(len(satisfied))])}'
+        sat_str = f'{"".join([" " if satisfied[i] else "^" for i in range(len(satisfied))])}'
+        return sat_str
 
 
 class Segregation_World(GA_World):
@@ -155,21 +157,23 @@ class Segregation_World(GA_World):
 
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
-        self.chromosome_length = None
+        # self.chromosome_length = None
 
     @staticmethod
     def display_best_ind(best_ind: Segregation_Individual):
         Segregation_World.insert_chrom_and_sats(best_ind.chromosome, best_ind.satisfied)
+        # print(str(best_ind))
 
     def gen_gene_pool(self):
         # Use ceil to ensure we have enough genes.
-        blanks_nbr = max(ceil(0.05*self.chromosome_length), 4)
-        zeros_ones = ceil((self.chromosome_length - blanks_nbr)/2)
+        chromosome_length = SimEngine.gui_get('chrom_length')
+        blanks_nbr = max(ceil(0.05*chromosome_length), 4)
+        zeros_ones = ceil((chromosome_length - blanks_nbr)/2)
         # zeros_ones = ceil(self.chromosome_length/2) - 2
         blanks = [' '] * blanks_nbr
         zeros = ['0'] * zeros_ones
         ones = ['1'] * zeros_ones
-        GA_World.gene_pool = sample(zeros + ones + blanks, self.chromosome_length)
+        GA_World.gene_pool = sample(zeros + ones + blanks, chromosome_length)
 
     def gen_individual(self):
         chromosome_tuple: Tuple[Gene] = GA_World.chromosome_class(Gene(id, val)
@@ -186,8 +190,8 @@ class Segregation_World(GA_World):
         green = Color('springgreen3')
         yellow = Color('yellow')
         blue = Color('lightblue')
-        indentation = (gui.PATCH_COLS - len(chromosome))//2
         val_to_color = {'1': yellow, '0': green, ' ': blue}
+        indentation = ceil((gui.PATCH_COLS - len(chromosome))/2)
         for c in range(len(chromosome)):
             patch_color = val_to_color[chromosome[c].val]
             World.patches_array[gui.PATCH_ROWS-2, indentation+c].set_color(patch_color)
@@ -215,15 +219,15 @@ class Segregation_World(GA_World):
         GA_World.individual_class = Segregation_Individual
         GA_World.chromosome_class = Segregation_Chromosome
         Segregation_World.world = self
-        self.chromosome_length = SimEngine.gui_get('chrom_length')
         super().setup()
 
 
 # ########################################## Parameters for demos ######################################## #
 # patch_size = 5
-# patch_size = 8
-patch_size = 11
+patch_size = 8
+# patch_size = 11
 
+# Ensure it is even
 board_size = (70//patch_size)*10
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
@@ -264,8 +268,8 @@ seg_gui_left_upper = gui_left_upper \
                          ],
 
                         [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                         sg.Slider(key='chrom_length', range=(10, board_size+1), enable_events=True, size=(10, 20),
-                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size+1)
+                         sg.Slider(key='chrom_length', range=(5, board_size), enable_events=True, size=(10, 20),
+                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=board_size)
                          ],
 
                         ]
