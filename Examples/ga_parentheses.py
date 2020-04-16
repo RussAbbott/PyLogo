@@ -3,11 +3,8 @@ from __future__ import annotations
 
 from collections import namedtuple
 from itertools import count
-from math import ceil
 from random import choice, randint, sample
 from typing import List, Sequence, Tuple
-
-from pygame.color import Color
 
 import core.gui as gui
 from core.ga import Chromosome, GA_World, Individual, gui_left_upper
@@ -19,21 +16,32 @@ Gene = namedtuple('Gene', ['id', 'val'])
 
 class Parentheses_Chromosome(Chromosome):
 
-    def compute_chromosome_fitness(self) -> Tuple[List[bool], int]:
-        len_chrom = len(self)
+    def chromosome_fitness(self) -> Tuple[List[bool], int]:
+        left_satisfactions = Parentheses_Chromosome.chromosome_satisfactions_from_end(0, self,
+                                                                                      {'(': 1, ' ': 0, ')': -1})
+        right_satisfactions = Parentheses_Chromosome.chromosome_satisfactions_from_end(len(self) - 1, self,
+                                                                                       {'(': -1, ' ': 0, ')': 1})
+        len_self = len(self)
+        satisfactions = [left_satisfactions[i] and right_satisfactions[i] for i in range(len_self)]
+        fitness = len_self - sum(satisfactions)
+        return (satisfactions, fitness)
+
+    @staticmethod
+    def chromosome_satisfactions_from_end(start, chromo, balance_value) -> List[bool]:
+        len_chrom = len(chromo)
+        (end, step) = (len_chrom, 1) if start == 0 else (-1, -1)
         # A chromosome is a tuple of Genes, each of which is a Gene(id, val), where val 0 or 1.
         errors = 0
         balance = 0
-        balance_value = {'(': 1, ' ': 0, ')': -1}
+        # balance_value = {'(': 1, ' ': 0, ')': -1}
         satisfied = [True]*len_chrom
-        for i in range(len_chrom):
-            balance += balance_value[self[i].val]
+        for i in range(start, end, step):
+            balance += balance_value[chromo[i].val]
             if balance < 0:
                 errors += 1
                 balance = 0
                 satisfied[i] = False
-        fitness = errors
-        return (satisfied, fitness)
+        return satisfied
 
     def chromosome_string(self):
         return ' '.join([str(gene.val) for gene in self])
@@ -113,7 +121,7 @@ class Parentheses_Individual(Individual):
                f'{" "*len(str(self.fitness))}  {Parentheses_Individual.satisfied_string(self.satisfied)}'
 
     def compute_fitness(self) -> float:
-        (self.satisfied, fitness) = self.chromosome.compute_chromosome_fitness()
+        (self.satisfied, fitness) = self.chromosome.chromosome_fitness()
         return fitness
 
     def mate_with(self, other):
@@ -187,32 +195,6 @@ class Parentheses_World(GA_World):
         return individual
 
     @staticmethod
-    def insert_chrom_and_sats(best_ind, chromosome, satisfied, window_rows=2):
-        """ Scroll the screen and insert the current best chromosome with unsatisfied genes indicated. """
-        Parentheses_World.scroll_window(window_rows)
-
-        # chrom_string = chromosome.chromosome_string()
-        # green = Color('springgreen3')
-        # yellow = Color('yellow')
-        # blue = Color('lightblue')
-        # val_to_color = {'(': yellow, ')': green}
-        indentation = ceil((gui.PATCH_COLS - len(chromosome))/2)
-        # print(indentation, len(chromosome), gui.PATCH_COLS)
-        chrom_str = f'{chromosome.chromosome_string()}'
-        sats_str = f'{Parentheses_Individual.satisfied_string(satisfied)}'
-
-        # best_str = str(best_ind)
-        World.patches_array[gui.PATCH_ROWS - 2, indentation].label = chrom_str
-        World.patches_array[gui.PATCH_ROWS - 1, indentation].label = sats_str
-        # for c in range(len(chromosome)):
-        #     # patch_color = val_to_color[chromosome[c].val]
-        #     World.patches_array[gui.PATCH_ROWS-2, indentation+c].label = chromosome[c].val
-        # red = Color('red')
-        # black = Color('black')
-        # for c in range(len(satisfied)):
-        #     World.patches_array[gui.PATCH_ROWS-1, indentation+c].set_color(black if satisfied[c] else red)
-
-    @staticmethod
     def scroll_window(window_rows):
         """ Scroll the screen up by window-rows lines """
         for i in range(0, gui.PATCH_ROWS, window_rows):
@@ -238,11 +220,15 @@ class Parentheses_World(GA_World):
 
 
 # ########################################## Parameters for demos ######################################## #
-# patch_size = 5
-# patch_size = 8
-patch_size = 11
+patch_sizes = (5,   8,  11, 14, 19, 25, 50)
+#             (140, 80, 60, 50, 30, 20, 10)
 
+# board_sizes = [(70//patch_size)*10 for patch_size in patch_sizes]
+# print(board_sizes)
+
+patch_size = patch_sizes[6]
 board_size = (70//patch_size)*10
+
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 seg_gui_left_upper = gui_left_upper \
