@@ -220,13 +220,10 @@ class Parentheses_World(GA_World):
 
 
 # ########################################## Parameters for demos ######################################## #
-patch_sizes = (5,   8,  11, 14, 19, 25, 50)
-#             (140, 80, 60, 50, 30, 20, 10)
+patch_sizes =                   (5,   8,  11, 14, 19, 25, 50)
+# chromosome length             (140, 80, 60, 50, 30, 20, 10)
 
-# board_sizes = [(70//patch_size)*10 for patch_size in patch_sizes]
-# print(board_sizes)
-
-patch_size = patch_sizes[6]
+patch_size = patch_sizes[3]
 board_size = (70//patch_size)*10
 
 # ############################################## Define GUI ############################################## #
