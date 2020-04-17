@@ -19,7 +19,7 @@ Gene = namedtuple('Gene', ['id', 'val'])
 
 class Segregation_Chromosome(Chromosome):
 
-    def compute_chromosome_fitness(self) -> Tuple[List[bool], int]:
+    def chromosome_fitness(self) -> Tuple[List[bool], int]:
         len_chrom = len(self)
         # A chromosome is a tuple of Genes, each of which is a Gene(id, val), where val 0 or 1.
         satisfied = [self.is_satisfied(i, len_chrom) for i in range(len_chrom)]
@@ -104,7 +104,7 @@ class Segregation_Individual(Individual):
                f'{" "*len(str(self.fitness))}  {Segregation_Individual.satisfied_string(self.satisfied)}'
 
     def compute_fitness(self) -> float:
-        (self.satisfied, fitness) = self.chromosome.compute_chromosome_fitness()
+        (self.satisfied, fitness) = self.chromosome.chromosome_fitness()
         return fitness
 
     def mate_with(self, other):
@@ -223,9 +223,7 @@ class Segregation_World(GA_World):
 
 
 # ########################################## Parameters for demos ######################################## #
-# patch_size = 5
-patch_size = 8
-# patch_size = 11
+patch_size = (5, 8, 11, 14)[3]
 
 # Ensure it is even
 board_size = (70//patch_size)*10

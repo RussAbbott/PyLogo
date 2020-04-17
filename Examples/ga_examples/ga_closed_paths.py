@@ -50,13 +50,13 @@ class Loop_Chromosome(Chromosome):
                 (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
         return (best_new_chrom, best_new_fitness, best_new_discr)
 
-    def chromosome_fitness(self) -> float:
+    def chromosome_fitness(self) -> float:   # Tuple[List[bool], int]:
         len_chrom = len(self)
         # A chromosome is a tuple of Genes, each of which is a Pixel_xy. We use mod (%)
         # so that we can include the distance from chromosome[len_chrom - 1] to chromosome[0]
         distances = [self[i].distance_to(self[(i + 1) % len_chrom]) for i in range(len_chrom)]
         fitness = sum(distances)
-        return fitness
+        return fitness   # ([], fitness)
 
     def link_chromosome(self):
         for i in range(len(self)):
@@ -116,7 +116,8 @@ class Loop_Individual(Individual):
         return f'{self.fitness}: {[str(gene) for gene in self.chromosome]}'
 
     def compute_fitness(self) -> float:
-        return self.chromosome.chromosome_fitness()
+        fitness = self.chromosome.chromosome_fitness()
+        return fitness
 
     def mate_with(self, other):
         return self.cx_all_diff(other)
