@@ -49,10 +49,9 @@ class Knapsack_Individual(Individual):
         return self.cx_uniform(other)
 
     def mutate(self) -> Individual:
-        chromosome = self.chromosome
 
         if randint(0, 100) <= SimEngine.gui_get('invert selection'):
-            new_chromosome = chromosome.invert_a_gene()
+            new_chromosome = self.chromosome.invert_a_gene()
             new_individual = GA_World.individual_class(new_chromosome)
             return new_individual
         else:
@@ -84,14 +83,14 @@ class Knapsack_World(GA_World):
         print(f"Pop (fitness<-selection):  {',  '.join([str(ind) for ind in self.population])}")
         print(f'  Best (fitness<-selection):  {self.best_ind}')
 
-
     def setup(self):
         GA_World.individual_class = Knapsack_Individual
         GA_World.chromosome_class = Knapsack_Chromosome
         problem_name = SimEngine.gui_get('Problem')
         Knapsack_World.problem = Knapsack_World.problems[problem_name]
         (weight, items) = Knapsack_World.problem
-        print(f'\nNew Problem: max weight: {weight}, items (value, weight): {", ".join([str(item) for item in items])}')
+        print(f'\nNew Problem: (max weight: {weight}, items (value, weight)): '
+              f'{", ".join([str(item) for item in items])}')
         super().setup()
 
 
