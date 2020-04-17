@@ -39,7 +39,7 @@ class Knapsack_Individual(Individual):
         return self.chromosome == other.chromosome
 
     def __str__(self):
-        return f'{self.fitness}::{"".join([str(gene) for gene in self.chromosome])}'
+        return f'{self.fitness}<-{"".join([str(gene) for gene in self.chromosome])}'
 
     def compute_fitness(self) -> float:
         return self.chromosome.chromosome_fitness()
@@ -80,8 +80,8 @@ class Knapsack_World(GA_World):
 
     def set_results(self):
         super().set_results()
-        print(f"Pop (fitness::selection):  {',  '.join([str(ind) for ind in self.population])}")
-        print(f'Best (fitness::selection):  {self.best_ind}')
+        print(f"Pop (fitness<-selection):  {',  '.join([str(ind) for ind in self.population])}")
+        print(f'  Best (fitness<-selection):  {self.best_ind}')
 
 
     def setup(self):
