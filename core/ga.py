@@ -2,6 +2,7 @@
 # This allows us to use the type Individual within the Individual class.
 from __future__ import annotations
 
+from collections import namedtuple
 from random import choice, randint, sample
 from typing import Any, List, NewType, Sequence, Tuple
 
@@ -13,6 +14,8 @@ from core.world_patch_block import World
 # Create a Gene type for pre-execution type checking.
 # This will be "overridden" in ga_segregation.
 Gene = NewType('Gene', Any)
+
+Item = namedtuple('Item', ['value', 'weight'])
 
 
 class Chromosome(tuple):
@@ -48,6 +51,12 @@ class Chromosome(tuple):
     def cx_uniform(self: Chromosome, other_chromosome: Chromosome) -> Chromosome:
         new_c_list = [choice(pair) for pair in zip(self, other_chromosome)]
         new_chromosome = GA_World.chromosome_class(new_c_list)
+        return new_chromosome
+
+    def invert_a_gene(self):
+        """ Convert a random gene between 0 and 1. """
+        index = choice(list(range(len(self))))
+        new_chromosome = self[:index] + (1-self[index], ) + self[index+1:]
         return new_chromosome
 
     def move_gene(self) -> Sequence:
@@ -141,24 +150,33 @@ class GA_World(World):
     # noinspection PyNoneFunctionAssignment
     def generate_2_children(self):
         """ Generate two children and put them into the population. """
-        parent_1 = self.get_parent()
-        parent_2 = self.get_parent()
+
+        tour_size = SimEngine.gui_get('tourn_size')
+
+        parent_1_indx: int = self.select_gene_index(self.BEST, tour_size)
+        parent_1 = self.population[parent_1_indx]
+
+        parent_2_indx: int = self.select_gene_index(self.BEST, tour_size)
+        parent_2 = self.population[parent_2_indx]
+
+        if parent_1 == parent_2:
+            parent_2 = self.gen_individual()
+
         # Some percent of the time, mutate the parents without mating them.
         # This lets the better individuals get mutated directly.
         (child_1, child_2) = (parent_1, parent_2) if randint(0, 100) < SimEngine.gui_get('no_mating') else \
                              parent_1.mate_with(parent_2)
+
         child_1_mutated: Individual = child_1.mutate()
         child_2_mutated: Individual = child_2.mutate()
 
-        child_1_mutated.compute_fitness()
-        child_2_mutated.compute_fitness()
+        # print(f'{(str(parent_1), str(parent_2))} -> {(str(child_1), str(child_2))} -> '
+        #       f'{(str(child_1_mutated), str(child_2_mutated))}')
 
-        tour_size = SimEngine.gui_get('tourn_size')
         dest_1_indx: int = self.select_gene_index(self.WORST, tour_size)
-        dest_2_indx: int = self.select_gene_index(self.WORST, tour_size)
-        # noinspection PyTypeChecker
         self.population[dest_1_indx] = min([child_1, child_1_mutated], key=lambda c: c.discrepancy)
-        # noinspection PyTypeChecker
+
+        dest_2_indx: int = self.select_gene_index(self.WORST, tour_size)
         self.population[dest_2_indx] = min([child_2, child_2_mutated], key=lambda c: c.discrepancy)
 
     def gen_gene_pool(self):
@@ -171,14 +189,6 @@ class GA_World(World):
         best_index = self.select_gene_index(self.BEST, len(self.population))
         best_individual = self.population[best_index]
         return best_individual
-
-    def get_parent(self) -> Individual:
-        if randint(0, 100) < SimEngine.gui_get('prob_random_parent'):
-            parent = self.gen_individual()
-        else:
-            parent_indx = self.select_gene_index(self.BEST, SimEngine.gui_get('tourn_size'))
-            parent = self.population[parent_indx]
-        return parent
 
     def handle_event(self, event):
         if event == 'fitness_target':
@@ -214,9 +224,9 @@ class GA_World(World):
             self.done = False
             self.best_ind = None
             SimEngine.gui_set('best_fitness', value=None)
-            go_stop_button = gui.WINDOW[GOSTOP]
             SimEngine.gui_set(GOSTOP, enabled=True)
             SimEngine.gui_set(GO_ONCE, enabled=True)
+            go_stop_button = gui.WINDOW[GOSTOP]
             go_stop_button.click()
         self.set_results()
 
@@ -288,7 +298,7 @@ gui_left_upper = [
                     ],
 
                    [sg.Text('Tournament size', pad=((0, 5), (10, 0))),
-                    sg.Slider(key='tourn_size', range=(3, 15), resolution=1, default_value=7,
+                    sg.Slider(key='tourn_size', range=(3, 15), resolution=1, default_value=4,
                               orientation='horizontal', size=(10, 20))
                     ],
 
