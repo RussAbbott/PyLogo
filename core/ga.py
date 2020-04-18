@@ -261,7 +261,8 @@ class GA_World(World):
         self.pop_size = SimEngine.gui_get('pop_size')
         self.population = self.initial_population()
         self.tournament_size = SimEngine.gui_get('tourn_size')
-        GA_World.fitness_target = SimEngine.gui_get('fitness_target')
+        if GA_World.fitness_target is None:
+            GA_World.fitness_target = SimEngine.gui_get('fitness_target')
         self.best_ind = None
         self.generations = 0
         self.set_results()
