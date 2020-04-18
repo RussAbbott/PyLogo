@@ -100,7 +100,8 @@ class Knapsack_World(GA_World):
         individual = Knapsack_Individual(chromosome)
         return individual
 
-    def set_maximum_fitness_target(self, items, max_weight):
+    @staticmethod
+    def set_maximum_fitness_target(items, max_weight):
         total_value = 0
         total_weight = 0
         for item in items:
@@ -123,7 +124,7 @@ class Knapsack_World(GA_World):
         problem_name = SimEngine.gui_get('Problem')
         Knapsack_World.problem = Knapsack_World.problems[problem_name]
         (max_weight, items) = Knapsack_World.problem
-        self.set_maximum_fitness_target(items, max_weight)
+        Knapsack_World.set_maximum_fitness_target(items, max_weight)
         SimEngine.gui_set('fitness_target', value=f'{GA_World.fitness_target}')
         print(f'\nNew Problem (max weight: {max_weight}, items(value, weight)): '
               f'{", ".join([str(item) for item in items])}')
