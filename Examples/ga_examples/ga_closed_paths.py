@@ -1,5 +1,5 @@
 
-from random import randint, random, sample, uniform
+from random import random, sample, uniform
 from typing import List, Tuple
 
 from pygame import Color
@@ -38,8 +38,7 @@ class Loop_Chromosome(Chromosome):
 
     """
 
-    def add_gene_to_chromosome(self, orig_fitness: float, gene: Gene) -> \
-                                                                                       Tuple[Chromosome, int, float]:
+    def add_gene_to_chromosome(self, orig_fitness: float, gene: Gene) -> Tuple[Chromosome, int, float]:
         """ Add gene to the chromosome to minimize the resulting discrepancy. """
         (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
         len_chrom = len(self)
@@ -50,19 +49,20 @@ class Loop_Chromosome(Chromosome):
                 (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
         return (best_new_chrom, best_new_fitness, best_new_discr)
 
-    def chromosome_fitness(self) -> float:   # Tuple[List[bool], int]:
+    def chromosome_fitness(self) -> float:
         len_chrom = len(self)
-        # A chromosome is a tuple of Genes, each of which is a Pixel_xy. We use mod (%)
-        # so that we can include the distance from chromosome[len_chrom - 1] to chromosome[0]
+        # A chromosome is a tuple of Genes, each of which is a Pixel_xy.
+        # We use mod (%) so that we can include the distance from the gene
+        # at chromosome[len_chrom - 1] to the gene at chromosome[0].
         distances = [self[i].distance_to(self[(i + 1) % len_chrom]) for i in range(len_chrom)]
         fitness = sum(distances)
-        return fitness   # ([], fitness)
+        return fitness
 
     def link_chromosome(self):
         for i in range(len(self)):
             Loop_Link(self[i], self[(i+1) % len(self)])
 
-    def replace_gene_in_chromosome(self, original_fitness: float) -> Tuple[Chromosome, int, float]:
+    def replace_gene_in_chromosome(self, original_fitness: float) -> Chromosome:
         (best_new_chrom, best_new_fitness, best_new_discr) = (None, None, None)
         len_chrom = len(self)
         for i in sample(range(len_chrom), min(3, len_chrom)):
@@ -76,7 +76,7 @@ class Loop_Chromosome(Chromosome):
                                                      + gene_before.distance_to(gene_after)
             # Make the removed gene not available because we will add it in explicitly 3 lines down.
             available_genes = GA_World.gene_pool - set(self)
-            sample_size = min(5 if len_chrom == 2 else 4, len(available_genes))
+            sample_size = min(len(available_genes), 5)  # if len_chrom == 2 else 4)
             # Include the removed gene as one of the ones to try.
             sampled_available_genes = sample(available_genes, sample_size) + [self[i]]
             # Don't want i_p_1 here since if i is the the last position, i_p_1 is 0,
@@ -88,7 +88,9 @@ class Loop_Chromosome(Chromosome):
                 if not best_new_discr or new_discr < best_new_discr:
                     (best_new_chrom, best_new_fitness, best_new_discr) = (new_chrom, new_fitness, new_discr)
 
-        return (best_new_chrom, best_new_fitness, best_new_discr)
+        # if GA_World.best_ind.discrepancy != GA_World.best_discr:
+        #     print('replace after loop', round(GA_World.best_discr, 5), round(GA_World.best_ind.discrepancy, 5))
+        return best_new_chrom
 
     def trial_insertion(self, current_fitness: float, pos: int, new_gene: Gene) -> Tuple[Chromosome, int, float]:
         """
@@ -120,22 +122,19 @@ class Loop_Individual(Individual):
         return fitness
 
     def mate_with(self, other):
-        return self.cx_all_diff(other)
+        children = self.cx_all_diff(other)
+        return children
 
     def mutate(self) -> Individual:
-        chromosome = self.chromosome
-        if randint(0, 100) <= SimEngine.gui_get('replace_gene'):
-            (chromosome, self.fitness, _) = chromosome.replace_gene_in_chromosome(self.fitness)
+        chromosome: Chromosome = self.chromosome
+        # if randint(0, 100) <= SimEngine.gui_get('replace_gene'):
+        new_chromosome = chromosome.replace_gene_in_chromosome(self.fitness)
+        # if GA_World.best_ind.discrepancy != GA_World.best_discr:
+        #     print('mutate after replace_gene', round(GA_World.best_discr, 5), round(GA_World.best_ind.discrepancy, 5))
+        # else:
+        #     return self
 
-        elif randint(0, 100) <= SimEngine.gui_get('reverse_subseq'):
-            chromosome = chromosome.reverse_subseq()
-            self.fitness = self.compute_fitness()
-
-        if chromosome is self.chromosome:
-            return self
-
-        new_individual = GA_World.individual_class(chromosome)
-        # self.chromosome: Chromosome = GA_World.chromosome_class(chromosome)
+        new_individual = GA_World.individual_class(new_chromosome)
         return new_individual
 
 
@@ -148,8 +147,10 @@ class Loop_World(GA_World):
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
         nbr_points = SimEngine.gui_get('nbr_points')
-        self.create_random_agents(nbr_points, color=Color('white'), shape_name='node')
+        self.create_random_agents(nbr_points, color=Color('white'), shape_name='node', scale=1)
         GA_World.gene_pool = World.agents
+        for agent in GA_World.gene_pool:
+            agent.set_velocity(Loop_World.random_velocity())
 
     def gen_individual(self):
         chromosome_list: List = sample(GA_World.gene_pool, self.cycle_length)
@@ -160,9 +161,11 @@ class Loop_World(GA_World):
         if event == 'cycle_length':
             new_cycle_length = SimEngine.gui_get('cycle_length')
             if new_cycle_length != self.cycle_length:
-                World.links = set()
-                self.cycle_length = new_cycle_length
-                self.update_cycle_lengths(new_cycle_length)
+                self.cycle_length = SimEngine.gui_get('cycle_length')
+                # World.links = set()
+                self.best_ind = None
+                self.population = self.initial_population()
+                # super().setup()
                 self.resume_ga()
             return
         super().handle_event(event)
@@ -178,17 +181,17 @@ class Loop_World(GA_World):
 
         assert isinstance(best_chromosome, Loop_Chromosome)
         best_chromosome.link_chromosome()
+        # Never stop
+        self.done = False
 
     def setup(self):
         GA_World.individual_class = Loop_Individual
         GA_World.chromosome_class = Loop_Chromosome
-        super().setup()
-
-        for agent in GA_World.gene_pool:
-            agent.set_velocity(Loop_World.random_velocity())
-
+        SimEngine.gui_set('Max generations', value=float('inf'))
+        SimEngine.gui_set('pop_size', value=500)
+        SimEngine.gui_set('prob_random_parent', value=20)
         self.cycle_length = SimEngine.gui_get('cycle_length')
-
+        super().setup()
 
     def step(self):
         """
@@ -202,7 +205,10 @@ class Loop_World(GA_World):
                 if random() < 0.0001:
                     agent.set_velocity(Loop_World.random_velocity())
         super().step()
+        # Never stop
         self.done = False
+        # if self.best_ind.discrepancy != self.best_discr:
+        #     print('step', round(self.best_discr, 3), round(self.best_ind.discrepancy, 3))
 
     def update_cycle_lengths(self, cycle_length):
         for ind in self.population:
@@ -226,16 +232,11 @@ class Loop_World(GA_World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 loop_gui_left_upper = gui_left_upper + [
-                      [sg.Text('Prob replace elt', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='replace_gene', range=(0, 100), default_value=95,
-                                 orientation='horizontal', size=(10, 20))
-                       ],
-
-                      [sg.Text('Prob reverse subseq', pad=((0, 5), (20, 0))),
-                       sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
-                                 orientation='horizontal', size=(10, 20))
-                       ],
-
+                      # [sg.Text('Prob replace elt', pad=((0, 5), (20, 0))),
+                      #  sg.Slider(key='replace_gene', range=(0, 100), default_value=95,
+                      #            orientation='horizontal', size=(10, 20))
+                      #  ],
+                      #
                       [sg.Text('Nbr points', pad=((0, 5), (10, 0))),
                        sg.Slider(key='nbr_points', range=(10, 200), default_value=100,
                                  orientation='horizontal', size=(10, 20))

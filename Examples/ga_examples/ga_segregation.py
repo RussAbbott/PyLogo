@@ -29,7 +29,7 @@ class Segregation_Chromosome(Chromosome):
     def chromosome_string(self):
         return ''.join([str(gene.val) for gene in self])
 
-    def exchange_genes(self, satisfied) -> Sequence[int]:
+    def exchange_unsatisfied_genes(self, satisfied) -> Sequence[int]:
         len_chrom = len(self)
         candidate_zero_indices = self.unsatisfied_value_indices(0, satisfied, len_chrom)
         if not candidate_zero_indices:
@@ -116,11 +116,11 @@ class Segregation_Individual(Individual):
 
         no_mutation = SimEngine.gui_get('no_mutation')
         move_unsatisfied = SimEngine.gui_get('move_unsatisfied_gene')
-        exchange_genes = SimEngine.gui_get('exchange_genes')
+        exchange_unsatisfied_genes = SimEngine.gui_get('exchange_unsatisfied_genes')
         move_gene = SimEngine.gui_get('move_gene')
         reverse_subseq = SimEngine.gui_get('reverse_subseq')
 
-        mutations_options = move_unsatisfied + exchange_genes + move_gene + reverse_subseq + no_mutation
+        mutations_options = move_unsatisfied + exchange_unsatisfied_genes + move_gene + reverse_subseq + no_mutation
         mutation_choice = randint(0, mutations_options)
 
         if mutation_choice <= move_unsatisfied:
@@ -129,14 +129,14 @@ class Segregation_Individual(Individual):
                 return self
             new_chromosome = chromosome.move_unsatisfied_gene(unsatisfied_indices)
 
-        elif mutation_choice <= move_unsatisfied + exchange_genes:
+        elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes:
             assert isinstance(self.chromosome, Segregation_Chromosome)
-            new_chromosome = chromosome.exchange_genes(satisfied)
+            new_chromosome = chromosome.exchange_unsatisfied_genes(satisfied)
 
-        elif mutation_choice <= move_unsatisfied + exchange_genes + move_gene:
+        elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes + move_gene:
             new_chromosome = chromosome.move_gene()
 
-        elif mutation_choice <= move_unsatisfied + exchange_genes + move_gene + reverse_subseq:
+        elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes + move_gene + reverse_subseq:
             new_chromosome = chromosome.reverse_subseq()
 
         else:
@@ -242,7 +242,7 @@ seg_gui_left_upper = gui_left_upper \
                           ],
 
                         [sg.Text('Prob exchange two genes', pad=((0, 5), (20, 0))),
-                         sg.Slider(key='exchange_genes', range=(0, 100), default_value=5,
+                         sg.Slider(key='exchange_unsatisfied_genes', range=(0, 100), default_value=5,
                                    orientation='horizontal', size=(10, 20))
                          ],
 

@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from math import floor
 from random import choice, randint, shuffle
 from typing import List
@@ -17,6 +19,62 @@ class Item:
 
     def __str__(self):
         return f'{(self.value, self.weight)}'
+    
+    
+class Knapsack_Problem:
+    
+    # Every problem is a tuple: (capacity, items)
+    # problems is a dictionary of problems. (So far, only one problem.)
+    # problem 1 is the example from the reading.
+    problems = {'Problem 1': {'capacity': 9,
+                              'items': [Item(6, 2), Item(5, 3), Item(8, 6), Item(9, 7),
+                                        Item(6, 5), Item(7, 9), Item(3, 4)],
+                              'solution': '1001000'},
+                'Problem 2': {'capacity': 10,
+                              'items': [Item(4, 1), Item(8, 4), Item(7, 5), Item(9, 6), ],
+                              'solution': '1101'},
+                'Problem 3': {'capacity': 102,
+                              'items': [Item(15, 2), Item(100, 20), Item(90, 20), Item(60, 30),
+                                        Item(40, 40), Item(15, 30), Item(10, 60), Item(1, 100), ],
+                              'solution': '11110100'},
+                }
+    problem_names = list(problems.keys())
+    
+    def __init__(self, problem_name):
+        problem = Knapsack_Problem.problems[problem_name]
+        self.capacity = problem['capacity']
+        items = problem['items']
+        # Sort the items by density
+        self.items = sorted(items, key=lambda item: item.value/item.weight, reverse=True)
+        self.solution = problem['solution']
+        self.fitness_target = self.maximum_fitness_target()
+
+    def __str__(self):
+        chromo = None if self.solution is None else [int(i) for i in self.solution]
+        return f'\n  capacity: {self.capacity}\n' \
+               f'  items(value, weight)): {", ".join([str(item) for item in self.items])}\n' \
+               f'  solution: {None if chromo is None else Knapsack_Individual(chromo)}'
+
+    def maximum_fitness_target(self):
+        total_value = 0
+        total_weight = 0
+        for item in self.items:
+            total_value += item.value
+            total_weight += item.weight
+            if total_weight >= self.capacity:
+                total_value -= item.value
+                total_weight -= item.weight
+                avail_weight = self.capacity - total_weight
+                pct_of_last = avail_weight/item.weight
+                total_value += item.value*pct_of_last
+                total_weight += item.weight*pct_of_last
+                break
+        # avg_density = total_value / total_weight
+        # GA_World.fitness_target = floor(avg_density * capacity)
+        fitness_target = floor(total_value)
+        return fitness_target
+        # print(total_value, total_weight, capacity, GA_World.fitness_target)
+
 
 
 class Knapsack_Chromosome(Chromosome):
@@ -27,10 +85,21 @@ class Knapsack_Chromosome(Chromosome):
 
     """
 
+    def __str__(self):
+        return "".join([str(gene) for gene in self])
+
     def chromosome_fitness(self) -> float:
-        (_max_weight, items) = Knapsack_World.problem
-        total_value = sum([self[i] * items[i].value for i in range(len(self))])
-        return total_value
+        items = Knapsack_World.problem.items
+        return self.total_value(items)
+
+    def total_value(self, items: List[Item]):
+        total_val = sum([self[i] * items[i].value for i in range(len(self))])
+        return total_val
+
+    # def total_weight(self, items: List[Item]):
+    #     total_wgt = sum([self[i] * items[i].weight for i in range(len(self))])
+    #     return total_wgt
+    #
 
 
 class Knapsack_Individual(Individual):
@@ -45,7 +114,7 @@ class Knapsack_Individual(Individual):
         return self.chromosome == other.chromosome
 
     def __str__(self):
-        return f'{self.fitness}/{self.total_weight}<-{"".join([str(gene) for gene in self.chromosome])}'
+        return f'{self.fitness}/{self.total_weight}<-{self.chromosome}'
 
     def compute_fitness(self) -> float:
         return self.chromosome.chromosome_fitness()
@@ -63,10 +132,11 @@ class Knapsack_Individual(Individual):
             return self
 
     def trim_chromosome(self):
-        (max_weight, items) = Knapsack_World.problem
+        capacity = Knapsack_World.problem.capacity
+        items = Knapsack_World.problem.items
         chromosome = self.chromosome
         self.total_weight = sum([chromosome[i] * items[i].weight for i in range(len(chromosome))])
-        if self.total_weight <= max_weight:
+        if self.total_weight <= capacity:
             return
         selected_indices = [i for i in range(len(chromosome)) if chromosome[i]]
         chromo_list = list(chromosome)
@@ -74,20 +144,15 @@ class Knapsack_Individual(Individual):
         for i in selected_indices:
             self.total_weight -= items[i].weight
             chromo_list[i] = 0
-            if self.total_weight <= max_weight:
+            if self.total_weight <= capacity:
                 break
         self.chromosome = Knapsack_Chromosome(chromo_list)
 
 
 class Knapsack_World(GA_World):
 
-    # Every problem is a tuple: (max_weight, items)
-    # problems is a dictionary of problems. (So far, only one problem.)
-    # problem 1 is the example from the reading.
-    problems = {'Problem 1': (9, [Item(6, 2), Item(5, 3), Item(8, 6), Item(9, 7), Item(6, 5), Item(7, 9), Item(3, 4)])}
-
     # problem is the user-selected problem
-    problem = None
+    problem: Knapsack_Problem = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -95,39 +160,31 @@ class Knapsack_World(GA_World):
 
     def gen_individual(self):
         # A Chromosome has as many positions as the problem has items.
-        chromosome_list: List = [choice([0, 1]) for _ in range(len(Knapsack_World.problem[1]))]
+        chromosome_list: List = [choice([0, 1]) for _ in range(len(Knapsack_World.problem.items))]
         chromosome = Knapsack_Chromosome(chromosome_list)
         individual = Knapsack_Individual(chromosome)
         return individual
 
-    @staticmethod
-    def set_maximum_fitness_target(items, max_weight):
-        total_value = 0
-        total_weight = 0
-        for item in items:
-            total_value += item.value
-            total_weight += item.weight
-            if total_weight >= max_weight:
-                break
-        avg_density = total_value / total_weight
-        GA_World.fitness_target = floor(avg_density * max_weight)
-
     def set_results(self):
-        print('GA_World.fitness_target 2', GA_World.fitness_target)
         super().set_results()
-        print(f"{self.generations}) Pop (value/weight<-selection):  {',  '.join([str(ind) for ind in self.population])}")
-        print(f'     Best (value/weight<-selection):  {self.best_ind}')
+        print(f"{self.generations}) Pop (value/weight<-selection):  "
+              f"{',  '.join([str(ind) for ind in self.population])}")
+        print(f'{" "*(len(str(self.generations))+2)}Best (value/weight<-selection):  {self.best_ind}')
+        if str(self.best_ind.chromosome) == Knapsack_World.problem.solution:
+            self.done = True
 
     def setup(self):
         GA_World.individual_class = Knapsack_Individual
         GA_World.chromosome_class = Knapsack_Chromosome
+
         problem_name = SimEngine.gui_get('Problem')
-        Knapsack_World.problem = Knapsack_World.problems[problem_name]
-        (max_weight, items) = Knapsack_World.problem
-        Knapsack_World.set_maximum_fitness_target(items, max_weight)
-        SimEngine.gui_set('fitness_target', value=f'{GA_World.fitness_target}')
-        print(f'\nNew Problem (max weight: {max_weight}, items(value, weight)): '
-              f'{", ".join([str(item) for item in items])}')
+        Knapsack_World.problem = Knapsack_Problem(problem_name)
+        fitness_target = Knapsack_World.problem.fitness_target
+        SimEngine.gui_set('fitness_target', value=f'{fitness_target}')
+        GA_World.fitness_target = fitness_target
+        print(f'\nNew Problem: {Knapsack_World.problem}')
+
+        SimEngine.gui_set('Max generations', value=50)
         super().setup()
 
 
@@ -140,8 +197,8 @@ knapsack_gui_left_upper = gui_left_upper + [
      ],
 
     [sg.Text('Problem selection', pad=(None, (20, 0))),
-     sg.Combo(key='Problem', default_value='Problem 1', pad=((10, 0), (20, 0)),
-              values=['Problem 1'])
+     sg.Combo(key='Problem', default_value=choice(Knapsack_Problem.problem_names), pad=((10, 0), (20, 0)),
+              values=Knapsack_Problem.problem_names)
      ],
 
     [sg.Text('Fitness target:', pad=(None, (10, 0))),

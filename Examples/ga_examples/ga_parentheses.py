@@ -69,11 +69,10 @@ class Parentheses_Individual(Individual):
 
         no_mutation = SimEngine.gui_get('no_mutation')
         move_unsatisfied = SimEngine.gui_get('move_unsatisfied_gene')
-        exchange_genes = SimEngine.gui_get('exchange_genes')
-        move_gene = SimEngine.gui_get('move_gene')
+        exchange_unsatisfied_genes = SimEngine.gui_get('exchange_unsatisfied_genes')
         reverse_subseq = SimEngine.gui_get('reverse_subseq')
 
-        mutations_options = move_unsatisfied + exchange_genes + move_gene + reverse_subseq + no_mutation
+        mutations_options = move_unsatisfied + exchange_unsatisfied_genes + reverse_subseq + no_mutation
         mutation_choice = randint(0, mutations_options)
 
         if mutation_choice <= move_unsatisfied:
@@ -82,14 +81,11 @@ class Parentheses_Individual(Individual):
                 return self
             new_chromosome = chromosome.move_unsatisfied_gene(unsatisfied_indices)
 
-        elif mutation_choice <= move_unsatisfied + exchange_genes:
+        elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes:
             assert isinstance(self.chromosome, Parentheses_Chromosome)
-            new_chromosome = chromosome.exchange_genes(satisfied)
+            new_chromosome = chromosome.exchange_unsatisfied_genes(satisfied)
 
-        elif mutation_choice <= move_unsatisfied + exchange_genes + move_gene:
-            new_chromosome = chromosome.move_gene()
-
-        elif mutation_choice <= move_unsatisfied + exchange_genes + move_gene + reverse_subseq:
+        elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes + reverse_subseq:
             new_chromosome = chromosome.reverse_subseq()
 
         else:
@@ -161,20 +157,20 @@ paren_gui_left_upper = gui_left_upper \
                          ],
 
                          [sg.Text('Prob move unsatisfied gene', pad=((0, 5), (20, 0))),
-                          sg.Slider(key='move_unsatisfied_gene', range=(0, 100), default_value=5,
+                          sg.Slider(key='move_unsatisfied_gene', range=(0, 100), default_value=25,
                                     orientation='horizontal', size=(10, 20))
                           ],
 
                         [sg.Text('Prob exchange two genes', pad=((0, 5), (20, 0))),
-                         sg.Slider(key='exchange_genes', range=(0, 100), default_value=5,
+                         sg.Slider(key='exchange_unsatisfied_genes', range=(0, 100), default_value=5,
                                    orientation='horizontal', size=(10, 20))
                          ],
 
-                        [sg.Text('Prob move gene', pad=((0, 5), (20, 0))),
-                         sg.Slider(key='move_gene', range=(0, 100), default_value=5,
-                                   orientation='horizontal', size=(10, 20))
-                         ],
-
+                        # [sg.Text('Prob move gene', pad=((0, 5), (20, 0))),
+                        #  sg.Slider(key='move_gene', range=(0, 100), default_value=5,
+                        #            orientation='horizontal', size=(10, 20))
+                        #  ],
+                        #
                         [sg.Text('Prob reverse subseq', pad=((0, 5), (20, 0))),
                          sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
                                    orientation='horizontal', size=(10, 20))
