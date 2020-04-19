@@ -23,9 +23,10 @@ class Item:
     
 class Knapsack_Problem:
     
-    # Every problem is a tuple: (capacity, items)
-    # problems is a dictionary of problems. (So far, only one problem.)
-    # problem 1 is the example from the reading.
+    # Every problem is a tuple: (capacity, items, solution (if known))
+
+    # problems is a dictionary of problems.
+    # Problem 1 is the example from the reading.
     problems = {'Problem 1': {'capacity': 9,
                               'items': [Item(6, 2), Item(5, 3), Item(8, 6), Item(9, 7),
                                         Item(6, 5), Item(7, 9), Item(3, 4)],
@@ -93,9 +94,8 @@ class Knapsack_Problem:
 class Knapsack_Chromosome(Chromosome):
     """
     An individual consists primarily of a sequence of Genes, called
-    a chromosome. We create a class for it simply because it's a
+    a chromosome. We create a class for it because it's a
     convenient place to store methods.
-
     """
 
     def __str__(self):
@@ -140,15 +140,19 @@ class Knapsack_Individual(Individual):
             return self
 
     def trim_chromosome(self):
+        """ If the chromosome exceeds the problem capacity, remove items at random until is fits. """
         capacity = Knapsack_World.problem.capacity
         items = Knapsack_World.problem.items
         chromosome = self.chromosome
         self.total_weight = sum([chromosome[i] * items[i].weight for i in range(len(chromosome))])
         if self.total_weight <= capacity:
             return
+
+        # Indices of selected items
         selected_indices = [i for i in range(len(chromosome)) if chromosome[i]]
-        chromo_list = list(chromosome)
+        # shuffle reorders its argument randomly.
         shuffle(selected_indices)
+        chromo_list = list(chromosome)
         for i in selected_indices:
             self.total_weight -= items[i].weight
             chromo_list[i] = 0
@@ -164,11 +168,10 @@ class Knapsack_World(GA_World):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cycle_length = SimEngine.gui_get('cycle_length')
 
     def gen_individual(self):
         # A Chromosome has as many positions as the problem has items.
-        chromosome_list: List = [choice([0, 1]) for _ in range(len(Knapsack_World.problem.items))]
+        chromosome_list: List[int] = [choice([0, 1]) for _ in range(len(Knapsack_World.problem.items))]
         chromosome = Knapsack_Chromosome(chromosome_list)
         individual = Knapsack_Individual(chromosome)
         return individual
