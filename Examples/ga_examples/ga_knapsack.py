@@ -37,6 +37,19 @@ class Knapsack_Problem:
                               'items': [Item(15, 2), Item(100, 20), Item(90, 20), Item(60, 30),
                                         Item(40, 40), Item(15, 30), Item(10, 60), Item(1, 100), ],
                               'solution': '11110100'},
+                'Problem 4': {'capacity': 50,
+                              'items': [Item(70, 31), Item(20, 10), Item(39, 20), Item(37, 19),
+                                        Item(7, 4), Item(5, 3), Item(10, 6), ],
+                              'solution': '1001000'},
+                'Problem 5': {'capacity': 190,
+                              'items': [Item(50, 56), Item(50, 59), Item(64, 80), Item(46, 64),
+                                        Item(50, 75), Item(5, 17), ],
+                              'solution': '110010'},
+                'Problem 6': {'capacity': 104,
+                              'items': [Item(350, 25), Item(400, 35), Item(450, 45), Item(20, 5),
+                                        Item(70, 25), Item(8, 3), Item(5, 2), Item(5, 2), ],
+                              'solution': '10111011'},
+
                 }
     problem_names = list(problems.keys())
     
@@ -95,11 +108,6 @@ class Knapsack_Chromosome(Chromosome):
     def total_value(self, items: List[Item]):
         total_val = sum([self[i] * items[i].value for i in range(len(self))])
         return total_val
-
-    # def total_weight(self, items: List[Item]):
-    #     total_wgt = sum([self[i] * items[i].weight for i in range(len(self))])
-    #     return total_wgt
-    #
 
 
 class Knapsack_Individual(Individual):
