@@ -197,11 +197,12 @@ class World:
         # .flat is an iterator. Can't use it more than once.
         World.patches = list(World.patches_array.flat)
 
-    def create_random_agents(self, n, shape_name='netlogo_figure', color=None, scale=1.4):
+    def create_random_agents(self, nbr_agents, shape_name='netlogo_figure', color=None, scale=1.4):
         """
-        Create n Agents placed randomly on the screen. They are all facing the screen's center pixel.
+        Create nbr_agents Agents placed randomly on the screen.
+        They are all facing the screen's center pixel.
         """
-        for _ in range(n):
+        for _ in range(nbr_agents):
             agent = self.agent_class(color=color, shape_name=shape_name, scale=scale)
             agent.move_to_xy(Pixel_xy.random_pixel())
             agent.face_xy(center_pixel())

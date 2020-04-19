@@ -50,7 +50,7 @@ class SimEngine:
         if not SimEngine.values:
             (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
         value = SimEngine.values.get(key, None) if not flip else not SimEngine.values.get('disabled', None)
-        return int(value) if isinstance(value, float) and value == int(value) else value
+        return int(value) if value != float('inf') and isinstance(value, float) and value == int(value) else value
 
     @staticmethod
     def gui_set(key, **kwargs):

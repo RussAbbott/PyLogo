@@ -42,16 +42,16 @@ class Chromosome(tuple):
         indx = choice(inner_indices)
 
         child_chromosome_start: Chromosome = self_rotated[:indx]
-        child_chromosome_end = tuple(gene for gene in other_chromosome_rotated
-                                                                     if gene not in child_chromosome_start)
+        child_chromosome_end = tuple(gene for gene in other_chromosome_rotated if gene not in child_chromosome_start)
 
         child_chromosome: Chromosome = GA_World.chromosome_class(child_chromosome_start + child_chromosome_end)
         return child_chromosome[:len(self)]
 
-    def cx_uniform(self: Chromosome, other_chromosome: Chromosome) -> Chromosome:
-        new_c_list = [choice(pair) for pair in zip(self, other_chromosome)]
-        new_chromosome = GA_World.chromosome_class(new_c_list)
-        return new_chromosome
+    def cx_uniform(self: Chromosome, other_chromosome: Chromosome) -> Tuple[Chromosome, Chromosome]:
+        pairs = [choice([(a, b), (b, a)]) for (a, b) in zip(self, other_chromosome)]
+        (tuple_1, tuple_2) = tuple(zip(*pairs))
+        chromo_pair = (GA_World.chromosome_class(tuple_1), GA_World.chromosome_class(tuple_2))
+        return chromo_pair
 
     def invert_a_gene(self):
         """ Convert a random gene between 0 and 1. """
@@ -68,7 +68,6 @@ class Chromosome(tuple):
         gene_to_move: Gene = list_chromosome[from_index]
         revised_list: List[Gene] = list_chromosome[:from_index] + list_chromosome[from_index+1:]
         revised_list.insert(to_index, gene_to_move)
-        # return GA_World.chromosome_class(revised_list)
         return revised_list
 
     def reverse_subseq(self: Chromosome) -> Sequence:
@@ -108,8 +107,8 @@ class Individual:
         return (child_1, child_2)
 
     def cx_uniform(self, other: Individual) -> Tuple[Individual, Individual]:
-        return (GA_World.individual_class(self.chromosome.cx_uniform(other.chromosome)),
-                GA_World.individual_class(other.chromosome.cx_uniform(self.chromosome)))
+        (chromo_1, chromo_2) = self.chromosome.cx_uniform(other.chromosome)
+        return (GA_World.individual_class(chromo_1), GA_World.individual_class(chromo_2))
 
     @property
     def discrepancy(self) -> float:
@@ -131,6 +130,9 @@ class GA_World(World):
     fitness_target = None
     gene_pool = None
     individual_class = Individual
+
+    # best_ind = None
+    # best_discr = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -170,9 +172,6 @@ class GA_World(World):
         child_1_mutated: Individual = child_1.mutate()
         child_2_mutated: Individual = child_2.mutate()
 
-        # print(f'{(str(parent_1), str(parent_2))} -> {(str(child_1), str(child_2))} -> '
-        #       f'{(str(child_1_mutated), str(child_2_mutated))}')
-
         dest_1_indx: int = self.select_gene_index(self.WORST, tour_size)
         self.population[dest_1_indx] = min([child_1, child_1_mutated], key=lambda c: c.discrepancy)
 
@@ -195,7 +194,7 @@ class GA_World(World):
             GA_World.fitness_target = SimEngine.gui_get('fitness_target')
             self.resume_ga()
             return
-        if event == 'pop_size':
+        elif event == 'pop_size':
             new_pop_size = SimEngine.gui_get('pop_size')
             if new_pop_size <= self.pop_size:
                 self.population = self.population[:new_pop_size]
@@ -205,13 +204,14 @@ class GA_World(World):
             self.pop_size = new_pop_size
             self.resume_ga()
             return
-        super().handle_event(event)
+        else:
+            super().handle_event(event)
 
     def initial_population(self) -> List[Individual]:
         """
         Generate the initial population. Use gen_individual from the subclass.
         """
-        self.gen_gene_pool()
+        # self.gen_gene_pool()
         population = [self.gen_individual() for _ in range(self.pop_size)]
         return population
 
@@ -220,9 +220,12 @@ class GA_World(World):
         This is used when one of the parameters changes dynamically. 
         It is called from handle_event. (See above.)
         """
+        self.best_ind = None
+        self.generations = 0
         if self.done:
             self.done = False
-            self.best_ind = None
+            # GA_World.best_ind = None
+            # GA_World.best_discr = None
             SimEngine.gui_set('best_fitness', value=None)
             SimEngine.gui_set(GOSTOP, enabled=True)
             SimEngine.gui_set(GO_ONCE, enabled=True)
@@ -239,25 +242,23 @@ class GA_World(World):
         selected_index = min_or_max(candidate_indices, key=lambda i: self.population[i].discrepancy)
         return selected_index
 
-    @staticmethod
-    def seq_to_chromosome(sequence: Sequence[Gene]):  # -> Chromosome:
-        """ Converts a list to a Chromosome. """
-        return sequence
-        # return GA_World.chromosome_class(tuple(sequence))
-
     def set_results(self):
         """ Find and display the best individual. """
-        # noinspection PyNoneFunctionAssignment
         current_best_ind = self.get_best_individual()
-        if self.best_ind is None or current_best_ind.discrepancy <= self.best_ind.discrepancy:
+        if self.best_ind is None or current_best_ind.discrepancy < self.best_ind.discrepancy:
             self.best_ind = current_best_ind
         SimEngine.gui_set('best_fitness', value=round(self.best_ind.fitness, 1))
         SimEngine.gui_set('discrepancy', value=round(self.best_ind.discrepancy, 1))
         SimEngine.gui_set('generations', value=self.generations)
+        if self.best_ind.discrepancy == 0 or self.generations >= SimEngine.gui_get('Max generations'):
+            self.done = True
+
 
     def setup(self):
+        World.agents = set()
         # Create a list of Individuals as the initial population.
         # self.pop_size must be even since we generate children two at a time.
+        self.gen_gene_pool()
         self.pop_size = SimEngine.gui_get('pop_size')
         self.population = self.initial_population()
         self.tournament_size = SimEngine.gui_get('tourn_size')
@@ -268,10 +269,6 @@ class GA_World(World):
         self.set_results()
 
     def step(self):
-        if self.best_ind and self.best_ind.discrepancy < 0.05:
-            self.done = True
-            return
-
         for i in range(self.pop_size//2):
             self.generate_2_children()
 
@@ -294,13 +291,18 @@ gui_left_upper = [
                     ],
 
                    [sg.Text('Population size\n(must be even)', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='pop_size', range=(4, 100), resolution=2, default_value=10,
+                    sg.Slider(key='pop_size', range=(5, 1000), resolution=5, default_value=10,
                               orientation='horizontal', size=(10, 20), enable_events=True)
                     ],
 
                    [sg.Text('Tournament size', pad=((0, 5), (10, 0))),
-                    sg.Slider(key='tourn_size', range=(3, 15), resolution=1, default_value=4,
+                    sg.Slider(key='tourn_size', range=(3, 15), resolution=1, default_value=7,
                               orientation='horizontal', size=(10, 20))
+                    ],
+
+                   [sg.Text('Max generations:', pad=(None, (10, 0))),
+                    sg.Combo(key='Max generations', values=[10, 50, 100, 500, float('inf')], default_value=100,
+                             pad=(None, (10, 0)))
                     ],
 
                    [sg.Text('Prob no mating', pad=((0, 5), (10, 0))),
