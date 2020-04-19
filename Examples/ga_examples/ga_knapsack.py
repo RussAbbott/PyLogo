@@ -140,7 +140,7 @@ class Knapsack_Individual(Individual):
             return self
 
     def trim_chromosome(self):
-        """ If the chromosome exceeds the problem capacity, remove items at random until is fits. """
+        """ If the chromosome exceeds the problem capacity, remove items at random until it fits. """
         capacity = Knapsack_World.problem.capacity
         items = Knapsack_World.problem.items
         chromosome = self.chromosome
@@ -165,9 +165,6 @@ class Knapsack_World(GA_World):
 
     # problem is the user-selected problem
     problem: Knapsack_Problem = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def gen_individual(self):
         # A Chromosome has as many positions as the problem has items.
