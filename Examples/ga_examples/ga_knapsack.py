@@ -49,7 +49,10 @@ class Knapsack_Problem:
                               'items': [Item(350, 25), Item(400, 35), Item(450, 45), Item(20, 5),
                                         Item(70, 25), Item(8, 3), Item(5, 2), Item(5, 2), ],
                               'solution': '10111011'},
-
+                'Problem 7': {'capacity': 15,
+                              'items': [Item(5, 2), Item(12, 5), Item(7, 3), Item(9, 4), Item(12, 6),
+                                        Item(14, 7), Item(6, 3), ],
+                              'solution': '0111001'},
                 }
     problem_names = list(problems.keys())
     
@@ -82,11 +85,8 @@ class Knapsack_Problem:
                 total_value += item.value*pct_of_last
                 total_weight += item.weight*pct_of_last
                 break
-        # avg_density = total_value / total_weight
-        # GA_World.fitness_target = floor(avg_density * capacity)
         fitness_target = floor(total_value)
         return fitness_target
-        # print(total_value, total_weight, capacity, GA_World.fitness_target)
 
 
 
@@ -190,7 +190,7 @@ class Knapsack_World(GA_World):
         fitness_target = Knapsack_World.problem.fitness_target
         SimEngine.gui_set('fitness_target', value=f'{fitness_target}')
         GA_World.fitness_target = fitness_target
-        print(f'\nNew Problem: {Knapsack_World.problem}')
+        print(f'\n{problem_name}: {Knapsack_World.problem}')
 
         SimEngine.gui_set('Max generations', value=50)
         super().setup()
