@@ -217,12 +217,14 @@ class Segregation_World(GA_World):
     def setup(self):
         GA_World.individual_class = Segregation_Individual
         GA_World.chromosome_class = Segregation_Chromosome
+        SimEngine.gui_set('Max generations', value=500)
+        SimEngine.gui_set('pop_size', value=100)
         Segregation_World.world = self
         super().setup()
 
 
 # ########################################## Parameters for demos ######################################## #
-patch_size = (5, 8, 11, 14)[3]
+patch_size = (5, 8, 11, 14)[1]
 
 # Ensure it is even
 board_size = (70//patch_size)*10

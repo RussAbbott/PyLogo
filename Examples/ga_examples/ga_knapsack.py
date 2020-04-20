@@ -68,9 +68,9 @@ class Knapsack_Problem:
 
     def __str__(self):
         chromo = None if self.solution is None else [int(i) for i in self.solution]
-        return f'\n  capacity: {self.capacity}\n' \
-               f'  items in density order (value/weight): {", ".join([str(item) for item in self.items])}\n' \
-               f'  solution: {None if chromo is None else Knapsack_Individual(chromo)}'
+        return f'\n  Capacity: {self.capacity}\n' \
+               f'  Items in density order (value/weight): {", ".join([str(item) for item in self.items])}\n' \
+               f'  Solution: {None if chromo is None else Knapsack_Individual(chromo)}'
 
     def maximum_fitness_target(self):
         total_value = 0
