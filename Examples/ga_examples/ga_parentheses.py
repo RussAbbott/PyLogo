@@ -103,7 +103,6 @@ class Parentheses_World(GA_World):
 
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
-        # self.chromosome_length = None
 
     def gen_gene_pool(self):
         chromosome_length = SimEngine.gui_get('chrom_length')
@@ -127,8 +126,6 @@ class Parentheses_World(GA_World):
               f'{" "*(9 + len(str(self.generations))+len(str(best_ind.fitness)))}'
               f'{best_ind.satisfied_string()}')
 
-
-
     def setup(self):
         GA_World.individual_class = Parentheses_Individual
         GA_World.chromosome_class = Parentheses_Chromosome
@@ -137,13 +134,6 @@ class Parentheses_World(GA_World):
         print('---')
         super().setup()
 
-
-# ########################################## Parameters for demos ######################################## #
-# chromo_lengths = (140, 80, 60, 50, 30, 20, 10)
-# chromo_length = chromo_lengths[3]
-
-# patch_size = patch_sizes[3]      # chromosome length -> 50
-# board_size = (70//patch_size)*10
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
