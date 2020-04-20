@@ -131,9 +131,6 @@ class GA_World(World):
     gene_pool = None
     individual_class = Individual
 
-    # best_ind = None
-    # best_discr = None
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

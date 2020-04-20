@@ -155,9 +155,12 @@ class World:
 
     ticks = None
 
+    world = None
+
     def __init__(self, patch_class, agent_class):
 
         World.ticks = 0
+        World.world = self
 
         self.patch_class = patch_class
         self.create_patches_array()
