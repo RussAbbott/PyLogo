@@ -54,7 +54,7 @@ class Parentheses_Individual(Individual):
         return f'{self.fitness}: ' \
                f'{self.chromosome.chromosome_string()}' \
                f'\n' \
-               f'{" "*len(str(self.fitness))}  {Parentheses_Individual.satisfied_string(self.satisfied)}'
+               f'{" "*len(str(self.fitness))}  {self.satisfied_string()}'
 
     def compute_fitness(self) -> float:
         (self.satisfied, fitness) = self.chromosome.chromosome_fitness()
@@ -82,7 +82,6 @@ class Parentheses_Individual(Individual):
             new_chromosome = chromosome.move_unsatisfied_gene(unsatisfied_indices)
 
         elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes:
-            assert isinstance(self.chromosome, Parentheses_Chromosome)
             new_chromosome = chromosome.exchange_unsatisfied_genes(satisfied)
 
         elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes + reverse_subseq:
@@ -94,24 +93,17 @@ class Parentheses_Individual(Individual):
         new_individual = GA_World.individual_class(new_chromosome)
         return new_individual
 
-    @staticmethod
-    def satisfied_string(satisfied: List[bool]):
+    def satisfied_string(self):
+        satisfied: List[bool] = self.satisfied
         sat_str = f'{" ".join([" " if satisfied[i] else "^" for i in range(len(satisfied))])}'
         return sat_str
 
 
 class Parentheses_World(GA_World):
 
-    world = None
-
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
         # self.chromosome_length = None
-
-    @staticmethod
-    def display_best_ind(best_ind: Parentheses_Individual):
-        # Parentheses_World.insert_chrom_and_sats(best_ind, best_ind.chromosome, best_ind.satisfied)
-        print(str(best_ind))
 
     def gen_gene_pool(self):
         chromosome_length = SimEngine.gui_get('chrom_length')
@@ -129,20 +121,26 @@ class Parentheses_World(GA_World):
     def set_results(self):
         """ Find and display the best individual. """
         super().set_results()
-        # noinspection PyTypeChecker
-        Parentheses_World.display_best_ind(self.best_ind)
+        assert isinstance(self.best_ind, Parentheses_Individual)
+        best_ind: Parentheses_Individual = self.best_ind
+        print(f'Gen {self.generations}.  {best_ind.fitness}: {best_ind.chromosome.chromosome_string()}\n'
+              f'{" "*(9 + len(str(self.generations))+len(str(best_ind.fitness)))}'
+              f'{best_ind.satisfied_string()}')
+
+
 
     def setup(self):
         GA_World.individual_class = Parentheses_Individual
         GA_World.chromosome_class = Parentheses_Chromosome
+        SimEngine.gui_set('Max generations', value=float('inf'))
         Parentheses_World.world = self
         print('---')
         super().setup()
 
 
 # ########################################## Parameters for demos ######################################## #
-chromo_lengths = (140, 80, 60, 50, 30, 20, 10)
-chromo_length = chromo_lengths[3]
+# chromo_lengths = (140, 80, 60, 50, 30, 20, 10)
+# chromo_length = chromo_lengths[3]
 
 # patch_size = patch_sizes[3]      # chromosome length -> 50
 # board_size = (70//patch_size)*10
@@ -161,16 +159,11 @@ paren_gui_left_upper = gui_left_upper \
                                     orientation='horizontal', size=(10, 20))
                           ],
 
-                        [sg.Text('Prob exchange two genes', pad=((0, 5), (20, 0))),
-                         sg.Slider(key='exchange_unsatisfied_genes', range=(0, 100), default_value=5,
+                        [sg.Text('Prob exchange two unsatisfied genes', pad=((0, 5), (20, 0))),
+                         sg.Slider(key='exchange_unsatisfied_genes', range=(0, 100), default_value=25,
                                    orientation='horizontal', size=(10, 20))
                          ],
 
-                        # [sg.Text('Prob move gene', pad=((0, 5), (20, 0))),
-                        #  sg.Slider(key='move_gene', range=(0, 100), default_value=5,
-                        #            orientation='horizontal', size=(10, 20))
-                        #  ],
-                        #
                         [sg.Text('Prob reverse subseq', pad=((0, 5), (20, 0))),
                          sg.Slider(key='reverse_subseq', range=(0, 100), default_value=5,
                                    orientation='horizontal', size=(10, 20))
@@ -182,8 +175,8 @@ paren_gui_left_upper = gui_left_upper \
                          ],
 
                         [sg.Text('Chromosome length', pad=(None, (20, 0))),
-                         sg.Slider(key='chrom_length', range=(2, chromo_length), enable_events=True, size=(10, 20),
-                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=chromo_length,
+                         sg.Slider(key='chrom_length', range=(4, 140), enable_events=True, size=(10, 20),
+                                   pad=((10, 0), (0, 0)), orientation='horizontal', default_value=50,
                                    resolution=2)
                          ],
 
@@ -192,4 +185,4 @@ paren_gui_left_upper = gui_left_upper \
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Parentheses_World, 'GA Segregation', paren_gui_left_upper, patch_size=10, board_rows_cols=(10, 10))
+    PyLogo(Parentheses_World, 'GA Parentheses', paren_gui_left_upper, patch_size=10, board_rows_cols=(10, 10))

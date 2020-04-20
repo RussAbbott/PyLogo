@@ -130,7 +130,6 @@ class Segregation_Individual(Individual):
             new_chromosome = chromosome.move_unsatisfied_gene(unsatisfied_indices)
 
         elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes:
-            assert isinstance(self.chromosome, Segregation_Chromosome)
             new_chromosome = chromosome.exchange_unsatisfied_genes(satisfied)
 
         elif mutation_choice <= move_unsatisfied + exchange_unsatisfied_genes + move_gene:

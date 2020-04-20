@@ -178,9 +178,7 @@ class Cycle_World(GA_World):
     def set_results(self):
         super().set_results()
         World.links = set()
-        best_chromosome = self.best_ind.chromosome
-
-        assert isinstance(best_chromosome, Cycle_Chromosome)
+        best_chromosome: Cycle_Chromosome = self.best_ind.chromosome
         best_chromosome.link_chromosome()
         # Never stop
         self.done = False
