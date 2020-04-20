@@ -143,7 +143,6 @@ class SegregationWorld(World):
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
         self.max_agents_per_step = SimEngine.gui_get('max_agents_per_step')
-        # print('About to create agents')
         for patch in self.patches:
             patch.set_color(self.patch_color)
             patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
@@ -155,7 +154,6 @@ class SegregationWorld(World):
                 agent.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
-        # print('Finished creating agents')
         self.update_all()
 
     def step(self):
