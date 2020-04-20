@@ -93,7 +93,7 @@ class Individual:
     """
     def __init__(self, chromosome: Sequence[Gene] = None):
         self.chromosome: Chromosome = GA_World.chromosome_class(chromosome)
-        self.fitness = self.compute_fitness()
+        self.fitness: float = self.compute_fitness()
 
     def compute_fitness(self) -> float:
         pass
@@ -211,7 +211,6 @@ class GA_World(World):
         """
         Generate the initial population. Use gen_individual from the subclass.
         """
-        # self.gen_gene_pool()
         population = [self.gen_individual() for _ in range(self.pop_size)]
         return population
 
@@ -259,7 +258,8 @@ class GA_World(World):
         # Create a list of Individuals as the initial population.
         # self.pop_size must be even since we generate children two at a time.
         self.gen_gene_pool()
-        self.pop_size = SimEngine.gui_get('pop_size')
+        if self.pop_size is None:
+            self.pop_size = SimEngine.gui_get('pop_size')
         self.population = self.initial_population()
         self.tournament_size = SimEngine.gui_get('tourn_size')
         if GA_World.fitness_target is None:
