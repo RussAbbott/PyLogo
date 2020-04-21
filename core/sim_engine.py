@@ -46,10 +46,9 @@ class SimEngine:
         Widgets typically have a 'disabled' property. The following makes
         it possible to use 'enabled' as the negation of 'disabled'.
         """
-        flip = key == 'enabled'
         if not SimEngine.values:
             (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
-        value = SimEngine.values.get(key, None) if not flip else not SimEngine.values.get('disabled', None)
+        value = SimEngine.values.get(key, None) if key != 'enabled' else not SimEngine.values.get('disabled', None)
         return int(value) if value != float('inf') and isinstance(value, float) and value == int(value) else value
 
     @staticmethod
@@ -173,3 +172,27 @@ class SimEngine:
             self.draw_world()
 
             self.clock.tick(self.idle_fps)
+
+
+def gui_get(key):
+    """
+    Widgets typically have a 'disabled' property. The following makes
+    it possible to use 'enabled' as the negation of 'disabled'.
+    """
+    if not SimEngine.values:
+        (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
+    value = SimEngine.values.get(key, None) if key != 'enabled' else not SimEngine.values.get('disabled', None)
+    return int(value) if value != float('inf') and isinstance(value, float) and value == int(value) else value
+
+
+def gui_set(key, **kwargs):
+    """
+    Widgets typically have a 'disabled' property. The following makes
+    it possible to use 'enabled' as the negation of 'disabled'.
+    """
+    if 'enabled' in kwargs:
+        value = kwargs.get('enabled')
+        kwargs['disabled'] = not bool(value)
+        kwargs.pop('enabled')
+    widget = gui.WINDOW[key]
+    widget.update(**kwargs)

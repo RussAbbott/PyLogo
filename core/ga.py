@@ -8,7 +8,7 @@ from typing import Any, List, NewType, Sequence, Tuple
 
 import core.gui as gui
 from core.gui import GOSTOP, GO_ONCE
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 from core.world_patch_block import World
 
 # Create a Gene type for pre-execution type checking.
@@ -146,11 +146,21 @@ class GA_World(World):
         self.BEST = 'best'
         self.WORST = 'worst'
 
+    def eliminate_duplicates(self):
+        self.sort_population()
+        comparison_individual = self.population[0]
+        for i in range(1, len(self.population)):
+            if self.population[i] == comparison_individual:
+                self.population[i] = self.gen_individual()
+            else:
+                comparison_individual = self.population[i]
+        self.sort_population()
+
     # noinspection PyNoneFunctionAssignment
     def generate_2_children(self):
         """ Generate two children and put them into the population. """
 
-        tourn_size = SimEngine.gui_get('tourn_size')
+        tourn_size = gui_get('tourn_size')
 
         parent_1_indx: int = self.select_gene_index(self.BEST, tourn_size)
         parent_1 = self.population[parent_1_indx]
@@ -163,7 +173,7 @@ class GA_World(World):
 
         # Some percent of the time, mutate the parents without mating them.
         # This lets the better individuals get mutated directly.
-        (child_1, child_2) = (parent_1, parent_2) if randint(0, 100) < SimEngine.gui_get('no_mating') else \
+        (child_1, child_2) = (parent_1, parent_2) if randint(0, 100) < gui_get('no_mating') else \
                              parent_1.mate_with(parent_2)
 
         child_1_mutated: Individual = child_1.mutate()
@@ -189,11 +199,11 @@ class GA_World(World):
 
     def handle_event(self, event):
         if event == 'fitness_target':
-            GA_World.fitness_target = SimEngine.gui_get('fitness_target')
+            GA_World.fitness_target = gui_get('fitness_target')
             self.resume_ga()
             return
         elif event == 'pop_size':
-            new_pop_size = SimEngine.gui_get('pop_size')
+            new_pop_size = gui_get('pop_size')
             if new_pop_size <= self.pop_size:
                 self.population = self.population[:new_pop_size]
             else:
@@ -221,9 +231,9 @@ class GA_World(World):
         self.generations = 0
         if self.done:
             self.done = False
-            SimEngine.gui_set('best_fitness', value=None)
-            SimEngine.gui_set(GOSTOP, enabled=True)
-            SimEngine.gui_set(GO_ONCE, enabled=True)
+            gui_set('best_fitness', value=None)
+            gui_set(GOSTOP, enabled=True)
+            gui_set(GO_ONCE, enabled=True)
             go_stop_button = gui.WINDOW[GOSTOP]
             go_stop_button.click()
         self.set_results()
@@ -248,11 +258,11 @@ class GA_World(World):
         if self.best_ind is None or current_best_ind.discrepancy < self.best_ind.discrepancy:
             self.best_ind = current_best_ind
 
-        SimEngine.gui_set('best_fitness', value=round(self.best_ind.fitness, 1))
-        SimEngine.gui_set('discrepancy', value=round(self.best_ind.discrepancy, 1))
-        SimEngine.gui_set('generations', value=self.generations)
+        gui_set('best_fitness', value=round(self.best_ind.fitness, 1))
+        gui_set('discrepancy', value=round(self.best_ind.discrepancy, 1))
+        gui_set('generations', value=self.generations)
 
-        if self.best_ind.discrepancy == 0 or self.generations >= SimEngine.gui_get('Max generations'):
+        if self.best_ind.discrepancy == 0 or self.generations >= gui_get('Max generations'):
             self.done = True
 
 
@@ -264,21 +274,28 @@ class GA_World(World):
         # self.pop_size must be even since we generate children two at a time.
         # It may not be None if it was set by the specific problem's setup function.
         if self.pop_size is None:
-            self.pop_size = SimEngine.gui_get('pop_size')
+            self.pop_size = gui_get('pop_size')
         self.population = self.initial_population()
 
-        self.tournament_size = SimEngine.gui_get('tourn_size')
+        self.tournament_size = gui_get('tourn_size')
         if GA_World.fitness_target is None:
-            GA_World.fitness_target = SimEngine.gui_get('fitness_target')
+            GA_World.fitness_target = gui_get('fitness_target')
 
         self.best_ind = None
         self.generations = 0
         self.set_results()
 
+    def sort_population(self):
+        self.population = sorted(self.population, key=lambda i: i.fitness, reverse=True)
+
     def step(self):
         # Loop for self.pop_size//2 steps since we generate two individuals for each time around.
         for i in range(self.pop_size//2):
             self.generate_2_children()
+
+        self.sort_population()
+        if gui_get('elim_dups'):
+            self.eliminate_duplicates()
 
         self.generations += 1
         self.set_results()
@@ -309,9 +326,12 @@ gui_left_upper = [
                     ],
 
                    [sg.Text('Max generations:', pad=(None, (10, 0))),
-                    sg.Combo(key='Max generations', values=[10, 50, 100, 500, float('inf')], default_value=100,
+                    sg.Combo(key='Max generations', values=[10, 50, 100, 250, 500, float('inf')], default_value=100,
                              pad=(None, (10, 0)))
                     ],
+
+                   [sg.Checkbox('Eliminate duplicates', key='elim_dups', default=True,
+                                pad=((0, 0), (10, 0)))],
 
                    [sg.Text('Prob no mating', pad=((0, 5), (10, 0))),
                     sg.Slider(key='no_mating', range=(1, 100), resolution=1, default_value=10,
