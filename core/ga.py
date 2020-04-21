@@ -54,7 +54,7 @@ class Chromosome(tuple):
         return chromo_pair
 
     def invert_a_gene(self):
-        """ Convert a random gene between 0 and 1. """
+        """ Switch a random gene between 0 and 1. """
         index = choice(list(range(len(self))))
         new_chromosome = self[:index] + (1-self[index], ) + self[index+1:]
         return new_chromosome
@@ -150,12 +150,12 @@ class GA_World(World):
     def generate_2_children(self):
         """ Generate two children and put them into the population. """
 
-        tour_size = SimEngine.gui_get('tourn_size')
+        tourn_size = SimEngine.gui_get('tourn_size')
 
-        parent_1_indx: int = self.select_gene_index(self.BEST, tour_size)
+        parent_1_indx: int = self.select_gene_index(self.BEST, tourn_size)
         parent_1 = self.population[parent_1_indx]
 
-        parent_2_indx: int = self.select_gene_index(self.BEST, tour_size)
+        parent_2_indx: int = self.select_gene_index(self.BEST, tourn_size)
         parent_2 = self.population[parent_2_indx]
 
         if parent_1 == parent_2:
@@ -169,10 +169,11 @@ class GA_World(World):
         child_1_mutated: Individual = child_1.mutate()
         child_2_mutated: Individual = child_2.mutate()
 
-        dest_1_indx: int = self.select_gene_index(self.WORST, tour_size)
+        # The population is not immutable. We change it by writing new individuals into it.
+        dest_1_indx: int = self.select_gene_index(self.WORST, tourn_size)
         self.population[dest_1_indx] = min([child_1, child_1_mutated], key=lambda c: c.discrepancy)
 
-        dest_2_indx: int = self.select_gene_index(self.WORST, tour_size)
+        dest_2_indx: int = self.select_gene_index(self.WORST, tourn_size)
         self.population[dest_2_indx] = min([child_2, child_2_mutated], key=lambda c: c.discrepancy)
 
     def gen_gene_pool(self):
@@ -220,8 +221,6 @@ class GA_World(World):
         self.generations = 0
         if self.done:
             self.done = False
-            # GA_World.best_ind = None
-            # GA_World.best_discr = None
             SimEngine.gui_set('best_fitness', value=None)
             SimEngine.gui_set(GOSTOP, enabled=True)
             SimEngine.gui_set(GO_ONCE, enabled=True)
@@ -230,8 +229,13 @@ class GA_World(World):
         self.set_results()
 
     def select_gene_index(self, best_or_worst, tournament_size) -> int:
-        """ Run a tournament to select the index of a best or worst individual in a sample. """
+        """
+        Run a tournament to select the index of a best or worst individual in a sample.
+        If tournament_size is the size of the entire population, look at the entire population
+        and select the index of the best/worst
+        """
         candidate_indices = sample(range(self.pop_size), min(tournament_size, self.pop_size))
+
         # min_or_max is min if we're looking for the best
         # because we are looking for the smallest discrepancy.
         min_or_max = min if best_or_worst == self.BEST else max
@@ -243,9 +247,11 @@ class GA_World(World):
         current_best_ind = self.get_best_individual()
         if self.best_ind is None or current_best_ind.discrepancy < self.best_ind.discrepancy:
             self.best_ind = current_best_ind
+
         SimEngine.gui_set('best_fitness', value=round(self.best_ind.fitness, 1))
         SimEngine.gui_set('discrepancy', value=round(self.best_ind.discrepancy, 1))
         SimEngine.gui_set('generations', value=self.generations)
+
         if self.best_ind.discrepancy == 0 or self.generations >= SimEngine.gui_get('Max generations'):
             self.done = True
 
@@ -253,19 +259,24 @@ class GA_World(World):
     def setup(self):
         World.agents = set()
         # Create a list of Individuals as the initial population.
-        # self.pop_size must be even since we generate children two at a time.
         self.gen_gene_pool()
+
+        # self.pop_size must be even since we generate children two at a time.
+        # It may not be None if it was set by the specific problem's setup function.
         if self.pop_size is None:
             self.pop_size = SimEngine.gui_get('pop_size')
         self.population = self.initial_population()
+
         self.tournament_size = SimEngine.gui_get('tourn_size')
         if GA_World.fitness_target is None:
             GA_World.fitness_target = SimEngine.gui_get('fitness_target')
+
         self.best_ind = None
         self.generations = 0
         self.set_results()
 
     def step(self):
+        # Loop for self.pop_size//2 steps since we generate two individuals for each time around.
         for i in range(self.pop_size//2):
             self.generate_2_children()
 
