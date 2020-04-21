@@ -7,7 +7,7 @@ from typing import List, Sequence, Tuple
 
 from Examples.ga_examples.ga_segregation import Gene, Segregation_Chromosome
 from core.ga import GA_World, Individual, gui_left_upper
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 
 
 class Parentheses_Chromosome(Segregation_Chromosome):
@@ -67,10 +67,10 @@ class Parentheses_Individual(Individual):
         chromosome = self.chromosome
         satisfied = self.satisfied
 
-        no_mutation = SimEngine.gui_get('no_mutation')
-        move_unsatisfied = SimEngine.gui_get('move_unsatisfied_gene')
-        exchange_unsatisfied_genes = SimEngine.gui_get('exchange_unsatisfied_genes')
-        reverse_subseq = SimEngine.gui_get('reverse_subseq')
+        no_mutation = gui_get('no_mutation')
+        move_unsatisfied = gui_get('move_unsatisfied_gene')
+        exchange_unsatisfied_genes = gui_get('exchange_unsatisfied_genes')
+        reverse_subseq = gui_get('reverse_subseq')
 
         mutations_options = move_unsatisfied + exchange_unsatisfied_genes + reverse_subseq + no_mutation
         mutation_choice = randint(0, mutations_options)
@@ -105,7 +105,7 @@ class Parentheses_World(GA_World):
         super().__init__(*arga, **kwargs)
 
     def gen_gene_pool(self):
-        chromosome_length = SimEngine.gui_get('chrom_length')
+        chromosome_length = gui_get('chrom_length')
         lefts_rights = chromosome_length//2
         lefts = ['('] * lefts_rights
         rights = [')'] * lefts_rights
@@ -129,7 +129,7 @@ class Parentheses_World(GA_World):
     def setup(self):
         GA_World.individual_class = Parentheses_Individual
         GA_World.chromosome_class = Parentheses_Chromosome
-        SimEngine.gui_set('Max generations', value=float('inf'))
+        gui_set('Max generations', value=float('inf'))
         Parentheses_World.world = self
         print('---')
         super().setup()

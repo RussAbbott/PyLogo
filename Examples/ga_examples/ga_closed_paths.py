@@ -8,7 +8,7 @@ from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
 from core.link import Link
 from core.pairs import Velocity
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 from core.world_patch_block import World
 
 
@@ -16,7 +16,7 @@ class Cycle_Agent(Agent):
 
     @property
     def label(self):
-        return str(self.x_y) if SimEngine.gui_get('show_positions') else None
+        return str(self.x_y) if gui_get('show_positions') else None
 
 
 class Cycle_Link(Link):
@@ -27,7 +27,7 @@ class Cycle_Link(Link):
         label is defined as a getter. No parentheses needed.
         Returns the length of the link.
         """
-        return str(round(self.agent_1.distance_to(self.agent_2), 1)) if SimEngine.gui_get('show_lengths') else None
+        return str(round(self.agent_1.distance_to(self.agent_2), 1)) if gui_get('show_lengths') else None
 
 
 class Cycle_Chromosome(Chromosome):
@@ -139,11 +139,11 @@ class Cycle_World(GA_World):
     
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
-        self.cycle_length = SimEngine.gui_get('cycle_length')
+        self.cycle_length = gui_get('cycle_length')
 
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
-        nbr_points = SimEngine.gui_get('nbr_points')
+        nbr_points = gui_get('nbr_points')
         self.create_random_agents(nbr_points, color=Color('white'), shape_name='node', scale=1)
         GA_World.gene_pool = World.agents
         for agent in GA_World.gene_pool:
@@ -160,9 +160,9 @@ class Cycle_World(GA_World):
 
     def handle_event(self, event):
         if event == 'cycle_length':
-            new_cycle_length = SimEngine.gui_get('cycle_length')
+            new_cycle_length = gui_get('cycle_length')
             if new_cycle_length != self.cycle_length:
-                self.cycle_length = SimEngine.gui_get('cycle_length')
+                self.cycle_length = gui_get('cycle_length')
                 # World.links = set()
                 self.best_ind = None
                 self.population = self.initial_population()
@@ -186,18 +186,18 @@ class Cycle_World(GA_World):
     def setup(self):
         GA_World.individual_class = Cycle_Individual
         GA_World.chromosome_class = Cycle_Chromosome
-        SimEngine.gui_set('Max generations', value=float('inf'))
-        SimEngine.gui_set('pop_size', value=100)
+        gui_set('Max generations', value=float('inf'))
+        gui_set('pop_size', value=100)
         self.pop_size = 100
-        SimEngine.gui_set('prob_random_parent', value=20)
-        self.cycle_length = SimEngine.gui_get('cycle_length')
+        gui_set('prob_random_parent', value=20)
+        self.cycle_length = gui_get('cycle_length')
         super().setup()
 
     def step(self):
         """
         Update the world by moving the agents.
         """
-        if SimEngine.gui_get('move_points'):
+        if gui_get('move_points'):
             for agent in GA_World.gene_pool:
                 agent.move_by_velocity()
                 if self.best_ind:
@@ -232,11 +232,7 @@ class Cycle_World(GA_World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 cycle_gui_left_upper = gui_left_upper + [
-                      # [sg.Text('Prob replace elt', pad=((0, 5), (20, 0))),
-                      #  sg.Slider(key='replace_gene', range=(0, 100), default_value=95,
-                      #            orientation='horizontal', size=(10, 20))
-                      #  ],
-                      #
+
                       [sg.Text('Nbr points', pad=((0, 5), (10, 0))),
                        sg.Slider(key='nbr_points', range=(10, 200), default_value=100,
                                  orientation='horizontal', size=(10, 20))

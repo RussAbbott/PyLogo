@@ -11,7 +11,7 @@ from pygame.color import Color
 
 import core.gui as gui
 from core.ga import Chromosome, GA_World, Individual, gui_left_upper
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 from core.world_patch_block import World
 
 Gene = namedtuple('Gene', ['id', 'val'])
@@ -63,8 +63,8 @@ class Segregation_Chromosome(Chromosome):
                    -1
                    for p in neigh_indices]
         sum_matches = sum(matches)
-        satisfied = sum_matches < 0 if SimEngine.gui_get('div_or_seg') == 'Diversity' else \
-                    sum_matches > 0 if SimEngine.gui_get('div_or_seg') == 'Segregation' else \
+        satisfied = sum_matches < 0 if gui_get('div_or_seg') == 'Diversity' else \
+                    sum_matches > 0 if gui_get('div_or_seg') == 'Segregation' else \
                     sum_matches == 0
         return satisfied
 
@@ -114,11 +114,11 @@ class Segregation_Individual(Individual):
         chromosome = self.chromosome
         satisfied = self.satisfied
 
-        no_mutation = SimEngine.gui_get('no_mutation')
-        move_unsatisfied = SimEngine.gui_get('move_unsatisfied_gene')
-        exchange_unsatisfied_genes = SimEngine.gui_get('exchange_unsatisfied_genes')
-        move_gene = SimEngine.gui_get('move_gene')
-        reverse_subseq = SimEngine.gui_get('reverse_subseq')
+        no_mutation = gui_get('no_mutation')
+        move_unsatisfied = gui_get('move_unsatisfied_gene')
+        exchange_unsatisfied_genes = gui_get('exchange_unsatisfied_genes')
+        move_gene = gui_get('move_gene')
+        reverse_subseq = gui_get('reverse_subseq')
 
         mutations_options = move_unsatisfied + exchange_unsatisfied_genes + move_gene + reverse_subseq + no_mutation
         mutation_choice = randint(0, mutations_options)
@@ -165,7 +165,7 @@ class Segregation_World(GA_World):
 
     def gen_gene_pool(self):
         # Use ceil to ensure we have enough genes.
-        chromosome_length = SimEngine.gui_get('chrom_length')
+        chromosome_length = gui_get('chrom_length')
         blanks_nbr = max(ceil(0.05*chromosome_length), 4)
         zeros_ones = ceil((chromosome_length - blanks_nbr)/2)
         # zeros_ones = ceil(self.chromosome_length/2) - 2
@@ -217,8 +217,8 @@ class Segregation_World(GA_World):
     def setup(self):
         GA_World.individual_class = Segregation_Individual
         GA_World.chromosome_class = Segregation_Chromosome
-        SimEngine.gui_set('Max generations', value=500)
-        SimEngine.gui_set('pop_size', value=100)
+        gui_set('Max generations', value=500)
+        gui_set('pop_size', value=100)
         Segregation_World.world = self
         super().setup()
 

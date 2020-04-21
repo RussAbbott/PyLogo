@@ -6,7 +6,7 @@ from random import choice, randint, shuffle
 from typing import List
 
 from core.ga import Chromosome, GA_World, Individual, gui_left_upper
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 
 
 class Item:
@@ -53,23 +53,33 @@ class Knapsack_Problem:
                               'items': [Item(5, 2), Item(12, 5), Item(7, 3), Item(9, 4), Item(12, 6),
                                         Item(14, 7), Item(6, 3), ],
                               'solution': '0111001'},
+                'Random': None,
                 }
     problem_names = list(problems.keys())
     
     def __init__(self, problem_name):
         problem = Knapsack_Problem.problems[problem_name]
-        self.capacity = problem['capacity']
-        items = problem['items']
+        self.capacity = randint(10, 1000) if problem is None else problem['capacity']
+        items = [Item(randint(1, 100), randint(1, 100)) for _ in range(randint(5, 50))] if problem is None else \
+                problem['items']
         # Sort the items by density
-        self.items = sorted(items, key=lambda item: item.value/item.weight, reverse=True)
-        self.solution = problem['solution']
+        self.items = sorted(items, key=lambda item: item.value / item.weight, reverse=True)
         self.fitness_target = self.maximum_fitness_target()
+        self.solution = f'<{self.fitness_target}>' if problem is None else problem['solution']
 
     def __str__(self):
-        chromo = None if self.solution is None else [int(i) for i in self.solution]
+        chromo = None if self.solution.startswith('<') else [int(i) for i in self.solution]
         return f'\n  Capacity: {self.capacity}\n' \
                f'  Items in density order (value/weight): {", ".join([str(item) for item in self.items])}\n' \
-               f'  Solution: {None if chromo is None else Knapsack_Individual(chromo)}'
+               f'  Solution: {self.solution if chromo is None else Knapsack_Individual(chromo)}'
+
+    def generate_random_problem(self):
+        self.capacity = randint(10, 1000)
+        nbr_items = randint(5, 50)
+        items = [Item(randint(1, 100), randint(1, 100)) for _ in range(nbr_items)]
+        self.items = sorted(items, key=lambda item: item.value/item.weight, reverse=True)
+        self.solution = None
+        self.fitness_target = self.maximum_fitness_target()
 
     def maximum_fitness_target(self):
         total_value = 0
@@ -131,7 +141,7 @@ class Knapsack_Individual(Individual):
 
     def mutate(self) -> Individual:
 
-        if randint(0, 100) <= SimEngine.gui_get('invert selection'):
+        if randint(0, 100) <= gui_get('invert selection'):
             new_chromosome = self.chromosome.invert_a_gene()
             new_individual = GA_World.individual_class(new_chromosome)
             return new_individual
@@ -177,7 +187,7 @@ class Knapsack_World(GA_World):
     def set_results(self):
         super().set_results()
         print(f"{self.generations}) Pop (value/weight<-selection):  "
-              f"{',  '.join([str(ind) for ind in sorted(self.population, key=lambda i: i.fitness, reverse=True)])}")
+              f"{',  '.join([str(ind) for ind in self.population])}")
         print(f'{" "*(len(str(self.generations))+2)}Best (value/weight<-selection):  {self.best_ind}')
         if str(self.best_ind.chromosome) == Knapsack_World.problem.solution:
             self.done = True
@@ -186,14 +196,14 @@ class Knapsack_World(GA_World):
         GA_World.individual_class = Knapsack_Individual
         GA_World.chromosome_class = Knapsack_Chromosome
 
-        problem_name = SimEngine.gui_get('Problem')
+        problem_name = gui_get('Problem')
         Knapsack_World.problem = Knapsack_Problem(problem_name)
         fitness_target = Knapsack_World.problem.fitness_target
-        SimEngine.gui_set('fitness_target', value=fitness_target)  
+        gui_set('fitness_target', value=fitness_target)
         GA_World.fitness_target = fitness_target
         print(f'\n{problem_name}: {Knapsack_World.problem}')
 
-        SimEngine.gui_set('Max generations', value=50)
+        gui_set('Max generations', value=250)
         super().setup()
 
 
