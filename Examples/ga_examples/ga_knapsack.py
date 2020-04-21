@@ -13,7 +13,6 @@ class Item:
     """ These are the items from which to select. """
 
     def __init__(self, value, weight):
-        super().__init__()
         self.value = value
         self.weight = weight
 
@@ -93,9 +92,9 @@ class Knapsack_Problem:
 
 class Knapsack_Chromosome(Chromosome):
     """
-    An individual consists primarily of a sequence of Genes, called
-    a chromosome. We create a class for it because it's a
-    convenient place to store methods.
+    A Knapsack_Chromosome is a sequence of 1 and 0. Each position corresponds to one of the items
+    in the problem. If the entry in position i is 1, the Individual is selcting that item. If
+    it's 0, the Individual is not selecting that item.
     """
 
     def __str__(self):
@@ -150,8 +149,11 @@ class Knapsack_Individual(Individual):
 
         # Indices of selected items
         selected_indices = [i for i in range(len(chromosome)) if chromosome[i]]
+
         # shuffle reorders its argument randomly.
+        # (It's not functional. It changes its argument.)
         shuffle(selected_indices)
+
         chromo_list = list(chromosome)
         for i in selected_indices:
             self.total_weight -= items[i].weight
@@ -169,8 +171,7 @@ class Knapsack_World(GA_World):
     def gen_individual(self):
         # A Chromosome has as many positions as the problem has items.
         chromosome_list: List[int] = [choice([0, 1]) for _ in range(len(Knapsack_World.problem.items))]
-        chromosome = Knapsack_Chromosome(chromosome_list)
-        individual = Knapsack_Individual(chromosome)
+        individual = Knapsack_Individual(chromosome_list)
         return individual
 
     def set_results(self):
@@ -188,7 +189,7 @@ class Knapsack_World(GA_World):
         problem_name = SimEngine.gui_get('Problem')
         Knapsack_World.problem = Knapsack_Problem(problem_name)
         fitness_target = Knapsack_World.problem.fitness_target
-        SimEngine.gui_set('fitness_target', value=f'{fitness_target}')
+        SimEngine.gui_set('fitness_target', value=fitness_target)  
         GA_World.fitness_target = fitness_target
         print(f'\n{problem_name}: {Knapsack_World.problem}')
 
