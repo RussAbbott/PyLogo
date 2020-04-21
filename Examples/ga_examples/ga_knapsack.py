@@ -177,7 +177,7 @@ class Knapsack_World(GA_World):
     def set_results(self):
         super().set_results()
         print(f"{self.generations}) Pop (value/weight<-selection):  "
-              f"{',  '.join([str(ind) for ind in self.population])}")
+              f"{',  '.join([str(ind) for ind in sorted(self.population, key=lambda i: i.fitness, reverse=True)])}")
         print(f'{" "*(len(str(self.generations))+2)}Best (value/weight<-selection):  {self.best_ind}')
         if str(self.best_ind.chromosome) == Knapsack_World.problem.solution:
             self.done = True
