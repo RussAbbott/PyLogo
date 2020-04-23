@@ -18,7 +18,7 @@ from core.pairs import Pixel_xy, RowCol, center_pixel
 from core.utils import get_class_name
 
 
-class Block:  # (Sprite):
+class Block:
     """
     A generic patch/agent. Has a Pixel_xy but not necessarily a RowCol. Has a Color.
     """
@@ -27,7 +27,6 @@ class Block:  # (Sprite):
     patch_text_offset = -int(1.0*gui.PATCH_SIZE)
 
     def __init__(self, center_pixel: Pixel_xy, color=Color('black')):
-        super().__init__()
         self.center_pixel: Pixel_xy = center_pixel
         self.rect = Rect((0, 0), (gui.PATCH_SIZE, gui.PATCH_SIZE))
         # noinspection PyTypeChecker
@@ -200,15 +199,26 @@ class World:
         # .flat is an iterator. Can't use it more than once.
         World.patches = list(World.patches_array.flat)
 
-    def create_random_agents(self, nbr_agents, shape_name='netlogo_figure', color=None, scale=1.4):
+    def create_random_agent(self, color=None, shape_name='netlogo_figure', scale=1.4):
+        """
+        Create an Agent placed randomly on the screen.
+        Set it to face the screen's center pixel.
+        """
+        agent = self.agent_class(color=color, shape_name=shape_name, scale=scale)
+        agent.move_to_xy(Pixel_xy.random_pixel())
+        agent.face_xy(center_pixel())
+        return agent
+
+    def create_random_agents(self, nbr_agents, color=None, shape_name='netlogo_figure', scale=1.4):
         """
         Create nbr_agents Agents placed randomly on the screen.
         They are all facing the screen's center pixel.
         """
         for _ in range(nbr_agents):
-            agent = self.agent_class(color=color, shape_name=shape_name, scale=scale)
-            agent.move_to_xy(Pixel_xy.random_pixel())
-            agent.face_xy(center_pixel())
+            self.create_random_agent(color=color, shape_name=shape_name, scale=scale)
+            # agent = self.agent_class(color=color, shape_name=shape_name, scale=scale)
+            # agent.move_to_xy(Pixel_xy.random_pixel())
+            # agent.face_xy(center_pixel())
 
     def draw(self):
         """ 

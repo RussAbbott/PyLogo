@@ -240,25 +240,6 @@ class Graph_World(World):
         self.disable_enable_buttons()
         super().draw()
 
-    @staticmethod
-    def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):
-        """
-        Link the nodes to create the requested graph.
-
-        Args:
-            graph_type: The name of the graph type.
-            nbr_nodes: The total number of nodes the user requested
-            ring_node_list: The nodes that have been arranged in a ring.
-                            Will contain either:
-                            nbr_nodes - 1 if graph type is STAR or WHEEL
-                            or nbr_nodes otherwise
-
-        Returns: None
-
-        To be overridden in subclasses.
-        """
-        pass
-
     def handle_event(self, event):
         """
         This is called when a GUI widget is changed and the change isn't handled by the system.
@@ -280,6 +261,25 @@ class Graph_World(World):
             World.links.pop()
         elif event == DELETE_SHORTEST_PATH_LINK:
             self.delete_a_shortest_path_link()
+
+    @staticmethod
+    def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):
+        """
+        Link the nodes to create the requested graph.
+
+        Args:
+            graph_type: The name of the graph type.
+            nbr_nodes: The total number of nodes the user requested
+            ring_node_list: The nodes that have been arranged in a ring.
+                            Will contain either:
+                            nbr_nodes - 1 if graph type is STAR or WHEEL
+                            or nbr_nodes otherwise
+
+        Returns: None
+
+        To be overridden in subclasses.
+        """
+        pass
 
     def mouse_click(self, xy: Tuple[int, int]):
         """ Select closest node. """

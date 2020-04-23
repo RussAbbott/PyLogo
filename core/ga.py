@@ -98,6 +98,9 @@ class Individual:
     def compute_fitness(self) -> float:
         pass
 
+    def covers(self, other):
+        return self == other
+
     def cx_all_diff(self, other: Individual) -> Tuple[Individual, Individual]:
         """
         Perform crossover between self and other while preserving all_different.
@@ -146,15 +149,16 @@ class GA_World(World):
         self.BEST = 'best'
         self.WORST = 'worst'
 
-    def eliminate_duplicates(self):
-        self.sort_population()
-        comparison_individual = self.population[0]
-        for i in range(1, len(self.population)):
-            if self.population[i] == comparison_individual:
-                self.population[i] = self.gen_individual()
+    def eliminate_duplicates(self, population):
+        sorted_population = self.sort_population(population)
+        comparison_individual = sorted_population[0]
+        for i in range(1, len(sorted_population)):
+            if comparison_individual.covers(sorted_population[i]):
+                sorted_population[i] = self.gen_individual()
             else:
-                comparison_individual = self.population[i]
-        self.sort_population()
+                comparison_individual = sorted_population[i]
+        sorted_population = self.sort_population(sorted_population)
+        return sorted_population
 
     # noinspection PyNoneFunctionAssignment
     def generate_2_children(self):
@@ -189,7 +193,8 @@ class GA_World(World):
     def gen_gene_pool(self):
         pass
 
-    def gen_individual(self) -> Individual:
+    @staticmethod
+    def gen_individual() -> Individual:
         pass
 
     def get_best_individual(self) -> Individual:
@@ -220,7 +225,8 @@ class GA_World(World):
         Generate the initial population. Use gen_individual from the subclass.
         """
         population = [self.gen_individual() for _ in range(self.pop_size)]
-        return population
+        new_population = self.eliminate_duplicates(population)
+        return new_population
 
     def resume_ga(self):
         """ 
@@ -265,7 +271,6 @@ class GA_World(World):
         if self.best_ind.discrepancy == 0 or self.generations >= gui_get('Max generations'):
             self.done = True
 
-
     def setup(self):
         World.agents = set()
         # Create a list of Individuals as the initial population.
@@ -285,17 +290,17 @@ class GA_World(World):
         self.generations = 0
         self.set_results()
 
-    def sort_population(self):
-        self.population = sorted(self.population, key=lambda i: i.fitness, reverse=True)
+    @staticmethod
+    def sort_population(population):
+        return sorted(population, key=lambda i: i.fitness, reverse=True)
 
     def step(self):
         # Loop for self.pop_size//2 steps since we generate two individuals for each time around.
         for i in range(self.pop_size//2):
             self.generate_2_children()
 
-        self.sort_population()
         if gui_get('elim_dups'):
-            self.eliminate_duplicates()
+            self.population = self.eliminate_duplicates(self.population)
 
         self.generations += 1
         self.set_results()
@@ -308,15 +313,15 @@ gui_left_upper = [
                    [sg.Text('Best:', pad=(None, (0, 0))),
                     sg.Text('000000.0', key='best_fitness', pad=(None, (0, 0))),
 
-                    sg.Text('Discrep:', pad=((5, 0), (0, 0))),
+                    sg.Text('Discrep:', key='Discrep:', pad=((5, 0), (0, 0))),
                     sg.Text('00000.0', key='discrepancy', pad=(None, (0, 0))),
 
-                    sg.Text('Gens:', pad=((5, 0), (0, 0))),
+                    sg.Text('Gens:', key='Gens:', pad=((5, 0), (0, 0))),
                     sg.Text('00000', key='generations', pad=(None, (0, 0))),
                     ],
 
                    [sg.Text('Population size\n(must be even)', pad=((0, 5), (20, 0))),
-                    sg.Slider(key='pop_size', range=(5, 1000), resolution=5, default_value=10,
+                    sg.Slider(key='pop_size', range=(10, 1000), resolution=10, default_value=10,
                               orientation='horizontal', size=(10, 20), enable_events=True)
                     ],
 

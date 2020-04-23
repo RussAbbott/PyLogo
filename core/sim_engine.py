@@ -78,7 +78,7 @@ class SimEngine:
             if SimEngine.event == FPS:
                 SimEngine.fps = SimEngine.gui_get(FPS)
 
-            if SimEngine.event == self.simple_gui.GRAPH:
+            if SimEngine.event.startswith(self.simple_gui.GRAPH):
                 self.world.mouse_click(SimEngine.values['-GRAPH-'])
 
             if SimEngine.event == GOSTOP:
@@ -139,7 +139,7 @@ class SimEngine:
             if not auto_setup and SimEngine.event == '__TIMEOUT__':
                 continue
 
-            if SimEngine.event == self.simple_gui.GRAPH:
+            if SimEngine.event.startswith(self.simple_gui.GRAPH):
                 self.world.mouse_click(SimEngine.values['-GRAPH-'])
 
             elif auto_setup or SimEngine.event == self.simple_gui.SETUP:
@@ -179,7 +179,7 @@ def gui_get(key):
     Widgets typically have a 'disabled' property. The following makes
     it possible to use 'enabled' as the negation of 'disabled'.
     """
-    if not SimEngine.values:
+    if SimEngine.values is None:
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
     value = SimEngine.values.get(key, None) if key != 'enabled' else not SimEngine.values.get('disabled', None)
     return int(value) if value != float('inf') and isinstance(value, float) and value == int(value) else value

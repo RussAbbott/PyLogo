@@ -153,6 +153,11 @@ class Agent(Block):
         patch = World.patches_array[row_col.row, row_col.col]
         return patch
 
+    def delete(self):
+        self.current_patch().remove_agent(self)
+        World.agents.remove(self)
+        World.links -= {lnk for lnk in World.links if lnk.includes(self)}
+
     def distance_to(self, other):
         dist = self.distance_to_pixel(other.center_pixel)
         # wrap = not SimEngine.gui_get('Bounce?')
@@ -187,10 +192,6 @@ class Agent(Block):
 
     def in_links(self):
         return [lnk for lnk in World.links if lnk.directed and lnk.agent_2 is self]
-
-    # @property
-    # def label(self):
-    #     return str(self.center_pixel.as_tuple())
 
     def lnk_nbrs(self):
         """
@@ -305,8 +306,6 @@ class Agent(Block):
     @property
     def y(self):
         return self.center_pixel.y
-
-
 
 
 class Turtle(Agent):
