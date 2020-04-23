@@ -178,7 +178,8 @@ class Knapsack_World(GA_World):
     # problem is the user-selected problem
     problem: Knapsack_Problem = None
 
-    def gen_individual(self):
+    @staticmethod
+    def gen_individual():
         # A Chromosome has as many positions as the problem has items.
         chromosome_list: List[int] = [choice([0, 1]) for _ in range(len(Knapsack_World.problem.items))]
         individual = Knapsack_Individual(chromosome_list)
@@ -205,6 +206,12 @@ class Knapsack_World(GA_World):
 
         gui_set('Max generations', value=250)
         super().setup()
+
+    @staticmethod
+    def sort_population(population):
+        return sorted(population, key=lambda i: (i.fitness, -i.total_weight), reverse=True)
+
+
 
 
 # ############################################## Define GUI ############################################## #

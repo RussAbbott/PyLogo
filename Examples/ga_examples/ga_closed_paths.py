@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from random import random, sample, uniform
 from typing import List, Tuple
@@ -16,6 +17,10 @@ class Cycle_Agent(Agent):
 
     @property
     def label(self):
+        """
+        label is defined as a getter. No parentheses needed.
+        Returns the position of the agent, i.e., the point
+        """
         return str(self.x_y) if gui_get('show_positions') else None
 
 
@@ -137,9 +142,10 @@ class Cycle_Individual(Individual):
 
 class Cycle_World(GA_World):
     
+    cycle_length = None
+
     def __init__(self, *arga, **kwargs):
         super().__init__(*arga, **kwargs)
-        self.cycle_length = gui_get('cycle_length')
 
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
@@ -151,18 +157,18 @@ class Cycle_World(GA_World):
 
     individuals = 0
 
-    def gen_individual(self):
-        chromosome_list: List = sample(GA_World.gene_pool, self.cycle_length)
+    @staticmethod
+    def gen_individual():
+        chromosome_list: List = sample(GA_World.gene_pool, Cycle_World.cycle_length)
         Cycle_World.individuals += 1
-        # print(Cycle_World.individuals, end=': ')
         individual = GA_World.individual_class(GA_World.chromosome_class(chromosome_list))
         return individual
 
     def handle_event(self, event):
         if event == 'cycle_length':
             new_cycle_length = gui_get('cycle_length')
-            if new_cycle_length != self.cycle_length:
-                self.cycle_length = gui_get('cycle_length')
+            if new_cycle_length != Cycle_World.cycle_length:
+                Cycle_World.cycle_length = gui_get('cycle_length')
                 # World.links = set()
                 self.best_ind = None
                 self.population = self.initial_population()
@@ -172,7 +178,7 @@ class Cycle_World(GA_World):
         super().handle_event(event)
 
     @staticmethod
-    def random_velocity(limit=0.05):
+    def random_velocity(limit=0.5):
         return Velocity((uniform(-limit, limit), uniform(-limit, limit)))
 
     def set_results(self):
@@ -186,11 +192,12 @@ class Cycle_World(GA_World):
     def setup(self):
         GA_World.individual_class = Cycle_Individual
         GA_World.chromosome_class = Cycle_Chromosome
+        Cycle_World.cycle_length = gui_get('cycle_length')
         gui_set('Max generations', value=float('inf'))
         gui_set('pop_size', value=100)
         self.pop_size = 100
         gui_set('prob_random_parent', value=20)
-        self.cycle_length = gui_get('cycle_length')
+        Cycle_World.cycle_length = gui_get('cycle_length')
         super().setup()
 
     def step(self):
@@ -207,8 +214,6 @@ class Cycle_World(GA_World):
         super().step()
         # Never stop
         self.done = False
-        # if self.best_ind.discrepancy != self.best_discr:
-        #     print('step', round(self.best_discr, 3), round(self.best_ind.discrepancy, 3))
 
     def update_cycle_lengths(self, cycle_length):
         for ind in self.population:
@@ -244,7 +249,7 @@ cycle_gui_left_upper = gui_left_upper + [
                        ],
 
                       [sg.Text('Cycle length', pad=(None, (20, 0))),
-                       sg.Slider(key='cycle_length', range=(2, 20), default_value=10, pad=((10, 0), (0, 0)),
+                       sg.Slider(key='cycle_length', range=(2, 50), default_value=10, pad=((10, 0), (0, 0)),
                                  orientation='horizontal', size=(10, 20), enable_events=True)
                        ],
 

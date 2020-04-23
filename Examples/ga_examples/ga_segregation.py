@@ -174,7 +174,8 @@ class Segregation_World(GA_World):
         ones = ['1'] * zeros_ones
         GA_World.gene_pool = sample(zeros + ones + blanks, chromosome_length)
 
-    def gen_individual(self):
+    @staticmethod
+    def gen_individual():
         chromosome_tuple: Tuple[Gene] = GA_World.chromosome_class(Gene(id, val)
                                                                   for (id, val) in zip(count(), GA_World.gene_pool))
         individual = GA_World.individual_class(chromosome_tuple)
