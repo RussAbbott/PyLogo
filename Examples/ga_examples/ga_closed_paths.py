@@ -265,4 +265,4 @@ cycle_gui_left_upper = gui_left_upper + [
 if __name__ == "__main__":
     from core.agent import PyLogo
     # gui_left_upper is from core.ga
-    PyLogo(Cycle_World, 'Closed paths', cycle_gui_left_upper, agent_class=Cycle_Agent)
+    PyLogo(Cycle_World, 'Closed paths', cycle_gui_left_upper, agent_class=Cycle_Agent, bounce=True)
