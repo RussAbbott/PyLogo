@@ -125,8 +125,9 @@ class TSP_Chromosome(Chromosome):
         return fitness
 
     def link_chromosome(self):
-        for i in range(len(self)):
-            TSP_Link(self[i], self[(i+1) % len(self)])
+        if len(self) > 1:
+            for i in range(len(self)):
+                TSP_Link(self[i], self[(i+1) % len(self)])
 
     def move_gene_in_chromosome(self, original_fitness: float) -> TSP_Chromosome:
         """
@@ -210,6 +211,29 @@ class TSP_World(GA_World):
     
     cycle_length = None
 
+    def create_node(self):
+        new_point = self.create_random_agent(color=Color('white'), shape_name='node', scale=1)
+        new_point.set_velocity(TSP_World.random_velocity())
+        for i in range(len(self.population)):
+            ind = self.population[i]
+            # noinspection PyUnresolvedReferences
+            old_chromo = ind.chromosome
+            # noinspection PyUnresolvedReferences
+            (new_chromosome, ind.fitness) = old_chromo.add_gene_to_chromosome(ind.fitness, new_point)
+            # noinspection PyArgumentList
+            ind.chromosome = GA_World.chromosome_class(new_chromosome)
+
+    def delete_node(self):
+        # Can't use choice with a set.
+        node = sample(World.agents, 1)[0]
+        for ind in self.population:
+            chromo = ind.chromosome
+            new_chromo_list = list(chromo)
+            new_chromo_list.remove(node)
+            new_chromo = GA_World.chromosome_class(new_chromo_list)
+            ind.chromosome = new_chromo
+        node.delete()
+
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
         nbr_points = gui_get('nbr_points')
@@ -229,17 +253,23 @@ class TSP_World(GA_World):
         return individual
 
     def handle_event(self, event):
-        if event == 'cycle_length':
-            new_cycle_length = gui_get('cycle_length')
-            if new_cycle_length != TSP_World.cycle_length:
-                TSP_World.cycle_length = gui_get('cycle_length')
-                # World.links = set()
+        if event.endswith('Node'):
+            if self.elim_dups:
+                if event == 'Create Node':
+                    self.create_node()
+                elif event == 'Delete Node':
+                    if len(GA_World.gene_pool) > 2:
+                        self.delete_node()
+                gui_set('nbr_points', value=len(self.gene_pool))
                 self.best_ind = None
-                self.population = self.initial_population()
-                # super().setup()
-                self.resume_ga()
-            return
-        super().handle_event(event)
+                self.set_results()
+            else:
+                print("Can't create or delete nodes unless 'Eliminate duplicates' is on.")
+        elif event == 'Reverse':
+            for gene in self.gene_pool:
+                gene.velocity = gene.velocity * (-1)
+        else:
+            super().handle_event(event)
 
     @staticmethod
     def random_velocity(limit=0.5):
@@ -257,9 +287,10 @@ class TSP_World(GA_World):
         Agent.id = 1
         GA_World.individual_class = TSP_Individual
         GA_World.chromosome_class = TSP_Chromosome.factory
+        # The following GUI elements are defined in ga.py.
+        # We can't set their default value in our gui definition.
         gui_set('Max generations', value=float('inf'))
-        self.pop_size = 50
-        gui_set('pop_size', value=self.pop_size)
+        gui_set('pop_size', value=20)
         gui_set('prob_random_parent', value=20)
         gui_set('Discrep:', visible=False)
         gui_set('discrepancy', visible=False)
@@ -287,7 +318,11 @@ class TSP_World(GA_World):
 import PySimpleGUI as sg
 tsp_right_upper = [
                      [sg.Button('Create Node', tooltip='Create a node'),
-                      sg.Button('Delete Node', tooltip='Delete one random node')]]
+                      sg.Button('Delete Node', tooltip='Delete one random node'),
+                      sg.Button('Reverse', tooltip='Reverse direction of motion')],
+
+
+                  ]
 
 tsp_gui_left_upper = gui_left_upper + [
 
