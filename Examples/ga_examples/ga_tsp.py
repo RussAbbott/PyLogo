@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from random import random, sample, uniform
+from random import choice, random, sample, uniform
 from typing import List, Tuple
 
 from pygame import Color
@@ -14,6 +14,7 @@ from core.world_patch_block import World
 
 
 class TSP_Agent(Agent):
+    """ An agent is a point on the screen, not a GA individual. """
 
     def __lt__(self, other):
         return self.id < other.id
@@ -60,6 +61,45 @@ class TSP_Chromosome(Chromosome):
 
     def __str__(self):
         return TSP_Chromosome.chromo_str(self)
+
+    # Functions to generate initial TSP paths
+
+    @staticmethod
+    def greedy_path() -> List[Gene]:
+        """
+        Generates a greedy path. Starts at a random Gene, i.e., a point on the screen
+        and extends that path to the nearest neighboring point until all the points
+        are included.
+
+        Currently written to call random_path. You should replace that with an actual greedy algorithm.
+        """
+
+        return TSP_Chromosome.random_path()
+
+    @staticmethod
+    def random_path() -> List[Gene]:
+        """
+        Generates a random path. The function sample selectes a given number of
+        elements from its first argument and returns them in a shuffled list.
+        Since the second argument is the lengt of the first argument, sample
+        will return a random permutation of the Genes, i.e., the points on the screen.
+
+        Currently written to call random_path. You should replace that with a minimal
+        spanning tree algorithm.
+        """
+        chromosome_list: List = sample(GA_World.gene_pool, len(GA_World.gene_pool))
+        return chromosome_list
+
+    @staticmethod
+    def spanning_tree_path() -> List[Gene]:
+        """
+        Generates a path derived from a minimum spanning tree of the Genes.
+        Constructs a minimum spanning tree. Then does a DFS of the tree, adding
+        elements in the order encountered as long as they were not added earlier.
+        """
+        return TSP_Chromosome.random_path()
+
+
 
     def add_gene_to_chromosome(self, orig_fitness: float, gene):
         """ Add gene to the chromosome to minimize the cycle distance. """
@@ -127,16 +167,23 @@ class TSP_Chromosome(Chromosome):
         new_chrom = self[:pos] + (new_gene, ) + self[pos:]
         return (new_chrom, new_fitness)
 
+    def two_opt(self, original_fitness: float) -> TSP_Chromosome:
+        """
+        Move a random gene to the point in the chromosome that will produce the best result.
+
+        Currently calls move_gene_in_chromosome. Should be replaced with code that does two_opt.
+        """
+        return self.move_gene_in_chromosome(original_fitness)
+
 
 # noinspection PyTypeChecker
 class TSP_Individual(Individual):
 
     def __str__(self):
-        return f'{self.fitness}: {[str(gene) for gene in self.chromosome]}'
+        return f'{round(self.fitness, 1)}: ({", ".join([str(gene) for gene in self.chromosome])})'
 
     def compute_fitness(self) -> float:
         fitness = (self.chromosome).chromosome_fitness()
-        # print(fitness)
         return fitness
 
     @property
@@ -149,7 +196,12 @@ class TSP_Individual(Individual):
 
     def mutate(self) -> Individual:
         assert isinstance(self.chromosome, TSP_Chromosome)
-        new_chromosome = (self.chromosome).move_gene_in_chromosome(self.fitness)
+
+        if uniform(0, 1) <= 0.5:
+            new_chromosome = (self.chromosome).move_gene_in_chromosome(self.fitness)
+        else:
+            new_chromosome = (self.chromosome).two_opt(self.fitness)
+
         new_individual = GA_World.individual_class(new_chromosome)
         return new_individual
 
@@ -158,9 +210,6 @@ class TSP_World(GA_World):
     
     cycle_length = None
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
         nbr_points = gui_get('nbr_points')
@@ -171,7 +220,10 @@ class TSP_World(GA_World):
 
     @staticmethod
     def gen_individual():
-        chromosome_list: List = sample(GA_World.gene_pool, len(GA_World.gene_pool))
+        gen_path_method = choice([TSP_Chromosome.greedy_path,
+                                  TSP_Chromosome.random_path,
+                                  TSP_Chromosome.spanning_tree_path])
+        chromosome_list: List = gen_path_method()
         chromo = GA_World.chromosome_class(chromosome_list)
         individual = GA_World.individual_class(chromo)
         return individual
@@ -202,10 +254,11 @@ class TSP_World(GA_World):
         self.done = False
 
     def setup(self):
+        Agent.id = 1
         GA_World.individual_class = TSP_Individual
         GA_World.chromosome_class = TSP_Chromosome.factory
         gui_set('Max generations', value=float('inf'))
-        self.pop_size = 10
+        self.pop_size = 50
         gui_set('pop_size', value=self.pop_size)
         gui_set('prob_random_parent', value=20)
         gui_set('Discrep:', visible=False)
@@ -239,7 +292,7 @@ tsp_right_upper = [
 tsp_gui_left_upper = gui_left_upper + [
 
                       [sg.Text('Nbr points', pad=((0, 5), (10, 0))),
-                       sg.Slider(key='nbr_points', range=(5, 200), default_value=5, orientation='horizontal',
+                       sg.Slider(key='nbr_points', range=(5, 200), default_value=15, orientation='horizontal',
                                  size=(10, 20))
                        ],
 
