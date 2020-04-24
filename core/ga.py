@@ -270,6 +270,11 @@ class GA_World(World):
         elif event == 'elim_dups':
             self.elim_dups = not self.elim_dups
             gui_set('elim_dups', value=self.elim_dups)
+            if self.elim_dups:
+                old_pop = self.population
+                self.population = []
+                for ind in old_pop:
+                    self.population.append(self.gen_new_individual() if ind in self.population else ind)
         else:
             super().handle_event(event)
 
