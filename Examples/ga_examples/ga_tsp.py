@@ -4,36 +4,22 @@ from random import random, sample, uniform
 from typing import List, Tuple
 
 from pygame import Color
-from pygame.draw import circle
 
-import core.gui as gui
 from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
-from core.gui import BLOCK_SPACING
 from core.link import Link
-from core.pairs import Pixel_xy, Velocity
+from core.pairs import Velocity
 from core.sim_engine import gui_get, gui_set
 from core.world_patch_block import World
 
 
 class TSP_Agent(Agent):
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Is the  node selected?
-        self.selected = False
-
     def __lt__(self, other):
         return self.id < other.id
 
     def __str__(self):
         return str(self.id)
-
-    def draw(self, shape_name=None):
-        super().draw(shape_name=shape_name)
-        if self.selected:
-            radius = round((BLOCK_SPACING() / 2) * self.scale * 1.5)
-            circle(gui.SCREEN, Color('red'), Pixel_xy(self.rect.center), radius, 1)
 
     @property
     def label(self):
@@ -79,12 +65,8 @@ class TSP_Chromosome(Chromosome):
         """ Add gene to the chromosome to minimize the cycle distance. """
         (best_new_chrom, best_new_fitness) = (None, None)
         len_chrom = len(self)
-        # if len_chrom != len(GA_World.gene_pool)-1:
-        #     print('wrong length 1')
         for i in sample(range(len_chrom), min(3, len_chrom)):
             (new_chrom, new_fitness) = self.trial_insertion(orig_fitness, i, gene)
-            # if len(new_chrom) != len(GA_World.gene_pool):
-            #     print('wrong length 2')
             if best_new_fitness is None or new_fitness < best_new_fitness:
                 (best_new_chrom, best_new_fitness) = (new_chrom, new_fitness)
         return (best_new_chrom, best_new_fitness)
@@ -104,8 +86,6 @@ class TSP_Chromosome(Chromosome):
 
     def link_chromosome(self):
         for i in range(len(self)):
-            if self[i] == self[(i+1) % len(self)]:
-                print(self)
             TSP_Link(self[i], self[(i+1) % len(self)])
 
     def move_gene_in_chromosome(self, original_fitness: float) -> TSP_Chromosome:
@@ -152,12 +132,16 @@ class TSP_Chromosome(Chromosome):
 class TSP_Individual(Individual):
 
     def __str__(self):
-        return f'{round(self.fitness, 1)}: ({", ".join([str(gene) for gene in self.chromosome])})'
+        return f'{self.fitness}: {[str(gene) for gene in self.chromosome]}'
 
     def compute_fitness(self) -> float:
         fitness = (self.chromosome).chromosome_fitness()
         # print(fitness)
         return fitness
+
+    @property
+    def discrepancy(self) -> float:
+        return self.fitness
 
     def mate_with(self, other):
         children = self.cx_all_diff(other)
@@ -171,44 +155,12 @@ class TSP_Individual(Individual):
 
 
 class TSP_World(GA_World):
+    
+    cycle_length = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def create_node(self):
-        new_point = self.create_random_agent(color=Color('white'), shape_name='node', scale=1)
-        # new_point.selected = True
-        for ind in self.population:
-            if new_point in ind.chromosome:
-                print(f'a) {new_point} in {ind.chromosome}')
-        for i in range(len(self.population)):
-            print(i)
-            ind = self.population[i]
-            # noinspection PyUnresolvedReferences
-            old_chromo = ind.chromosome
-            (new_chromosome, ind.fitness) = old_chromo.add_gene_to_chromosome(ind.fitness, new_point)
-            for j in range(i + 1, len(self.population)):
-                ind_j = self.population[j]
-                if new_point in ind_j.chromosome:
-                    print(f'c-{j} {TSP_Chromosome(new_chromosome)}: {new_point} in {ind_j.chromosome}')
-            # noinspection PyArgumentList
-            ind.chromosome = TSP_Chromosome(new_chromosome)
-            # if len(ind.chromosome) != len(GA_World.gene_pool):
-            #     print('duplicate')
-
-    def delete_node(self):
-        # Can't use choice with a set.
-        node = sample(World.agents, 1)[0]
-        print([str(ind) for ind in self.population])
-        for ind in self.population:
-            chromo = ind.chromosome
-            new_chromo_list = list(chromo)
-            new_chromo_list.remove(node)
-            new_chromo = GA_World.chromosome_class(new_chromo_list)
-            ind.chromosome = new_chromo
-            print([str(ind) for ind in self.population])
-        node.delete()
-
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
         nbr_points = gui_get('nbr_points')
@@ -225,32 +177,17 @@ class TSP_World(GA_World):
         return individual
 
     def handle_event(self, event):
-        print(f'start handle {event} {len(GA_World.gene_pool)}')
-        if event.endswith('Node'):
-            for gene in self.gene_pool:
-                gene.selected = False
-            if event == 'Create Node':
-                self.create_node()
-            elif event == 'Delete Node':
-                self.delete_node()
-            gui_set('nbr_points', value=len(self.gene_pool))
-            self.best_ind = None
-            self.set_results()
-        else:
-            super().handle_event(event)
-        print('end handle_event')
-
-    def mouse_click(self, xy: Tuple[int, int]):
-        """ Select closest node. """
-        patch = self.pixel_tuple_to_patch(xy)
-        if len(patch.agents) == 1:
-            node = sample(patch.agents, 1)[0]
-        else:
-            patches = patch.neighbors_24()
-            nodes = {node for patch in patches for node in patch.agents}
-            node = nodes.pop() if nodes else Pixel_xy(xy).closest_block(World.agents)
-        if node:
-            node.selected = not node.selected
+        if event == 'cycle_length':
+            new_cycle_length = gui_get('cycle_length')
+            if new_cycle_length != TSP_World.cycle_length:
+                TSP_World.cycle_length = gui_get('cycle_length')
+                # World.links = set()
+                self.best_ind = None
+                self.population = self.initial_population()
+                # super().setup()
+                self.resume_ga()
+            return
+        super().handle_event(event)
 
     @staticmethod
     def random_velocity(limit=0.5):
@@ -263,7 +200,6 @@ class TSP_World(GA_World):
         best_chromosome.link_chromosome()
         # Never stop
         self.done = False
-        # print('set_results', len(GA_World.gene_pool))
 
     def setup(self):
         GA_World.individual_class = TSP_Individual
@@ -282,7 +218,6 @@ class TSP_World(GA_World):
         """
         Update the world by moving the agents.
         """
-        # print('start step', len(GA_World.gene_pool))
         if gui_get('move_points'):
             for agent in GA_World.gene_pool:
                 agent.move_by_velocity()
