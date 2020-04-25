@@ -335,10 +335,11 @@ class TSP_World(GA_World):
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
+col  = [[sg.Button('Create Node', tooltip='Create a node')],
+        [sg.Button('Delete Node', tooltip='Delete one random node')]]
 
-frame_layout_node_buttons = [[sg.Button('Create Node', tooltip='Create a node'),
-                              sg.Button('Delete Node', tooltip='Delete one random node')],
-                             [sg.Button('Reverse', tooltip='Reverse direction of motion')]]
+frame_layout_node_buttons = [[sg.Column(col, pad=(None, None)),
+                              sg.Button('Reverse', tooltip='Reverse direction of motion')]]
 
 frame_layout_generators = [[sg.Checkbox('Greedy', key='Greedy', default=True)],
                            [sg.Checkbox('Min spanning tree', key='Min spanning tree', default=True)]]
@@ -359,7 +360,7 @@ tsp_gui_left_upper = gui_left_upper + [
                                  size=(10, 20))
                        ],
 
-                      [sg.Checkbox('Move points', key='move_points', pad=(None, (10, 0)), default=False)],
+                      [sg.Checkbox('Move points', key='move_points', pad=(None, (10, 0)), default=True)],
 
                       [sg.Checkbox('Show labels', key='show_labels', default=True, pad=((0, 0), (10, 0))),
                        sg.Checkbox('Show lengths', key='show_lengths', default=False, pad=((20, 0), (10, 0)))]
