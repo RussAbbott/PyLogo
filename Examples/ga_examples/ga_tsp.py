@@ -196,15 +196,25 @@ class TSP_Individual(Individual):
         return children
 
     def mutate(self) -> Individual:
-        assert isinstance(self.chromosome, TSP_Chromosome)
 
-        if uniform(0, 1) <= 0.5:
-            new_chromosome = (self.chromosome).move_gene_in_chromosome(self.fitness)
+        mutation_operations = []
+        chromo = self.chromosome
+        assert isinstance(chromo, TSP_Chromosome)
+        if gui_get('Move element'):
+            mutation_operations.append(chromo.move_gene_in_chromosome)
+        if gui_get('2-Opt'):
+            mutation_operations.append(chromo.two_opt)
+
+        # If no mutation operations have been selected, return the individual unchnged.
+        if not mutation_operations:
+            return self
         else:
-            new_chromosome = (self.chromosome).two_opt(self.fitness)
-
-        new_individual = GA_World.individual_class(new_chromosome)
-        return new_individual
+            # Otherwise, apply one of the selected mutation operation.
+            operation = choice(mutation_operations)
+            # Both of the current mutation operations require self.fitness as their argument.
+            new_chromosome = operation(self.fitness)
+            new_individual = GA_World.individual_class(new_chromosome)
+            return new_individual
 
 
 class TSP_World(GA_World):
@@ -214,24 +224,32 @@ class TSP_World(GA_World):
     def create_node(self):
         new_point = self.create_random_agent(color=Color('white'), shape_name='node', scale=1)
         new_point.set_velocity(TSP_World.random_velocity())
-        for i in range(len(self.population)):
-            ind = self.population[i]
-            # noinspection PyUnresolvedReferences
+        # If elim_dups is off, the same individual may be in the population multiple times.
+        # Don't attempt to process it more than once.
+        updated_chromos = set()
+        for ind in self.population:
             old_chromo = ind.chromosome
-            # noinspection PyUnresolvedReferences
-            (new_chromosome, ind.fitness) = old_chromo.add_gene_to_chromosome(ind.fitness, new_point)
-            # noinspection PyArgumentList
-            ind.chromosome = GA_World.chromosome_class(new_chromosome)
+            if old_chromo not in updated_chromos:
+                # noinspection PyUnresolvedReferences
+                (new_chromo, ind.fitness) = old_chromo.add_gene_to_chromosome(ind.fitness, new_point)
+                # noinspection PyArgumentList
+                ind.chromosome = GA_World.chromosome_class(new_chromo)
+                updated_chromos.add(new_chromo)
 
     def delete_node(self):
         # Can't use choice with a set.
         node = sample(World.agents, 1)[0]
+        # If elim_dups is off, the same individual may be in the population multiple times.
+        # Don't attempt to process it more than once.
+        updated_chromos = set()
         for ind in self.population:
-            chromo = ind.chromosome
-            new_chromo_list = list(chromo)
-            new_chromo_list.remove(node)
-            new_chromo = GA_World.chromosome_class(new_chromo_list)
-            ind.chromosome = new_chromo
+            old_chromo = ind.chromosome
+            if old_chromo not in updated_chromos:
+                new_chromo_list = list(old_chromo)
+                new_chromo_list.remove(node)
+                new_chromo = GA_World.chromosome_class(new_chromo_list)
+                ind.chromosome = new_chromo
+                updated_chromos.add(new_chromo)
         node.delete()
 
     def gen_gene_pool(self):
@@ -244,9 +262,12 @@ class TSP_World(GA_World):
 
     @staticmethod
     def gen_individual():
-        gen_path_method = choice([TSP_Chromosome.greedy_path,
-                                  TSP_Chromosome.random_path,
-                                  TSP_Chromosome.spanning_tree_path])
+        path_methods = [TSP_Chromosome.spanning_tree_path]
+        if gui_get('Greedy'):
+            path_methods.append(TSP_Chromosome.greedy_path)
+        if gui_get('Min spanning tree'):
+            path_methods.append(TSP_Chromosome.spanning_tree_path)
+        gen_path_method = choice(path_methods)
         chromosome_list: List = gen_path_method()
         chromo = GA_World.chromosome_class(chromosome_list)
         individual = GA_World.individual_class(chromo)
@@ -254,17 +275,14 @@ class TSP_World(GA_World):
 
     def handle_event(self, event):
         if event.endswith('Node'):
-            if self.elim_dups:
-                if event == 'Create Node':
-                    self.create_node()
-                elif event == 'Delete Node':
-                    if len(GA_World.gene_pool) > 2:
-                        self.delete_node()
-                gui_set('nbr_points', value=len(self.gene_pool))
-                self.best_ind = None
-                self.set_results()
-            else:
-                print("Can't create or delete nodes unless 'Eliminate duplicates' is on.")
+            if event == 'Create Node':
+                self.create_node()
+            elif event == 'Delete Node':
+                if len(GA_World.gene_pool) > 2:
+                    self.delete_node()
+            gui_set('nbr_points', value=len(self.gene_pool))
+            self.best_ind = None
+            self.set_results()
         elif event == 'Reverse':
             for gene in self.gene_pool:
                 gene.velocity = gene.velocity * (-1)
@@ -307,7 +325,7 @@ class TSP_World(GA_World):
                 agent.move_by_velocity()
                 if self.best_ind:
                     self.best_ind.fitness = self.best_ind.compute_fitness()
-                if random() < 0.0001:
+                if random() < 0.001:
                     agent.set_velocity(TSP_World.random_velocity())
         super().step()
         # Never stop
@@ -316,13 +334,23 @@ class TSP_World(GA_World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-tsp_right_upper = [
-                     [sg.Button('Create Node', tooltip='Create a node'),
-                      sg.Button('Delete Node', tooltip='Delete one random node'),
-                      sg.Button('Reverse', tooltip='Reverse direction of motion')],
 
 
-                  ]
+frame_layout_node_buttons = [[sg.Button('Create Node', tooltip='Create a node'),
+                              sg.Button('Delete Node', tooltip='Delete one random node')],
+                             [sg.Button('Reverse', tooltip='Reverse direction of motion')]]
+
+frame_layout_generators = [[sg.Checkbox('Greedy', key='Greedy', default=True)],
+                           [sg.Checkbox('Min spanning tree', key='Min spanning tree', default=True)]]
+
+frame_layout_mutations = [[sg.Checkbox('Move element', key='Move element', default=True)],
+                          [sg.Checkbox('2-Opt', key='2-Opt', default=True)]]
+
+tsp_right_upper = [[
+                      sg.Frame('Generators', frame_layout_generators, pad=((25, 0), (0, 0))),
+                      sg.Frame('Mutations', frame_layout_mutations, pad=((25, 0), (0, 0))),
+                      sg.Frame('Node control', frame_layout_node_buttons, pad=((25, 0), (0, 0))),
+    ]]
 
 tsp_gui_left_upper = gui_left_upper + [
 
