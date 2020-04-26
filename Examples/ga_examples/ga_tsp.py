@@ -193,9 +193,6 @@ class TSP_Individual(Individual):
             for lnk in self.links_to_display:
                 lnk.color = Color('red')
 
-        # self.path_was_displayed = False
-
-
     def __str__(self):
         return f'{round(self.fitness, 1)}: ({", ".join([str(gene) for gene in self.chromosome])})'
 
@@ -319,9 +316,6 @@ class TSP_World(GA_World):
         best_chromosome: TSP_Chromosome = self.best_ind.chromosome
         World.links = set(best_chromosome.link_chromosome())
 
-        # if not self.best_ind.path_was_displayed \
-        #     and self.best_ind.links_to_display \
-        #     and gui_get('Animate path construction'):
         if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
             World.links = set()
 
@@ -349,11 +343,10 @@ class TSP_World(GA_World):
     def step(self):
         """
         Update the world by moving the agents.
+        If 'Animate path construction' is on, draw the path step y step.
         """
         if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
             World.links.add(self.best_ind.links_to_display.pop(0))
-            # If there are no more points to display, set path_was_displayed to True.
-            # self.best_ind.path_was_displayed |= not self.best_ind.links_to_display
             sleep(0.60)
         else:
             if gui_get('move points'):
