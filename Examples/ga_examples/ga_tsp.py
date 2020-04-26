@@ -358,12 +358,7 @@ class TSP_World(GA_World):
     def step(self):
         """
         Update the world by moving the agents.
-        If 'Animate path construction' is on, draw the path step y step.
         """
-        # if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
-        #     World.links.add(self.best_ind.links_to_display.pop(0))
-        #     sleep(0.60)
-        # else:
         if gui_get('move points'):
             for agent in GA_World.gene_pool:
                 agent.move_by_velocity()
