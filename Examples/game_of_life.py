@@ -3,7 +3,7 @@ from random import randint
 
 from core.gui import HOR_SEP
 from core.on_off import OnOffPatch, OnOffWorld, on_off_left_upper
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get
 
 
 class Life_Patch(OnOffPatch):
@@ -26,7 +26,7 @@ class Life_World(OnOffWorld):
 
     def setup(self):
         super().setup()
-        density = SimEngine.gui_get('density')
+        density = gui_get('density')
         for patch in self.patches:
             is_alive = randint(0, 100) < density
             patch.set_alive_or_dead(is_alive)

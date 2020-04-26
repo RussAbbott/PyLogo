@@ -10,7 +10,7 @@ import numpy as np
 import core.gui as gui
 from core.gui import HOR_SEP
 from core.on_off import OnOffPatch, OnOffWorld, on_off_left_upper
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 from core.utils import bin_str
 
 
@@ -49,33 +49,33 @@ class CA_World(OnOffWorld):
         self.lists = None
         self.padding_element = None
         self.ca_lines = []
-        SimEngine.gui_set('rows', value=len(self.ca_lines))
+        gui_set('rows', value=len(self.ca_lines))
 
     def build_initial_line(self):
         """
         Construct the initial CA line.
-        It is a random line if SimEngine.gui_get('Random?').
-        It is a line (of length ca_display_size) of 0's if SimEngine.gui_get('init_line') == ''.
-        Otherwise it is the string in SimEngine.gui_get('init_line') converted into 0's and 1's.
+        It is a random line if gui_get('Random?').
+        It is a line (of length ca_display_size) of 0's if gui_get('init_line') == ''.
+        Otherwise it is the string in gui_get('init_line') converted into 0's and 1's.
         (' ' and '0' are converted to 0; everything else is converted to 1.)
         However, if the rule includes 000 -> 1,pad the line with 0's on both ends to fill the display.
         How much to put on each end depends on the user-specific initial line and the requested justification.
         """
-        if SimEngine.gui_get('Random?'):
+        if gui_get('Random?'):
             line = [choice([0, 1]) for _ in range(self.ca_display_size)] if self.lists else \
                    ''.join([choice(['0', '1']) for _ in range(self.ca_display_size)])
         else:
             padding = self.padding_element * (self.ca_display_size)
-            if SimEngine.gui_get('init_line') == '':
+            if gui_get('init_line') == '':
                 line = padding
             else:
-                line_0 = SimEngine.gui_get('init_line')
+                line_0 = gui_get('init_line')
                 # Convert line_0 to 0's and 1's
                 # Treat '0' and ' ' as "not on".
                 line = [0 if c in ' 0' else 1 for c in line_0] if self.lists else \
                        ''.join(['0' if c in ' 0' else '1' for c in line_0])
-                if SimEngine.gui_get('000'):
-                    justification = SimEngine.gui_get('justification')
+                if gui_get('000'):
+                    justification = gui_get('justification')
                     line_len = len(line)
                     actual_padding = padding[line_len:]
                     line = actual_padding + line if justification == 'Right' else \
@@ -152,14 +152,14 @@ class CA_World(OnOffWorld):
             prev_line.insert(0, 0)
             prev_line.extend([0, 0])
             triples = [''.join(map(str, prev_line[i:i + 3])) for i in range(len(prev_line) - 2)]
-            new_line = [int(SimEngine.gui_get(triple)) for triple in triples]
+            new_line = [int(gui_get(triple)) for triple in triples]
         else:
             prev_line = '00' + prev_line + '00'
 
             # For each triple of characters in the prev_line, look up the setting of the corresponding switch.
-            # (SimEngine.gui_get(prev_line[i:i + 3]))
+            # (gui_get(prev_line[i:i + 3]))
             # Convert its Truth value (rule is on/off) to an int and then to a one character str.
-            new_line_chars = [str(int(SimEngine.gui_get(prev_line[i:i + 3]))) for i in range(len(prev_line) - 2)]
+            new_line_chars = [str(int(gui_get(prev_line[i:i + 3]))) for i in range(len(prev_line) - 2)]
 
             # Finally, join those strings together into a new string.
             new_line = ''.join(new_line_chars)
@@ -192,8 +192,8 @@ class CA_World(OnOffWorld):
         # When the user checks the 'Random?' box, the Input line area should disappear.
         # When the user unchecks the 'Random?' box, the Input line area should re-appear.
         elif event == 'Random?':
-            disabled = SimEngine.gui_get('Random?')
-            SimEngine.gui_set('init_line', visible=not disabled, value='1')
+            disabled = gui_get('Random?')
+            gui_set('init_line', visible=not disabled, value='1')
 
     def make_switches_and_rule_nbr_consistent(self):
         """
@@ -203,7 +203,7 @@ class CA_World(OnOffWorld):
         if self.rule_nbr != new_switches_nbr:
             self.rule_nbr = new_switches_nbr
         else:
-            self.rule_nbr = SimEngine.gui_get('Rule_nbr')
+            self.rule_nbr = gui_get('Rule_nbr')
             self.set_switches_from_rule_nbr()
         self.set_binary_nbr_from_rule_nbr()
 
@@ -214,12 +214,12 @@ class CA_World(OnOffWorld):
         the string '(01101110)' is stored in gui.WINDOW['bin_string']. Include
         the parentheses around the binary number.
 
-        Use SimEngine.gui_set('bin_string', value=new_value) to update the value of the widget.
+        Use gui_set('bin_string', value=new_value) to update the value of the widget.
         """
         binary_rule_nbr = bin_str(self.rule_nbr, 8)
-        SimEngine.gui_set('Rule_nbr', value=self.rule_nbr)
+        gui_set('Rule_nbr', value=self.rule_nbr)
         new_bin_value = binary_rule_nbr + ' (binary)'
-        SimEngine.gui_set('bin_string', value=new_bin_value)
+        gui_set('bin_string', value=new_bin_value)
 
     def set_display_from_lines(self):
         """
@@ -231,7 +231,7 @@ class CA_World(OnOffWorld):
         This is the most difficult method. Here is the outline I used.
         """
         # Get the current setting of 'justification'.
-        justification = SimEngine.gui_get('justification')
+        justification = gui_get('justification')
 
         # Get the two relevant widths.
         display_width = gui.PATCH_COLS
@@ -309,14 +309,14 @@ class CA_World(OnOffWorld):
         Note that the 2^i position of self.rule_nbr corresponds to self.pos_to_switch[i]. That is,
         self.pos_to_switch[i] returns the key for the switch representing position  2^i.
 
-        Set that switch as follows: SimEngine.gui_set(self.pos_to_switch[pos], value=new_value).
+        Set that switch as follows: gui_set(self.pos_to_switch[pos], value=new_value).
         (new_value will be either True or False, i.e., 1 or 0.)
 
         This is the inverse of get_rule_nbr_from_switches().
         """
         rule_nbr = self.rule_nbr
         for pos in self.pos_to_switch:
-            SimEngine.gui_set(self.pos_to_switch[pos], value=rule_nbr % 2)
+            gui_set(self.pos_to_switch[pos], value=rule_nbr % 2)
             rule_nbr = rule_nbr // 2
 
     def setup(self):
@@ -329,7 +329,7 @@ class CA_World(OnOffWorld):
         Once the slider, the switches, and the bin_string of the rule number are consistent,
         set self.ca_lines[0] to the line generated by build_initial_line.
         """
-        self.lists = SimEngine.gui_get('lists_or_strings') == 'Lists'
+        self.lists = gui_get('lists_or_strings') == 'Lists'
         self.padding_element = [0] if self.lists else '0'
 
         self.make_switches_and_rule_nbr_consistent()
@@ -383,7 +383,7 @@ class CA_World(OnOffWorld):
         # Refresh the display from self.ca_lines
         self.set_display_from_lines()
         # Update the 'rows' widget.
-        SimEngine.gui_set('rows', value=len(self.ca_lines))
+        gui_set('rows', value=len(self.ca_lines))
 
 
 # ############################################## Define GUI ############################################## #

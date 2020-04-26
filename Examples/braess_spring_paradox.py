@@ -10,7 +10,7 @@ from core.graph_framework import Graph_Node
 from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH
 from core.link import Link
 from core.pairs import Pixel_xy, Velocity
-from core.sim_engine import GOSTOP, GO_ONCE, SimEngine
+from core.sim_engine import GOSTOP, GO_ONCE, gui_get, gui_set, SimEngine
 from core.world_patch_block import World
 
 
@@ -237,7 +237,7 @@ class Braess_World(World):
 
         self.adjustable_links = [self.top_spring, self.top_cord, self.bottom_spring, self.weight_cord]
 
-        SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
+        gui_set(Braess_World.CUT_CORD, enabled=False)
         Braess_World.state = 1
         Agent.some_agent_changed = True
 
@@ -254,7 +254,7 @@ class Braess_World(World):
         """
 
         # Move out by a small amount so that the two lines can be seen.
-        step = 5 if SimEngine.gui_get('Pause?') else 0
+        step = 5 if gui_get('Pause?') else 0
 
         self.top_spring.move_by_dxdy((step, 0))
         self.top_spring.set_target_by_dxdy((self.x_offset-step, 0))
@@ -312,12 +312,12 @@ class Braess_World(World):
 
         #                            ## Done with the setup for the animation. ##                            #
 
-        SimEngine.gui_set(Braess_World.CUT_CORD, enabled=False)
-        SimEngine.gui_set(GO_ONCE, enabled=True)
-        SimEngine.gui_set(GOSTOP, enabled=True)
-        if SimEngine.gui_get('Slow?'):
+        gui_set(Braess_World.CUT_CORD, enabled=False)
+        gui_set(GO_ONCE, enabled=True)
+        gui_set(GOSTOP, enabled=True)
+        if gui_get('Slow?'):
             SimEngine.fps = 15
-        if not SimEngine.gui_get('Pause?'):
+        if not gui_get('Pause?'):
             gui.WINDOW['GoStop'].click()
         Braess_World.state = 'a'
 
@@ -360,7 +360,7 @@ class Braess_World(World):
             gui.WINDOW[GOSTOP].click()
 
             # Enable/disable the Cut-cord button depending on whether we are leaving state 1.
-            SimEngine.gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 1))
+            gui_set(Braess_World.CUT_CORD, enabled=(Braess_World.state == 1))
 
 
 # ############################################## Define GUI ############################################## #

@@ -5,7 +5,7 @@ from pygame.color import Color
 from pygame.sprite import collide_rect
 
 from core.pairs import RowCol, Velocity
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get
 from core.world_patch_block import Patch, World
 
 
@@ -28,7 +28,7 @@ class CollisionTest_World(World):
     """
 
     def setup(self):
-        nbr_agents = int(SimEngine.gui_get('nbr_agents'))
+        nbr_agents = int(gui_get('nbr_agents'))
         for i in range(nbr_agents):
             # Adds itself to self.agents and to its patch's list of Agents.
             agent = self.agent_class(color=Color('red'))

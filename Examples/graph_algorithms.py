@@ -1,7 +1,7 @@
 # Import the string constants you need (mainly keys) as well as classes and gui elements
 from core.graph_framework import (CLUSTER_COEFF, Graph_Node, Graph_World, PATH_LENGTH, TBD, graph_left_upper,
                                   graph_right_upper)
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_set
 
 
 class Graph_Algorithms_World(Graph_World):
@@ -16,9 +16,9 @@ class Graph_Algorithms_World(Graph_World):
 
     def compute_metrics(self):
         cluster_coefficient = self.clustering_coefficient()
-        SimEngine.gui_set(CLUSTER_COEFF, value=cluster_coefficient)
+        gui_set(CLUSTER_COEFF, value=cluster_coefficient)
         avg_path_length = self.average_path_length()
-        SimEngine.gui_set(PATH_LENGTH, value=avg_path_length)
+        gui_set(PATH_LENGTH, value=avg_path_length)
 
     @staticmethod
     def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):

@@ -5,7 +5,7 @@ from core.graph_framework import (CLUSTER_COEFF, Graph_Node, Graph_World, LINK_P
 from core.gui import STAR
 from core.link import Link
 from core.pairs import center_pixel
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 
 
 class Graph_Algorithms_World(Graph_World):
@@ -51,9 +51,9 @@ class Graph_Algorithms_World(Graph_World):
 
     def compute_metrics(self):
         cluster_coefficient = self.clustering_coefficient()
-        SimEngine.gui_set(CLUSTER_COEFF, value=cluster_coefficient)
+        gui_set(CLUSTER_COEFF, value=cluster_coefficient)
         avg_path_length = self.average_path_length()
-        SimEngine.gui_set(PATH_LENGTH, value=avg_path_length)
+        gui_set(PATH_LENGTH, value=avg_path_length)
 
     @staticmethod
     def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):
@@ -75,7 +75,7 @@ class Graph_Algorithms_World(Graph_World):
         """
         # Treat random graphs as a separate case.
         if graph_type == RANDOM:
-            link_prob = SimEngine.gui_get(LINK_PROB)
+            link_prob = gui_get(LINK_PROB)
             # A generator for the links
             link_generator = (Link(ring_node_list[i], ring_node_list[j]) for i in range(nbr_nodes - 1)
                                                                          for j in range(i + 1, nbr_nodes)

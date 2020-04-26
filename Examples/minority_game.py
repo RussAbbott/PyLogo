@@ -5,7 +5,7 @@ from random import choice
 
 import core.gui as gui
 from core.agent import Agent
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set, SimEngine
 from core.utils import int_round
 from core.world_patch_block import World
 
@@ -169,7 +169,7 @@ class Minority_Game_World(World):
     def generate_all_strategies(self):
         # Generate enough strategies for all agents.
         strategy_length = 2 ** self.history_length
-        strategies_per_agent = SimEngine.gui_get(STRATEGIES_PER_AGENT)
+        strategies_per_agent = gui_get(STRATEGIES_PER_AGENT)
         strategies = set()
         # Why a while loop rather than a for loop?
         # Why is strategies a set rather than a list?
@@ -234,7 +234,7 @@ class Minority_Game_World(World):
 
     def setup(self):
         Agent.id = 0
-        Minority_Game_World.steps_to_win = SimEngine.gui_get(STEPS_TO_WIN)
+        Minority_Game_World.steps_to_win = gui_get(STEPS_TO_WIN)
 
         # Adjust how far one step is based on number of steps needed to win
         Minority_Game_World.one_step = (gui.PATCH_COLS - 2) * gui.BLOCK_SPACING() / Minority_Game_World.steps_to_win
@@ -248,15 +248,15 @@ class Minority_Game_World(World):
             return
 
         # This is the normal setup.
-        Minority_Game_World.nbr_agents = SimEngine.gui_get(NBR_AGENTS)
+        Minority_Game_World.nbr_agents = gui_get(NBR_AGENTS)
         if Minority_Game_World.nbr_agents % 2 == 0:
             Minority_Game_World.nbr_agents += (1 if Minority_Game_World.nbr_agents < gui.WINDOW[NBR_AGENTS].Range[1]
                                                else (-1))
-            SimEngine.gui_set(NBR_AGENTS, value=Minority_Game_World.nbr_agents)
+            gui_set(NBR_AGENTS, value=Minority_Game_World.nbr_agents)
         Minority_Game_World.random_agent_ids = {0, Minority_Game_World.nbr_agents - 1}
 
         # Generate a random initial history
-        self.history_length = SimEngine.gui_get(HISTORY_LENGTH)
+        self.history_length = gui_get(HISTORY_LENGTH)
         self.history = [choice([0, 1]) for _ in range(self.history_length)]
 
         self.generate_the_agents()

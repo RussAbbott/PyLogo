@@ -4,7 +4,7 @@ from random import choice, randint, sample
 from pygame import Color
 
 from core.agent import Agent, PYGAME_COLORS
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get
 from core.world_patch_block import Patch, World
 
 
@@ -136,13 +136,13 @@ class SegregationWorld(World):
             return colors if sums[0] < sums[1] else [colors[1], colors[0]]
 
     def setup(self):
-        density = SimEngine.gui_get('density')
-        SegregationAgent.pct_similar_wanted = SimEngine.gui_get('% similar wanted')
+        density = gui_get('density')
+        SegregationAgent.pct_similar_wanted = gui_get('% similar wanted')
         self.color_items = self.select_the_colors()
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
         self.empty_patches = set()
-        self.max_agents_per_step = SimEngine.gui_get('max_agents_per_step')
+        self.max_agents_per_step = gui_get('max_agents_per_step')
         for patch in self.patches:
             patch.set_color(self.patch_color)
             patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
