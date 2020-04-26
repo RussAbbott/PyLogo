@@ -211,7 +211,8 @@ class GA_World(World):
         # Must do it this way because self.gen_new_individual checks to see if each new individual
         # is already in self.population.
         self.population = []
-        for _ in range(self.pop_size):
+        for i in range(self.pop_size):
+            print(i)
             self.population.append(self.gen_new_individual())
 
     def gen_new_individual(self) -> Individual:

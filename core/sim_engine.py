@@ -12,6 +12,10 @@ class SimEngine:
     fps = 60
     values = None
 
+    simple_gui = None
+    world = None
+    
+
     def __init__(self, gui_left_upper, caption="Basic Model", gui_right_upper=None,
                  patch_size=11, board_rows_cols=(51, 51), clear=None, bounce=None, fps=None):
 
@@ -27,17 +31,18 @@ class SimEngine:
         SimEngine.fps = fps if fps else 60
         self.idle_fps = 10
 
-        self.world = None
+        # SimEngine.world = None
 
-        self.simple_gui = SimpleGUI(gui_left_upper, caption=caption, gui_right_upper=gui_right_upper,
-                                    patch_size=patch_size, board_rows_cols=board_rows_cols,
-                                    clear=clear, bounce=bounce, fps=fps)
+        SimEngine.simple_gui = SimpleGUI(gui_left_upper, caption=caption, gui_right_upper=gui_right_upper,
+                                         patch_size=patch_size, board_rows_cols=board_rows_cols,
+                                         clear=clear, bounce=bounce, fps=fps)
         self.graph_point = None
 
-    def draw_world(self):
+    @staticmethod
+    def draw_world():
         """ Fill the screen with the background color, draw the world, and update the display. """
-        self.simple_gui.fill_screen()
-        self.world.draw()
+        SimEngine.simple_gui.fill_screen()
+        SimEngine.world.draw()
         pg.display.update()
 
     @staticmethod
@@ -70,40 +75,40 @@ class SimEngine:
         while True:
             (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
 
-            if SimEngine.event in (None, self.simple_gui.EXIT):
-                return self.simple_gui.EXIT
+            if SimEngine.event in (None, SimEngine.simple_gui.EXIT):
+                return SimEngine.simple_gui.EXIT
 
             self.set_grab_anywhere(self.gui_get('Grab'))
 
             if SimEngine.event == FPS:
                 SimEngine.fps = SimEngine.gui_get(FPS)
 
-            if SimEngine.event.startswith(self.simple_gui.GRAPH):
-                self.world.mouse_click(SimEngine.values['-GRAPH-'])
+            if SimEngine.event.startswith(SimEngine.simple_gui.GRAPH):
+                SimEngine.world.mouse_click(SimEngine.values['-GRAPH-'])
 
             if SimEngine.event == GOSTOP:
                 SimEngine.gui_set(GO_ONCE, enabled=True)
                 break
 
-            elif self.world.done:
+            elif SimEngine.world.done:
                 SimEngine.gui_set(GOSTOP, enabled=True)
                 SimEngine.gui_set(GO_ONCE, enabled=True)
-                # self.world.done = False
+                # SimEngine.world.done = False
                 break
 
             elif SimEngine.event == '__TIMEOUT__':
                 # This increments the World's tick counter for the number of times we have gone around this loop.
                 # Examples.starburst uses it to decide when to "explode." Look at its step method.
-                self.world.increment_ticks()
+                SimEngine.world.increment_ticks()
                 # Take a step in the simulation.
-                self.world.step()
+                SimEngine.world.step()
                 # This line limits how fast the simulation runs. It is not a counter.
                 self.clock.tick(SimEngine.fps)
 
             else:
-                self.world.handle_event(SimEngine.event)
+                SimEngine.world.handle_event(SimEngine.event)
 
-            self.draw_world()
+            SimEngine.draw_world()
 
         return self.NORMAL
 
@@ -115,8 +120,8 @@ class SimEngine:
             gui.WINDOW.grab_any_where_off()
 
     def top_loop(self, the_world, auto_setup=False):
-        self.world = the_world
-        self.draw_world()
+        SimEngine.world = the_world
+        SimEngine.draw_world()
 
         # Keep setup enabled in case the user wants to change from the default setup.
 
@@ -127,7 +132,7 @@ class SimEngine:
 
             (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
 
-            if SimEngine.event in (None, self.simple_gui.EXIT):
+            if SimEngine.event in (None, SimEngine.simple_gui.EXIT):
                 gui.WINDOW.close()
                 break
 
@@ -139,37 +144,37 @@ class SimEngine:
             if not auto_setup and SimEngine.event == '__TIMEOUT__':
                 continue
 
-            if SimEngine.event.startswith(self.simple_gui.GRAPH):
-                self.world.mouse_click(SimEngine.values['-GRAPH-'])
+            if SimEngine.event.startswith(SimEngine.simple_gui.GRAPH):
+                SimEngine.world.mouse_click(SimEngine.values['-GRAPH-'])
 
-            elif auto_setup or SimEngine.event == self.simple_gui.SETUP:
+            elif auto_setup or SimEngine.event == SimEngine.simple_gui.SETUP:
                 auto_setup = False
                 SimEngine.gui_set(GOSTOP, enabled=True)
                 SimEngine.gui_set(GO_ONCE, enabled=True)
                 if SimEngine.gui_get('Clear?') in [True, None]:
-                    self.world.reset_all()
-                self.world.setup()
+                    SimEngine.world.reset_all()
+                SimEngine.world.setup()
 
             elif SimEngine.event == GO_ONCE:
-                self.world.increment_ticks()
-                self.world.step()
+                SimEngine.world.increment_ticks()
+                SimEngine.world.step()
 
             elif SimEngine.event == GOSTOP:
                 SimEngine.gui_set(GOSTOP, text='stop', button_color=('white', 'red'))
                 SimEngine.gui_set(GO_ONCE, enabled=False)
-                SimEngine.gui_set(self.simple_gui.SETUP, enabled=False)
+                SimEngine.gui_set(SimEngine.simple_gui.SETUP, enabled=False)
                 returned_value = self.model_loop()
                 SimEngine.gui_set(GOSTOP, text='go', button_color=('white', 'green'))
-                SimEngine.gui_set(self.simple_gui.SETUP, enabled=True)
-                self.world.final_thoughts()
-                if returned_value == self.simple_gui.EXIT:
+                SimEngine.gui_set(SimEngine.simple_gui.SETUP, enabled=True)
+                SimEngine.world.final_thoughts()
+                if returned_value == SimEngine.simple_gui.EXIT:
                     gui.WINDOW.close()
                     break
             else:
                 # For anything else, e.g., a button the user defined.
-                self.world.handle_event(SimEngine.event)
+                SimEngine.world.handle_event(SimEngine.event)
 
-            self.draw_world()
+            SimEngine.draw_world()
 
             self.clock.tick(self.idle_fps)
 
