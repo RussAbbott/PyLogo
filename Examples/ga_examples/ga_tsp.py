@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+from inspect import getmembers
 from random import choice, random, sample, uniform
 from time import sleep
 from typing import List, Tuple
 
 from pygame import Color
 
+import core.gui as gui
 from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
-from core.link import Link
+from core.link import Link, minimum_spanning_tree
 from core.pairs import Velocity
-from core.sim_engine import gui_get, gui_set, SimEngine
+from core.sim_engine import draw_links, SimEngine, gui_get, gui_set
 from core.world_patch_block import World
 
 
@@ -40,7 +42,7 @@ class TSP_Link(Link):
         label is defined as a getter. No parentheses needed.
         Returns the length of the link.
         """
-        return str(round(self.agent_1.distance_to(self.agent_2), 1)) if gui_get('show_lengths') else None
+        return str(self.length) if gui_get('show_lengths') else None
 
 
 class TSP_Chromosome(Chromosome):
@@ -227,6 +229,10 @@ class TSP_Individual(Individual):
 
 class TSP_World(GA_World):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.msp_links = None
+
     def create_node(self):
         new_point = self.create_random_agent(color=Color('white'), shape_name='node', scale=1)
         new_point.set_velocity(TSP_World.random_velocity())
@@ -258,15 +264,6 @@ class TSP_World(GA_World):
                 updated_chromos.add(new_chromo)
         node.delete()
 
-    @staticmethod
-    def draw_world(links):
-        World.links = set()
-        for lnk in links:
-            lnk.color = Color('red')
-            World.links.add(lnk)
-            SimEngine.draw_world()
-            sleep(0.60)
-
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
         nbr_points = gui_get('nbr_points')
@@ -296,13 +293,18 @@ class TSP_World(GA_World):
         # is already in self.population.
         self.population = []
         for i in range(self.pop_size):
-            print(i, end='. ')
             new_individual = self.gen_new_individual()
             assert isinstance(new_individual, TSP_Individual)
             assert isinstance(new_individual.chromosome, TSP_Chromosome)
-            if 'random_path' not in str(new_individual.generator):
-                links = new_individual.chromosome.link_chromosome()
-                TSP_World.draw_world(links)
+            generator_name = dict(getmembers(new_individual.generator))['__name__']
+            print(f'{i}. {generator_name} {"(no display)" if generator_name == "random_path" else ""}')
+            if generator_name != 'random_path':
+                msp_links = self.minimum_spanning_tree_links() if generator_name == 'spanning_tree_path' else []
+                path_links = new_individual.chromosome.link_chromosome()
+                for lnk in path_links:
+                    lnk.color = Color('red')
+                World.links = set()
+                draw_links(msp_links + path_links, World.links)
             self.population.append(new_individual)
 
     def handle_event(self, event):
@@ -312,25 +314,25 @@ class TSP_World(GA_World):
             elif event == 'Delete Node':
                 if len(GA_World.gene_pool) > 2:
                     self.delete_node()
-            gui_set('nbr_points', value=len(self.gene_pool))
-            self.best_ind = None
+            gui_set('nbr_points', value=len(GA_World.gene_pool))
             self.set_results()
         elif event == 'Reverse':
-            for gene in self.gene_pool:
+            for gene in GA_World.gene_pool:
                 gene.velocity *= (-1)
-        elif event == 'Animate path construction':
-            self.best_ind = None
-            gui_set('move points', value=False)
         else:
             super().handle_event(event)
 
+    def minimum_spanning_tree_links(self):
+        if not self.msp_links:
+            self.msp_links = minimum_spanning_tree(list(GA_World.gene_pool))
+        return self.msp_links
+
     @staticmethod
-    def random_velocity(limit=1):
+    def random_velocity(limit=0.75):
         return Velocity((uniform(-limit, limit), uniform(-limit, limit)))
 
     def set_results(self):
         super().set_results()
-        # World.links = set()
         best_chromosome: TSP_Chromosome = self.best_ind.chromosome
         World.links = set(best_chromosome.link_chromosome())
 
@@ -391,9 +393,9 @@ tsp_right_upper = [[
                     sg.Frame('Node control', frame_layout_node_buttons, pad=((25, 0), (0, 0))),
                     ]]
 
-path_controls = [[sg.Checkbox('Move points', key='move points', pad=(None, (10, 0)), default=True)],
-                  # sg.Checkbox('Animate construction', key='Animate path construction', pad=((20, 0), (10, 0)),
-                  #             default=True, enable_events=True)],
+path_controls = [[sg.Checkbox('Move points', key='move points', pad=(None, (10, 0)), default=True),
+                  sg.Checkbox('Animate construction', key='Animate construction', pad=((20, 0), (10, 0)),
+                              default=True, enable_events=True)],
 
                  [sg.Checkbox('Show labels', key='show_labels', default=True, pad=((0, 0), (10, 0))),
                   sg.Checkbox('Show lengths', key='show_lengths', default=False, pad=((20, 0), (10, 0)))]
