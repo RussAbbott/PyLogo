@@ -198,7 +198,7 @@ class Agent(Block):
         """
         Return a list of links from this node and the nodes to which they attach.
         """
-        lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
+        lns = [(lnk, lnk.other_side()) for lnk in World.links if lnk.includes(self)]
         return lns
 
     def move_by_dxdy(self, dxdy: Velocity):

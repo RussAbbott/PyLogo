@@ -111,6 +111,15 @@ def extract_class_name(full_class_name: type):
     return str(full_class_name).split('.')[-1][:-2]
 
 
+def extract_method_name(full_method_name: type):
+    """
+    full_class_name will be something like: <class 'PyLogo.core.static_values'>
+    We return the str: static_values. Take the final segment [-1] after segmenting
+    at '.' and then drop the final two characters [:-2].
+    """
+    return str(full_method_name).split('.')[-1][:-2]
+
+
 def get_class_name(obj) -> str:
     """ Get the name of the object's class as a string. """
     full_class_name = type(obj)

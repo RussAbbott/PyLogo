@@ -212,7 +212,6 @@ class GA_World(World):
         # is already in self.population.
         self.population = []
         for i in range(self.pop_size):
-            print(i)
             self.population.append(self.gen_new_individual())
 
     def gen_new_individual(self) -> Individual:
