@@ -10,7 +10,7 @@ from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
 from core.link import Link
 from core.pairs import Velocity
-from core.sim_engine import gui_get, gui_set
+from core.sim_engine import gui_get, gui_set, SimEngine
 from core.world_patch_block import World
 
 
@@ -184,14 +184,9 @@ class TSP_Chromosome(Chromosome):
 # noinspection PyTypeChecker
 class TSP_Individual(Individual):
 
-    def __init__(self, *args, links_to_display=None, **kwargs):
+    def __init__(self, *args, generator=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.links_to_display = links_to_display
-        if self.links_to_display is None:
-            assert isinstance(self.chromosome, TSP_Chromosome)
-            self.links_to_display = self.chromosome.link_chromosome()
-            for lnk in self.links_to_display:
-                lnk.color = Color('red')
+        self.generator = generator
 
     def __str__(self):
         return f'{round(self.fitness, 1)}: ({", ".join([str(gene) for gene in self.chromosome])})'
@@ -263,6 +258,15 @@ class TSP_World(GA_World):
                 updated_chromos.add(new_chromo)
         node.delete()
 
+    @staticmethod
+    def draw_world(links):
+        World.links = set()
+        for lnk in links:
+            lnk.color = Color('red')
+            World.links.add(lnk)
+            SimEngine.draw_world()
+            sleep(0.60)
+
     def gen_gene_pool(self):
         # The gene_pool in this case are the point on the grid, which are agents.
         nbr_points = gui_get('nbr_points')
@@ -281,11 +285,25 @@ class TSP_World(GA_World):
         gen_path_method = choice(path_methods)
         chromosome_list: List = gen_path_method()
         chromo = GA_World.chromosome_class(chromosome_list)
-        links = chromo.link_chromosome()
-        for lnk in links:
-            lnk.color = Color('red')
-        individual = GA_World.individual_class(chromo, links_to_display=links)
+        individual = GA_World.individual_class(chromo, generator=gen_path_method)
         return individual
+
+    def gen_initial_population(self):
+        """
+        Generate the initial population. gen_new_individual uses gen_individual from the subclass.
+        """
+        # Must do it this way because self.gen_new_individual checks to see if each new individual
+        # is already in self.population.
+        self.population = []
+        for i in range(self.pop_size):
+            print(i, end='. ')
+            new_individual = self.gen_new_individual()
+            assert isinstance(new_individual, TSP_Individual)
+            assert isinstance(new_individual.chromosome, TSP_Chromosome)
+            if 'random_path' not in str(new_individual.generator):
+                links = new_individual.chromosome.link_chromosome()
+                TSP_World.draw_world(links)
+            self.population.append(new_individual)
 
     def handle_event(self, event):
         if event.endswith('Node'):
@@ -316,9 +334,6 @@ class TSP_World(GA_World):
         best_chromosome: TSP_Chromosome = self.best_ind.chromosome
         World.links = set(best_chromosome.link_chromosome())
 
-        if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
-            World.links = set()
-
         # Never stop
         self.done = False
 
@@ -345,19 +360,19 @@ class TSP_World(GA_World):
         Update the world by moving the agents.
         If 'Animate path construction' is on, draw the path step y step.
         """
-        if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
-            World.links.add(self.best_ind.links_to_display.pop(0))
-            sleep(0.60)
-        else:
-            if gui_get('move points'):
-                for agent in GA_World.gene_pool:
-                    agent.move_by_velocity()
-                    if random() < 0.001:
-                        agent.set_velocity(TSP_World.random_velocity())
-                for ind in self.population:
-                    ind.fitness = ind.compute_fitness()
-                self.best_ind = None
-            super().step()
+        # if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
+        #     World.links.add(self.best_ind.links_to_display.pop(0))
+        #     sleep(0.60)
+        # else:
+        if gui_get('move points'):
+            for agent in GA_World.gene_pool:
+                agent.move_by_velocity()
+                if random() < 0.001:
+                    agent.set_velocity(TSP_World.random_velocity())
+            for ind in self.population:
+                ind.fitness = ind.compute_fitness()
+            self.best_ind = None
+        super().step()
 
 
 # ############################################## Define GUI ############################################## #
@@ -381,9 +396,9 @@ tsp_right_upper = [[
                     sg.Frame('Node control', frame_layout_node_buttons, pad=((25, 0), (0, 0))),
                     ]]
 
-path_controls = [[sg.Checkbox('Move points', key='move points', pad=(None, (10, 0)), default=False),
-                  sg.Checkbox('Animate construction', key='Animate path construction', pad=((20, 0), (10, 0)),
-                              default=True, enable_events=True)],
+path_controls = [[sg.Checkbox('Move points', key='move points', pad=(None, (10, 0)), default=True)],
+                  # sg.Checkbox('Animate construction', key='Animate path construction', pad=((20, 0), (10, 0)),
+                  #             default=True, enable_events=True)],
 
                  [sg.Checkbox('Show labels', key='show_labels', default=True, pad=((0, 0), (10, 0))),
                   sg.Checkbox('Show lengths', key='show_lengths', default=False, pad=((20, 0), (10, 0)))]
@@ -402,4 +417,5 @@ tsp_gui_left_upper = gui_left_upper + [
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(TSP_World, 'TSP', tsp_gui_left_upper, gui_right_upper=tsp_right_upper, agent_class=TSP_Agent, bounce=True)
+    PyLogo(TSP_World, 'TSP', tsp_gui_left_upper, gui_right_upper=tsp_right_upper,
+           agent_class=TSP_Agent, bounce=True, auto_setup=False)
