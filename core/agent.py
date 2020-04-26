@@ -14,6 +14,7 @@ import core.pairs as pairs
 import core.utils as utils
 from core.gui import HALF_PATCH_SIZE, PATCH_SIZE, SHAPES
 from core.pairs import Pixel_xy, RowCol, Velocity, XY, heading_and_speed_to_velocity
+from core.sim_engine import gui_get
 from core.world_patch_block import Block, Patch, World
 
 
@@ -160,7 +161,7 @@ class Agent(Block):
 
     def distance_to(self, other):
         dist = self.distance_to_pixel(other.center_pixel)
-        # wrap = not SimEngine.gui_get('Bounce?')
+        # wrap = not gui_get('Bounce?')
         # dist = (self.center_pixel).distance_to(other.center_pixel, wrap)
         return dist
 
@@ -211,7 +212,7 @@ class Agent(Block):
         self.move_to_xy(new_center_pixel_wrapped)
 
     def move_by_velocity(self):
-        if SimEngine.gui_get('Bounce?'):
+        if gui_get('Bounce?'):
             new_velocity = self.bounce_off_screen_edge(self.velocity)
             if self.velocity != new_velocity:
                 self.set_velocity(new_velocity)

@@ -12,7 +12,7 @@ from core.gui import (BLOCK_SPACING, CIRCLE, HOR_SEP, KNOWN_FIGURES, NETLOGO_FIG
                       SCREEN_PIXEL_WIDTH, STAR)
 from core.link import Link, link_exists
 from core.pairs import Pixel_xy, Velocity
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get, gui_set
 from core.utils import normalize_dxdy
 from core.world_patch_block import World
 
@@ -21,10 +21,10 @@ class Graph_Node(Agent):
 
     def __init__(self, **kwargs):
         if 'color' not in kwargs:
-            color = SimEngine.gui_get(COLOR)
+            color = gui_get(COLOR)
             kwargs['color'] = Color(color) if color != RANDOM else None
         if 'shape_name' not in kwargs:
-            shape_name = SimEngine.gui_get(SHAPE)
+            shape_name = gui_get(SHAPE)
             kwargs['shape_name'] = shape_name
         super().__init__(**kwargs)
 
@@ -71,7 +71,7 @@ class Graph_Node(Agent):
         normalized_force: Velocity = net_force / max([net_force.x, net_force.y, velocity_adjustment])
         normalized_force *= 10
 
-        if SimEngine.gui_get(PRINT_FORCE_VALUES):
+        if gui_get(PRINT_FORCE_VALUES):
             print(f'{self}. \n'
                   f'rep-force {tuple(repulsive_force.round(2))}; \n'
                   f'rep-wall-force {tuple(repulsive_wall_force.round(2))}; \n'
@@ -100,18 +100,18 @@ class Graph_Node(Agent):
         d = max(1, pixel_a.distance_to(pixel_b))  #, wrap=False))
         if repulsive:
             dist = max(1, pixel_a.distance_to(pixel_b) / screen_distance_unit)  #, wrap=False)
-            rep_coefficient = SimEngine.gui_get(REP_COEFF)
-            rep_exponent = SimEngine.gui_get(REP_EXPONENT)
+            rep_coefficient = gui_get(REP_COEFF)
+            rep_exponent = gui_get(REP_EXPONENT)
             force = direction * ((10**rep_coefficient)/10) * dist**rep_exponent
             return force
         else:  # attraction
             dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
-            att_exponent = SimEngine.gui_get(ATT_EXPONENT)
+            att_exponent = gui_get(ATT_EXPONENT)
             force = direction*dist**att_exponent
             # If the link is too short, push away instead of attracting.
             if d < screen_distance_unit:
                 force = force*(-1)
-            att_coefficient = SimEngine.gui_get(ATT_COEFF)
+            att_coefficient = gui_get(ATT_COEFF)
             final_force = force * 10**(att_coefficient-1)
             return final_force
 
@@ -133,8 +133,8 @@ class Graph_World(World):
         Arrange all the nodes (or all but one) as a ring.
         Then link them depending on the kind of network desired.
         """
-        nbr_nodes = SimEngine.gui_get(NBR_NODES)
-        graph_type = SimEngine.gui_get(GRAPH_TYPE)
+        nbr_nodes = gui_get(NBR_NODES)
+        graph_type = gui_get(GRAPH_TYPE)
 
         # If we are generating a star or a wheel network, arrange nbr_nodes-1 as
         # a ring and use the other node as the center node.
@@ -145,7 +145,7 @@ class Graph_World(World):
 
         # create_ordered_agents() creates the indicated number of nodes and arranges
         # them in a ring. It returns a list of the nodes in ring-order.
-        ring_node_list = self.create_ordered_agents(nbr_ring_nodes, shape_name=SimEngine.gui_get(SHAPE))
+        ring_node_list = self.create_ordered_agents(nbr_ring_nodes, shape_name=gui_get(SHAPE))
 
         # Link the nodes to complete the desired graph.
         if nbr_nodes:
@@ -166,9 +166,9 @@ class Graph_World(World):
 
     def compute_metrics(self):
         clust_coefficient = self.clustering_coefficient()
-        SimEngine.gui_set(CLUSTER_COEFF, value=clust_coefficient)
+        gui_set(CLUSTER_COEFF, value=clust_coefficient)
         avg_path_length = self.average_path_length()
-        SimEngine.gui_set(PATH_LENGTH, value=avg_path_length)
+        gui_set(PATH_LENGTH, value=avg_path_length)
 
     # noinspection PyMethodMayBeStatic
     def clustering_coefficient(self):
@@ -220,17 +220,17 @@ class Graph_World(World):
         World.links.remove(lnk)
 
     def disable_enable_buttons(self):
-        # 'enabled' is a pseudo attribute. SimEngine.gui_set replaces it with 'disabled' and negates the value.
+        # 'enabled' is a pseudo attribute. gui_set replaces it with 'disabled' and negates the value.
 
-        SimEngine.gui_set(DELETE_RANDOM_NODE, enabled=bool(World.agents))
+        gui_set(DELETE_RANDOM_NODE, enabled=bool(World.agents))
 
-        SimEngine.gui_set(DELETE_RANDOM_LINK, enabled=bool(World.links))
-        SimEngine.gui_set(CREATE_RANDOM_LINK, enabled=len(World.links) < len(World.agents)*(len(World.agents)-1)/2)
+        gui_set(DELETE_RANDOM_LINK, enabled=bool(World.links))
+        gui_set(CREATE_RANDOM_LINK, enabled=len(World.links) < len(World.agents)*(len(World.agents)-1)/2)
 
-        SimEngine.gui_set(DELETE_SHORTEST_PATH_LINK, enabled=self.shortest_path_links and len(self.selected_nodes) == 2)
+        gui_set(DELETE_SHORTEST_PATH_LINK, enabled=self.shortest_path_links and len(self.selected_nodes) == 2)
 
         # Show node id's or not as requested.
-        show_labels = SimEngine.gui_get(SHOW_NODE_IDS)
+        show_labels = gui_get(SHOW_NODE_IDS)
         for node in World.agents:
             node.label = str(node.id) if show_labels else None
 
@@ -302,7 +302,7 @@ class Graph_World(World):
 
     @staticmethod
     def screen_distance_unit():
-        dist_unit = SimEngine.gui_get(DIST_UNIT)
+        dist_unit = gui_get(DIST_UNIT)
         screen_distance_unit = sqrt(SCREEN_PIXEL_WIDTH() ** 2 + SCREEN_PIXEL_HEIGHT() ** 2) / dist_unit
         return screen_distance_unit
 
@@ -361,7 +361,7 @@ class Graph_World(World):
 
     def step(self):
         dist_unit = Graph_World.screen_distance_unit()
-        if SimEngine.gui_get(LAYOUT) == FORCE_DIRECTED:
+        if gui_get(LAYOUT) == FORCE_DIRECTED:
             for node in World.agents:
                 node.adjust_distances(dist_unit, self.velocity_adjustment)
 

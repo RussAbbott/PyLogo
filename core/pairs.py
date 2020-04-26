@@ -7,7 +7,7 @@ from random import randint
 
 import core.gui as gui
 import core.utils as utils
-from core.sim_engine import SimEngine
+from core.sim_engine import gui_get
 
 
 class XY(tuple):
@@ -78,7 +78,7 @@ class Pixel_xy(XY):
 
     def distance_to(self, other):
         # Try all ways to get there possibly including wrapping around.
-        bounce = SimEngine.gui_get('Bounce?')
+        bounce = gui_get('Bounce?')
         wrap = bounce is not None and not bounce
 
         # Can't do this directly since importing World would be circular

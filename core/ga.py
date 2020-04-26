@@ -139,7 +139,6 @@ class GA_World(World):
 
         # noinspection PyTypeChecker
         self.best_ind: Individual = None
-        self.elim_dups = None
         self.generations = None
         self.pop_size = None
         # noinspection PyTypeChecker
@@ -165,9 +164,7 @@ class GA_World(World):
     def generate_2_children(self):
         """
         Generate two children and put them into the population.
-        If self.elim_dups is one, don't allow duplicates in the population.
         """
-
         tourn_size = gui_get('tourn_size')
 
         parent_1_indx: int = self.select_gene_index(self.BEST, tourn_size)
@@ -176,7 +173,7 @@ class GA_World(World):
         parent_2_indx: int = self.select_gene_index(self.BEST, tourn_size)
         parent_2 = self.population[parent_2_indx]
 
-        if parent_1 == parent_2 and self.elim_dups:
+        if parent_1 == parent_2:
             parent_2 = self.gen_new_individual()
 
         # Some percent of the time, mutate the parents without mating them.
@@ -185,11 +182,11 @@ class GA_World(World):
                              parent_1.mate_with(parent_2)
 
         child_1_mutated: Individual = child_1.mutate()
-        if self.elim_dups and child_1_mutated in self.population:
+        if child_1_mutated in self.population:
             child_1_mutated = self.gen_new_individual()
 
         child_2_mutated: Individual = child_2.mutate()
-        if self.elim_dups and child_2_mutated in self.population:
+        if child_2_mutated in self.population:
             child_2_mutated = self.gen_new_individual()
 
         # The population is not immutable. We change it by writing new individuals into it.
@@ -219,20 +216,12 @@ class GA_World(World):
 
     def gen_new_individual(self) -> Individual:
         """
-        Generate a new individual.
-
-        If self.elim_dups is off, generate a random new individual.
-
-        If self.elim_dups is on, ensure, if possible, that the new individual is unique,
+        Generate a new individual. Ensure, if possible, that the new individual is unique,
         i.e., not already in the population. If that's not possible (because the population
         is too large for the gene pool and virtually all gene combinations are already in
-         use) generate a random new individual and turn off self.elim_dups.
+         use) generate a random new individual and warn the user.
 
         """
-        if not self.elim_dups:
-            # self.elim_dups is off. Do not require a unique individual.
-            return self.gen_individual()
-
         # Try for a unique individual.
         for _ in range(10):
             new_ind = self.gen_individual()
@@ -240,11 +229,8 @@ class GA_World(World):
                 # Found a unique individual, return it.
                 return new_ind
         else:
-            # Did not find a unique individual. Warn the user, turn off self.elim_dups,
-            # and generate a random individual.
+            # Did not find a unique individual. Warn the user and generate a random individual.
             print(f"Population too large for gene pool. Can't guarantee unique individuals.")
-            self.elim_dups = False
-            gui_set('elim_dups', value=False)
             return self.gen_individual()
 
     def get_best_individual(self) -> Individual:
@@ -267,14 +253,6 @@ class GA_World(World):
             self.pop_size = new_pop_size
             self.resume_ga()
             return
-        elif event == 'elim_dups':
-            self.elim_dups = not self.elim_dups
-            gui_set('elim_dups', value=self.elim_dups)
-            if self.elim_dups:
-                old_pop = self.population
-                self.population = []
-                for ind in old_pop:
-                    self.population.append(self.gen_new_individual() if ind in self.population else ind)
         else:
             super().handle_event(event)
 
@@ -326,8 +304,6 @@ class GA_World(World):
         # Create a list of Individuals as the initial population.
         self.gen_gene_pool()
 
-        self.elim_dups = gui_get('elim_dups')
-
         # self.pop_size must be even since we generate children two at a time.
         # It may not be None if it was set by the specific problem's setup function.
         if self.pop_size is None:
@@ -351,9 +327,6 @@ class GA_World(World):
         # Loop for self.pop_size//2 steps since we generate two individuals for each time around.
         for i in range(self.pop_size//2):
             self.generate_2_children()
-
-        if self.elim_dups:
-            self.population = self.eliminate_duplicates(self.population)
 
         self.generations += 1
         self.set_results()
@@ -387,9 +360,6 @@ gui_left_upper = [
                     sg.Combo(key='Max generations', values=[10, 50, 100, 250, 500, float('inf')], default_value=100,
                              pad=(None, (10, 0)))
                     ],
-
-                   [sg.Checkbox('Eliminate duplicates', key='elim_dups', default=True, enable_events=True,
-                                pad=((0, 0), (10, 0)))],
 
                    [sg.Text('Prob no mating', pad=((0, 5), (10, 0))),
                     sg.Slider(key='no_mating', range=(1, 100), resolution=1, default_value=10,
