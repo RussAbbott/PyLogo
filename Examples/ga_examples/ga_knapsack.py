@@ -212,8 +212,6 @@ class Knapsack_World(GA_World):
         return sorted(population, key=lambda i: (i.fitness, -i.total_weight), reverse=True)
 
 
-
-
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 

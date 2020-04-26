@@ -171,8 +171,7 @@ class Cycle_World(GA_World):
                 Cycle_World.cycle_length = gui_get('cycle_length')
                 # World.links = set()
                 self.best_ind = None
-                self.population = self.initial_population()
-                # super().setup()
+                self.gen_initial_population()
                 self.resume_ga()
             return
         super().handle_event(event)

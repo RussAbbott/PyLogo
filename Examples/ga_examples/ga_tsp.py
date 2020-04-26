@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from random import choice, random, sample, uniform
+from time import sleep
 from typing import List, Tuple
 
 from pygame import Color
@@ -125,9 +126,12 @@ class TSP_Chromosome(Chromosome):
         return fitness
 
     def link_chromosome(self):
+        links = []
         if len(self) > 1:
             for i in range(len(self)):
-                TSP_Link(self[i], self[(i+1) % len(self)])
+                lnk = TSP_Link(self[i], self[(i+1) % len(self)])
+                links.append(lnk)
+        return links
 
     def move_gene_in_chromosome(self, original_fitness: float) -> TSP_Chromosome:
         """
@@ -180,6 +184,18 @@ class TSP_Chromosome(Chromosome):
 # noinspection PyTypeChecker
 class TSP_Individual(Individual):
 
+    def __init__(self, *args, links_to_display=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.links_to_display = links_to_display
+        if self.links_to_display is None:
+            assert isinstance(self.chromosome, TSP_Chromosome)
+            self.links_to_display = self.chromosome.link_chromosome()
+            for lnk in self.links_to_display:
+                lnk.color = Color('red')
+
+        # self.path_was_displayed = False
+
+
     def __str__(self):
         return f'{round(self.fitness, 1)}: ({", ".join([str(gene) for gene in self.chromosome])})'
 
@@ -218,14 +234,12 @@ class TSP_Individual(Individual):
 
 
 class TSP_World(GA_World):
-    
-    cycle_length = None
 
     def create_node(self):
         new_point = self.create_random_agent(color=Color('white'), shape_name='node', scale=1)
         new_point.set_velocity(TSP_World.random_velocity())
-        # If elim_dups is off, the same individual may be in the population multiple times.
-        # Don't attempt to process it more than once.
+        # If the same individual is in the population
+        # multiple times, don't process it more than once.
         updated_chromos = set()
         for ind in self.population:
             old_chromo = ind.chromosome
@@ -239,8 +253,8 @@ class TSP_World(GA_World):
     def delete_node(self):
         # Can't use choice with a set.
         node = sample(World.agents, 1)[0]
-        # If elim_dups is off, the same individual may be in the population multiple times.
-        # Don't attempt to process it more than once.
+        # If the same individual is in the population
+        # multiple times, don't process it more than once.
         updated_chromos = set()
         for ind in self.population:
             old_chromo = ind.chromosome
@@ -262,7 +276,7 @@ class TSP_World(GA_World):
 
     @staticmethod
     def gen_individual():
-        path_methods = [TSP_Chromosome.spanning_tree_path]
+        path_methods = [TSP_Chromosome.random_path]
         if gui_get('Greedy'):
             path_methods.append(TSP_Chromosome.greedy_path)
         if gui_get('Min spanning tree'):
@@ -270,7 +284,10 @@ class TSP_World(GA_World):
         gen_path_method = choice(path_methods)
         chromosome_list: List = gen_path_method()
         chromo = GA_World.chromosome_class(chromosome_list)
-        individual = GA_World.individual_class(chromo)
+        links = chromo.link_chromosome()
+        for lnk in links:
+            lnk.color = Color('red')
+        individual = GA_World.individual_class(chromo, links_to_display=links)
         return individual
 
     def handle_event(self, event):
@@ -285,19 +302,29 @@ class TSP_World(GA_World):
             self.set_results()
         elif event == 'Reverse':
             for gene in self.gene_pool:
-                gene.velocity = gene.velocity * (-1)
+                gene.velocity *= (-1)
+        elif event == 'Animate path construction':
+            self.best_ind = None
+            gui_set('move points', value=False)
         else:
             super().handle_event(event)
 
     @staticmethod
-    def random_velocity(limit=0.5):
+    def random_velocity(limit=1):
         return Velocity((uniform(-limit, limit), uniform(-limit, limit)))
 
     def set_results(self):
         super().set_results()
-        World.links = set()
+        # World.links = set()
         best_chromosome: TSP_Chromosome = self.best_ind.chromosome
-        best_chromosome.link_chromosome()
+        World.links = set(best_chromosome.link_chromosome())
+
+        # if not self.best_ind.path_was_displayed \
+        #     and self.best_ind.links_to_display \
+        #     and gui_get('Animate path construction'):
+        if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
+            World.links = set()
+
         # Never stop
         self.done = False
 
@@ -306,37 +333,45 @@ class TSP_World(GA_World):
         GA_World.individual_class = TSP_Individual
         GA_World.chromosome_class = TSP_Chromosome.factory
         # The following GUI elements are defined in ga.py.
-        # We can't set their default value in our gui definition.
+        # We can't set their default values in this file's GUI.
         gui_set('Max generations', value=float('inf'))
         gui_set('pop_size', value=20)
         gui_set('prob_random_parent', value=20)
+
+        # Don't display the following standard GA features.
         gui_set('Discrep:', visible=False)
         gui_set('discrepancy', visible=False)
         gui_set('Gens:', visible=False)
         gui_set('generations', visible=False)
+
         super().setup()
 
     def step(self):
         """
         Update the world by moving the agents.
         """
-        if gui_get('move_points'):
-            for agent in GA_World.gene_pool:
-                agent.move_by_velocity()
-                if self.best_ind:
-                    self.best_ind.fitness = self.best_ind.compute_fitness()
-                if random() < 0.001:
-                    agent.set_velocity(TSP_World.random_velocity())
-        super().step()
-        # Never stop
-        self.done = False
+        if self.best_ind and self.best_ind.links_to_display and gui_get('Animate path construction'):
+            World.links.add(self.best_ind.links_to_display.pop(0))
+            # If there are no more points to display, set path_was_displayed to True.
+            # self.best_ind.path_was_displayed |= not self.best_ind.links_to_display
+            sleep(0.60)
+        else:
+            if gui_get('move points'):
+                for agent in GA_World.gene_pool:
+                    agent.move_by_velocity()
+                    if random() < 0.001:
+                        agent.set_velocity(TSP_World.random_velocity())
+                for ind in self.population:
+                    ind.fitness = ind.compute_fitness()
+                self.best_ind = None
+            super().step()
 
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
 
-col  = [[sg.Button('Create Node', tooltip='Create a node')],
-        [sg.Button('Delete Node', tooltip='Delete one random node')]]
+col = [[sg.Button('Create Node', tooltip='Create a node')],
+       [sg.Button('Delete Node', tooltip='Delete one random node')]]
 
 frame_layout_node_buttons = [[sg.Column(col, pad=(None, None)),
                               sg.Button('Reverse', tooltip='Reverse direction of motion')]]
@@ -348,27 +383,30 @@ frame_layout_mutations = [[sg.Checkbox('Move element', key='Move element', defau
                           [sg.Checkbox('2-Opt', key='2-Opt', default=True)]]
 
 tsp_right_upper = [[
-                      sg.Frame('Generators', frame_layout_generators, pad=((25, 0), (0, 0))),
-                      sg.Frame('Mutations', frame_layout_mutations, pad=((25, 0), (0, 0))),
-                      sg.Frame('Node control', frame_layout_node_buttons, pad=((25, 0), (0, 0))),
-    ]]
+                    sg.Frame('Generators', frame_layout_generators, pad=((25, 0), (0, 0))),
+                    sg.Frame('Mutations', frame_layout_mutations, pad=((25, 0), (0, 0))),
+                    sg.Frame('Node control', frame_layout_node_buttons, pad=((25, 0), (0, 0))),
+                    ]]
 
+path_controls = [[sg.Checkbox('Move points', key='move points', pad=(None, (10, 0)), default=False),
+                  sg.Checkbox('Animate construction', key='Animate path construction', pad=((20, 0), (10, 0)),
+                              default=True, enable_events=True)],
+
+                 [sg.Checkbox('Show labels', key='show_labels', default=True, pad=((0, 0), (10, 0))),
+                  sg.Checkbox('Show lengths', key='show_lengths', default=False, pad=((20, 0), (10, 0)))]
+                 ]
+
+# gui_left_upper is from core.ga
 tsp_gui_left_upper = gui_left_upper + [
 
                       [sg.Text('Nbr points', pad=((0, 5), (10, 0))),
                        sg.Slider(key='nbr_points', range=(5, 200), default_value=15, orientation='horizontal',
-                                 size=(10, 20))
-                       ],
+                                 size=(10, 20))],
 
-                      [sg.Checkbox('Move points', key='move_points', pad=(None, (10, 0)), default=True)],
-
-                      [sg.Checkbox('Show labels', key='show_labels', default=True, pad=((0, 0), (10, 0))),
-                       sg.Checkbox('Show lengths', key='show_lengths', default=False, pad=((20, 0), (10, 0)))]
-
-    ]
+                      [sg.Frame('Path controls', path_controls, pad=(None, (10, 0)))]
+                                       ]
 
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    # gui_left_upper is from core.ga
     PyLogo(TSP_World, 'TSP', tsp_gui_left_upper, gui_right_upper=tsp_right_upper, agent_class=TSP_Agent, bounce=True)
