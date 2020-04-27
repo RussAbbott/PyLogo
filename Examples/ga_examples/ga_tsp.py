@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from inspect import getmembers
 from random import choice, random, sample, uniform
-from time import sleep
 from typing import List, Tuple
 
 from pygame import Color
@@ -12,7 +11,7 @@ from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
 from core.link import Link, minimum_spanning_tree
 from core.pairs import Velocity
-from core.sim_engine import draw_links, SimEngine, gui_get, gui_set
+from core.sim_engine import draw_links, gui_get, gui_set, SimEngine
 from core.world_patch_block import World
 
 
@@ -346,7 +345,7 @@ class TSP_World(GA_World):
         # The following GUI elements are defined in ga.py.
         # We can't set their default values in this file's GUI.
         gui_set('Max generations', value=float('inf'))
-        gui_set('pop_size', value=20)
+        # gui_set('pop_size', value=20)
         gui_set('prob_random_parent', value=20)
 
         # Don't display the following standard GA features.
@@ -354,7 +353,7 @@ class TSP_World(GA_World):
         gui_set('discrepancy', visible=False)
         gui_set('Gens:', visible=False)
         gui_set('generations', visible=False)
-
+        (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
         super().setup()
 
     def step(self):
