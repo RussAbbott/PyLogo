@@ -301,7 +301,7 @@ class TSP_World(GA_World):
                 msp_links = self.minimum_spanning_tree_links() if generator_name == 'spanning_tree_path' else []
                 path_links = new_individual.chromosome.link_chromosome()
                 for lnk in path_links:
-                    lnk.color = Color('red')
+                    lnk.set_color(Color('red'))
                 World.links = set()
                 draw_links(msp_links + path_links, World.links)
             self.population.append(new_individual)
@@ -354,7 +354,11 @@ class TSP_World(GA_World):
         gui_set('Gens:', visible=False)
         gui_set('generations', visible=False)
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
-        super().setup()
+        SimEngine.draw_world()
+        if not SimEngine.auto_setup:
+            self.msp_links = None
+            print(f'\nGenerating the initial population of {gui_get("pop_size")} paths.')
+            super().setup()
 
     def step(self):
         """
@@ -414,4 +418,4 @@ tsp_gui_left_upper = gui_left_upper + [
 if __name__ == "__main__":
     from core.agent import PyLogo
     PyLogo(TSP_World, 'TSP', tsp_gui_left_upper, gui_right_upper=tsp_right_upper,
-           agent_class=TSP_Agent, bounce=True, auto_setup=False)
+           agent_class=TSP_Agent, bounce=True)  # , auto_setup=False)
