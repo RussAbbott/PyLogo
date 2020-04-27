@@ -18,6 +18,8 @@ from core.world_patch_block import World
 class TSP_Agent(Agent):
     """ An agent is a point on the screen, not a GA individual. """
 
+    show_labels = False
+
     def __lt__(self, other):
         return self.id < other.id
 
@@ -30,7 +32,7 @@ class TSP_Agent(Agent):
         label is defined as a getter. No parentheses needed.
         Returns the position of the agent, i.e., the point
         """
-        return str(self.id) if gui_get('show_labels') else None
+        return str(self.id) if TSP_Agent.show_labels else None
 
 
 class TSP_Link(Link):
@@ -296,14 +298,16 @@ class TSP_World(GA_World):
             assert isinstance(new_individual, TSP_Individual)
             assert isinstance(new_individual.chromosome, TSP_Chromosome)
             generator_name = dict(getmembers(new_individual.generator))['__name__']
-            print(f'{i}. {generator_name} {"(no display)" if generator_name == "random_path" else ""}')
+            if gui_get('Animate construction'):
+                print(f'{i}. {generator_name} {"(no display)" if generator_name == "random_path" else ""}')
             if generator_name != 'random_path':
                 msp_links = self.minimum_spanning_tree_links() if generator_name == 'spanning_tree_path' else []
                 path_links = new_individual.chromosome.link_chromosome()
-                for lnk in path_links:
-                    lnk.set_color(Color('red'))
-                World.links = set()
-                draw_links(msp_links + path_links, World.links)
+                if gui_get('Animate construction'):
+                    for lnk in path_links:
+                        lnk.set_color(Color('red'))
+                    World.links = set()
+                    draw_links(msp_links + path_links, World.links)
             self.population.append(new_individual)
 
     def handle_event(self, event):
@@ -349,21 +353,32 @@ class TSP_World(GA_World):
         gui_set('prob_random_parent', value=20)
 
         # Don't display the following standard GA features.
-        gui_set('Discrep:', visible=False)
-        gui_set('discrepancy', visible=False)
-        gui_set('Gens:', visible=False)
-        gui_set('generations', visible=False)
+        for label in ['Discrep:', 'discrepancy', 'Gens:', 'generations']:
+            gui_set(label, visible=False)
+
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
         SimEngine.draw_world()
+        TSP_Agent.show_labels = gui_get('show_labels')
+        # auto_setup is initially True (by default). The next line aborts setup in that case.
+        # The purpose is to allow the system to create a display but not run gen_population,
+        # which is run when the user clicks setup. That works because auto_setup is set to
+        # False by SimEngine after setup run, which happens automatically. So, if auto_setup
+        # is False, we will complete setup and generate the initial population.
         if not SimEngine.auto_setup:
             self.msp_links = None
-            print(f'\nGenerating the initial population of {gui_get("pop_size")} paths.')
+            if gui_get('Animate construction'):
+                print(f'\nGenerating the initial population of {gui_get("pop_size")} paths.')
             super().setup()
 
     def step(self):
         """
         Update the world by moving the agents.
         """
+        # If the user hadn't clicked setup before clicking go,
+        # the gene_pool had not been generated. The following
+        # call to setup replaces the user clicking setup.
+        if GA_World.gene_pool is None:
+            self.setup()
         if gui_get('move points'):
             for agent in GA_World.gene_pool:
                 agent.move_by_velocity()
@@ -372,6 +387,7 @@ class TSP_World(GA_World):
             for ind in self.population:
                 ind.fitness = ind.compute_fitness()
             self.best_ind = None
+        TSP_Agent.show_labels = gui_get('show_labels')
         super().step()
 
 
