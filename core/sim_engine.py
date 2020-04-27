@@ -186,9 +186,10 @@ class SimEngine:
 
 
 def draw_links(links, world_links):
-    gui_set(gui.GOSTOP, text='stop', button_color=('white', 'red'), enabled=True)
+    gui_set(gui.GOSTOP, text='pause', button_color=('white', 'red'), enabled=True)
     gui_set(gui.GO_ONCE, enabled=False)
     gui_set(SimEngine.simple_gui.SETUP, enabled=False)
+    gui_set(SimEngine.simple_gui.EXIT, enabled=False)
     paused = False
     while gui_get('Animate construction'):
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
@@ -200,9 +201,6 @@ def draw_links(links, world_links):
                 gui_set(gui.GOSTOP, text='go', button_color=('white', 'green'))
             paused = not paused
 
-        if SimEngine.event == SimEngine.simple_gui.EXIT:
-            return SimEngine.simple_gui.EXIT
-
         if not links:
             break
         if not paused:
@@ -210,6 +208,7 @@ def draw_links(links, world_links):
             world_links.add(lnk)
             SimEngine.draw_world()
         sleep(0.60)
+    gui_set(SimEngine.simple_gui.EXIT, enabled=True)
 
 
 def gui_get(key):
