@@ -10,6 +10,8 @@ from core.gui import FPS, GOSTOP, GO_ONCE, SimpleGUI
 
 class SimEngine:
 
+    auto_setup = None
+
     event = None
     fps = 60
     values = None
@@ -32,8 +34,6 @@ class SimEngine:
         self.clock = Clock()
         SimEngine.fps = fps if fps else 60
         self.idle_fps = 10
-
-        # SimEngine.world = None
 
         SimEngine.simple_gui = SimpleGUI(gui_left_upper, caption=caption, gui_right_upper=gui_right_upper,
                                          patch_size=patch_size, board_rows_cols=board_rows_cols,
@@ -124,6 +124,7 @@ class SimEngine:
     def top_loop(self, the_world, auto_setup=False):
         SimEngine.world = the_world
         SimEngine.draw_world()
+        SimEngine.auto_setup = auto_setup
 
         # Let events come through pygame to this level.
         pg.event.set_grab(False)
@@ -141,22 +142,21 @@ class SimEngine:
             if SimEngine.event == FPS:
                 SimEngine.fps = SimEngine.gui_get(FPS)
 
-            if not auto_setup and SimEngine.event == '__TIMEOUT__':
+            if not SimEngine.auto_setup and SimEngine.event == '__TIMEOUT__':
                 continue
 
             if SimEngine.event.startswith(SimEngine.simple_gui.GRAPH):
                 SimEngine.world.mouse_click(SimEngine.values['-GRAPH-'])
 
-            elif auto_setup or SimEngine.event == SimEngine.simple_gui.SETUP:
-                auto_setup = False
-                if gui_get('Clear?') in [True, None]:
-                    SimEngine.world.reset_all()
+            elif SimEngine.auto_setup or SimEngine.event == SimEngine.simple_gui.SETUP:
                 gui_set(SimEngine.simple_gui.SETUP, enabled=False)
                 gui_set(GO_ONCE, enabled=False)
+                SimEngine.world.reset_all()
                 returned_value = SimEngine.world.setup()
                 gui_set(SimEngine.simple_gui.SETUP, enabled=True)
                 gui_set(GOSTOP, text='go', button_color=('white', 'green'), enabled=True)
                 gui_set(GO_ONCE, enabled=True)
+                SimEngine.auto_setup = False
                 if returned_value == SimEngine.simple_gui.EXIT:
                     gui.WINDOW.close()
                     break

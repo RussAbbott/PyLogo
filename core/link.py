@@ -26,21 +26,16 @@ def link_exists(agent_1, agent_2, directed=False):
 
 
 def is_reachable_via(agent_1, link_list, agent_2) -> bool:
-    # print(f'\n{agent_1} {[", ".join([str(lnk) for lnk in link_list])]} {agent_2}')
     seen = {agent_1}
     frontier = [agent_1]
     while frontier:
         agent = frontier.pop(0)
-        # print(agent, end=' => ')
         seen.add(agent)
         new_nghbrs = [lnk.other_side(agent) for lnk in link_list
                       if lnk.includes(agent) and lnk.other_side(agent) not in seen]
-        # print('[', ', '.join([str(nn) for nn in new_nghbrs]), ']')
         if agent_2 in new_nghbrs:
-            # print('Reachable')
             return True
         frontier.extend(new_nghbrs)
-    # print('Not reachable')
     return False
 
 
@@ -66,7 +61,6 @@ class Link:
         if None in {agent_1, agent_2}:
             raise Exception(f"Can't link to None: agent_1: {agent_1}, agent_2: {agent_2}.")
         (self.agent_1, self.agent_2) = (agent_1, agent_2) if directed or agent_1 < agent_2 else (agent_2, agent_1)
-        # self.agent_2: Agent = agent_2
         self.both_sides = {agent_1, agent_2}
         if len(self.both_sides) != 2:
             raise Exception(f"Can't have a link from a node to itself: {agent_1} == {agent_2}.")
