@@ -418,4 +418,4 @@ tsp_gui_left_upper = gui_left_upper + [
 if __name__ == "__main__":
     from core.agent import PyLogo
     PyLogo(TSP_World, 'TSP', tsp_gui_left_upper, gui_right_upper=tsp_right_upper,
-           agent_class=TSP_Agent, bounce=True)  # , auto_setup=False)
+           agent_class=TSP_Agent, bounce=True)
