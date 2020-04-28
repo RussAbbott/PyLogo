@@ -95,7 +95,6 @@ class SimEngine:
             elif SimEngine.world.done:
                 SimEngine.gui_set(GOSTOP, enabled=True)
                 SimEngine.gui_set(GO_ONCE, enabled=True)
-                # SimEngine.world.done = False
                 break
 
             elif SimEngine.event == '__TIMEOUT__':
@@ -162,15 +161,22 @@ class SimEngine:
                     break
 
             elif SimEngine.event == GO_ONCE:
+                SimEngine.gui_set(GOSTOP, text='stop', button_color=('white', 'red'), enabled=False)
+                SimEngine.gui_set(GO_ONCE, enabled=False)
+                SimEngine.gui_set(SimEngine.simple_gui.SETUP, enabled=False)
                 SimEngine.world.increment_ticks()
                 SimEngine.world.step()
+                SimEngine.gui_set(SimEngine.simple_gui.SETUP, enabled=True)
+                SimEngine.gui_set(GOSTOP, text='go', button_color=('white', 'green'), enabled=True)
+                SimEngine.gui_set(GO_ONCE, enabled=True)
 
             elif SimEngine.event == GOSTOP:
                 SimEngine.gui_set(GOSTOP, text='stop', button_color=('white', 'red'))
                 SimEngine.gui_set(GO_ONCE, enabled=False)
                 SimEngine.gui_set(SimEngine.simple_gui.SETUP, enabled=False)
                 returned_value = self.model_loop()
-                SimEngine.gui_set(GOSTOP, text='go', button_color=('white', 'green'))
+                SimEngine.gui_set(GOSTOP, text='go', button_color=('white', 'green'), enabled=True)
+                SimEngine.gui_set(GO_ONCE, enabled=True)
                 SimEngine.gui_set(SimEngine.simple_gui.SETUP, enabled=True)
                 SimEngine.world.final_thoughts()
                 if returned_value == SimEngine.simple_gui.EXIT:
@@ -185,30 +191,27 @@ class SimEngine:
             self.clock.tick(self.idle_fps)
 
 
-def draw_links(links, world_links):
+def draw_links(links, world_links_set):
     gui_set(gui.GOSTOP, text='pause', button_color=('white', 'red'), enabled=True)
     gui_set(gui.GO_ONCE, enabled=False)
     gui_set(SimEngine.simple_gui.SETUP, enabled=False)
     gui_set(SimEngine.simple_gui.EXIT, enabled=False)
     paused = False
-    while gui_get('Animate construction'):
+    while links:
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
-
         if SimEngine.event == gui.GOSTOP:
             if paused:
                 gui_set(gui.GOSTOP, text='stop', button_color=('white', 'red'))
             else:
                 gui_set(gui.GOSTOP, text='go', button_color=('white', 'green'))
             paused = not paused
-
-        if not links:
-            break
         if not paused:
             lnk = links.pop(0)
-            world_links.add(lnk)
+            world_links_set.add(lnk)
             SimEngine.draw_world()
         sleep(0.60)
     gui_set(SimEngine.simple_gui.EXIT, enabled=True)
+    gui_set(gui.GOSTOP, text='stop', button_color=('white', 'red'), enabled=True)
 
 
 def gui_get(key):
