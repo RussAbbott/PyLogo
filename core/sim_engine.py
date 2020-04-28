@@ -200,11 +200,12 @@ def draw_links(links, world_links_set):
     while links:
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
         if SimEngine.event == gui.GOSTOP:
-            if paused:
-                gui_set(gui.GOSTOP, text='stop', button_color=('white', 'red'))
-            else:
-                gui_set(gui.GOSTOP, text='go', button_color=('white', 'green'))
+            gui_set(gui.GOSTOP,
+                    text='pause' if paused else 'continue',
+                    button_color=('white', 'red' if paused else 'green')
+                    )
             paused = not paused
+            SimEngine.draw_world()
         if not paused:
             lnk = links.pop(0)
             world_links_set.add(lnk)
