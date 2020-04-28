@@ -346,19 +346,22 @@ class TSP_World(GA_World):
         Agent.id = 1
         GA_World.individual_class = TSP_Individual
         GA_World.chromosome_class = TSP_Chromosome.factory
+
         # The following GUI elements are defined in ga.py.
         # We can't set their default values in this file's GUI.
+        # The only way to do it is explicitly.
         gui_set('Max generations', value=float('inf'))
-        # gui_set('pop_size', value=20)
         gui_set('prob_random_parent', value=20)
 
         # Don't display the following standard GA features.
         for label in ['Discrep:', 'discrepancy', 'Gens:', 'generations']:
             gui_set(label, visible=False)
 
+        TSP_Agent.show_labels = gui_get('show_labels')
+
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
         SimEngine.draw_world()
-        TSP_Agent.show_labels = gui_get('show_labels')
+
         # auto_setup is initially True (by default). The next line aborts setup in that case.
         # The purpose is to allow the system to create a display but not run gen_population,
         # which is run when the user clicks setup. That works because auto_setup is set to
@@ -374,8 +377,8 @@ class TSP_World(GA_World):
         """
         Update the world by moving the agents.
         """
-        # If the user hadn't clicked setup before clicking go,
-        # the gene_pool had not been generated. The following
+        # If the user hadn't clicked setup before clicking go, the
+        # gene_pool will not have been generated. The following
         # call to setup replaces the user clicking setup.
         if GA_World.gene_pool is None:
             self.setup()
