@@ -54,6 +54,19 @@ def minimum_spanning_tree(agent_list):
     return link_list
 
 
+def seq_to_links(agents):
+    """
+    Agents is a sequence (list or tuple) of Agents.
+    Returns the links that join them, include one from the end to the start.
+    """
+    links = []
+    if len(agents) > 1:
+        for i in range(len(agents)):
+            lnk = Link(agents[i], agents[(i + 1) % len(agents)])
+            links.append(lnk)
+    return links
+
+
 class Link:
 
     def __init__(self, agent_1: Agent, agent_2: Agent, directed: bool = False, add_to_world_links: bool = True,
