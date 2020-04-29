@@ -133,8 +133,8 @@ def draw(agent, shape_name):
         print(f"Don't know how to draw a {shape_name}.")
 
 
-def draw_label(label, text_center, obj_center, line_color):
-    text = gui.FONT.render(label, True, Color('black'), Color('white'))
+def draw_label(label, text_center, obj_center, line_color, background='white'):
+    text = gui.FONT.render(label, True, Color('black'), Color(background))
     # offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
     # text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
     gui.blit(text, text_center)

@@ -238,4 +238,6 @@ def gui_set(key, **kwargs):
         kwargs['disabled'] = not bool(value)
         kwargs.pop('enabled')
     widget = gui.WINDOW[key]
+    if widget is None:
+        print(f'No widget with key {key}')
     widget.update(**kwargs)

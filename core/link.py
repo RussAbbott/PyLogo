@@ -54,19 +54,6 @@ def minimum_spanning_tree(agent_list):
     return link_list
 
 
-def seq_to_links(agents):
-    """
-    Agents is a sequence (list or tuple) of Agents.
-    Returns the links that join them, include one from the end to the start.
-    """
-    links = []
-    if len(agents) > 1:
-        for i in range(len(agents)):
-            lnk = Link(agents[i], agents[(i + 1) % len(agents)])
-            links.append(lnk)
-    return links
-
-
 class Link:
 
     def __init__(self, agent_1: Agent, agent_2: Agent, directed: bool = False, add_to_world_links: bool = True,
@@ -113,7 +100,7 @@ class Link:
         obj_center = XY(((3*self.agent_1.x + self.agent_2.x)/4, (3*self.agent_1.y + self.agent_2.y)/4))
         text_center = (obj_center.x + offset, obj_center.y + offset)
         line_color = self.color
-        gui.draw_label(my_label, text_center, obj_center, line_color)
+        gui.draw_label(my_label, text_center, obj_center, line_color, background='yellow')
 
     def includes(self, agent):
         return agent in (self.agent_1, self.agent_2)
@@ -144,3 +131,18 @@ class Link:
         """
         sibs = (self.agent_1.lnk_nbrs(), self.agent_2.lnk_nbrs())
         return sibs if len(sibs[0]) < len(sibs[1]) else (sibs[1], sibs[0])
+
+
+def seq_to_links(agents, link_class=Link):
+    """
+    Agents is a sequence (list or tuple) of Agents.
+    Returns the links that join them, include one from the end to the start.
+    """
+    links = []
+    if len(agents) > 1:
+        for i in range(len(agents)):
+            lnk = link_class(agents[i], agents[(i + 1) % len(agents)])
+            links.append(lnk)
+    return links
+
+
