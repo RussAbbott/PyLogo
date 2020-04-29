@@ -128,15 +128,6 @@ class TSP_Chromosome(Chromosome):
         fitness = sum(distances)
         return fitness
 
-    # @staticmethod
-    # def seq_to_links(gene_sequence):
-    #     links = []
-    #     if len(gene_sequence) > 1:
-    #         for i in range(len(gene_sequence)):
-    #             lnk = TSP_Link(gene_sequence[i], gene_sequence[(i+1) % len(gene_sequence)])
-    #             links.append(lnk)
-    #     return links
-    #
     def move_gene_in_chromosome(self, original_fitness: float) -> TSP_Chromosome:
         """
         Move a random gene to the point in the chromosome that will produce the best result.
@@ -188,10 +179,10 @@ class TSP_Chromosome(Chromosome):
 # noinspection PyTypeChecker
 class TSP_Individual(Individual):
 
-    def __init__(self, *args, generator=None, original_order=None, **kwargs):
+    def __init__(self, *args, generator=None, original_sequence=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.generator = generator
-        self.original_order = original_order
+        self.original_sequence = original_sequence
 
     def __str__(self):
         return f'{round(self.fitness, 1)}: ({", ".join([str(gene) for gene in self.chromosome])})'
@@ -285,7 +276,7 @@ class TSP_World(GA_World):
         gen_path_method = choice(path_methods)
         chromosome_list: List = gen_path_method()
         chromo = GA_World.chromosome_class(chromosome_list)
-        individual = GA_World.individual_class(chromo, generator=gen_path_method, original_order=chromosome_list)
+        individual = GA_World.individual_class(chromo, generator=gen_path_method, original_sequence=chromosome_list)
         return individual
 
     def gen_initial_population(self):
@@ -304,10 +295,10 @@ class TSP_World(GA_World):
                 print(f'{i}. {generator_name} {"(no display)" if generator_name == "random_path" else ""}')
             if generator_name != 'random_path':
                 msp_links = self.minimum_spanning_tree_links() if generator_name == 'spanning_tree_path' else []
-                path_links = seq_to_links(new_individual.original_order)
+                path_links = seq_to_links(new_individual.original_sequence, TSP_Link)
                 if gui_get('Animate construction'):
                     for lnk in path_links:
-                        lnk.set_color(Color('red'))
+                        lnk.set_color(Color('yellow' if lnk in msp_links else 'red'))
                     World.links = set()
                     draw_links(msp_links + path_links, World.links)
             self.population.append(new_individual)
@@ -339,7 +330,7 @@ class TSP_World(GA_World):
     def set_results(self):
         super().set_results()
         best_chromosome: TSP_Chromosome = self.best_ind.chromosome
-        World.links = set(seq_to_links(best_chromosome))
+        World.links = set(seq_to_links(best_chromosome, TSP_Link))
 
         # Never stop
         self.done = False
