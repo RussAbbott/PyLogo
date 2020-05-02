@@ -337,7 +337,7 @@ class GA_World(World):
 import PySimpleGUI as sg
 gui_left_upper = [
 
-                   [sg.Text('Best:', pad=(None, (0, 0))),
+                   [sg.Text('Best:', key='best_fitness_text', pad=(None, (0, 0))),
                     sg.Text('000000.0', key='best_fitness', pad=(None, (0, 0))),
 
                     sg.Text('Discrep:', key='Discrep:', pad=((5, 0), (0, 0))),
@@ -347,27 +347,27 @@ gui_left_upper = [
                     sg.Text('00000', key='generations', pad=(None, (0, 0))),
                     ],
 
-                   [sg.Text('Population size\n(must be even)', pad=((0, 5), (20, 0))),
+                   [sg.Text('Population size\n(must be even)', key='pop_size_text', pad=((0, 5), (20, 0))),
                     sg.Slider(key='pop_size', range=(5, 500), resolution=5, default_value=10,
                               orientation='horizontal', size=(10, 20), enable_events=True)
                     ],
 
-                   [sg.Text('Tournament size', pad=((0, 5), (10, 0))),
+                   [sg.Text('Tournament size', key='tourn_size_text', pad=((0, 5), (10, 0))),
                     sg.Slider(key='tourn_size', range=(3, 15), resolution=1, default_value=7,
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   [sg.Text('Max generations:', pad=(None, (10, 0))),
+                   [sg.Text('Max generations:', key='Max generations text', pad=(None, (10, 0))),
                     sg.Combo(key='Max generations', values=[10, 50, 100, 250, 500, float('inf')], default_value=100,
                              pad=(None, (10, 0)))
                     ],
 
-                   [sg.Text('Prob no mating', pad=((0, 5), (10, 0))),
+                   [sg.Text('Prob no mating', key='no_mating_text', pad=((0, 5), (10, 0))),
                     sg.Slider(key='no_mating', range=(1, 100), resolution=1, default_value=10,
                               orientation='horizontal', size=(10, 20))
                     ],
 
-                   [sg.Text('Prob random parent', pad=((0, 5), (10, 0))),
+                   [sg.Text('Prob random parent', key='prob_random_parent_text', pad=((0, 5), (10, 0))),
                     sg.Slider(key='prob_random_parent', range=(0, 100), default_value=5,
                               orientation='horizontal', size=(10, 20))
                     ],

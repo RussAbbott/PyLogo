@@ -60,8 +60,7 @@ class Block:
         line_color = None if offset == 0 else \
                      Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
         obj_center = self.rect.center
-        label = self.label
-        gui.draw_label(label, text_center, obj_center, line_color)
+        gui.draw_label(self.label, text_center, obj_center, line_color)
 
     @property
     def label(self):

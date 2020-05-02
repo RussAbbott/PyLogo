@@ -191,32 +191,39 @@ class SimEngine:
             self.clock.tick(self.idle_fps)
 
 
-def draw_links(links, world_links_set):
-    gui_set(gui.GOSTOP, text='pause', button_color=('white', 'red'), enabled=True)
-    gui_set(gui.GO_ONCE, enabled=False)
-    gui_set(SimEngine.simple_gui.SETUP, enabled=False)
-    gui_set(SimEngine.simple_gui.EXIT, enabled=False)
-    paused = False
-    while links:
-        (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
-        if SimEngine.event == gui.GOSTOP:
-            gui_set(gui.GOSTOP,
-                    text='pause' if paused else 'continue',
-                    button_color=('white', 'red' if paused else 'green')
-                    )
-            paused = not paused
-            SimEngine.draw_world()
-        if not paused:
-            lnk = links.pop(0)
-            if lnk in world_links_set:
-                world_links_set.remove(lnk)
-            world_links_set.add(lnk)
-            SimEngine.draw_world()
-        sleep(0.60)
-    gui_set(SimEngine.simple_gui.EXIT, enabled=True)
-    gui_set(gui.GOSTOP, text='stop', button_color=('white', 'red'), enabled=True)
-
-
+# def draw_links(links, world_links_set, sleep_time=0.6):
+#     cached_world_links_set = world_links_set
+#
+#     world_links_set = set()
+#     gui_set(gui.GOSTOP, text='pause', button_color=('white', 'red'), enabled=True)
+#     gui_set(gui.GO_ONCE, enabled=False)
+#     gui_set(SimEngine.simple_gui.SETUP, enabled=False)
+#     gui_set(SimEngine.simple_gui.EXIT, enabled=False)
+#     paused = False
+#     while links:
+#
+#         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
+#         if SimEngine.event == gui.GOSTOP:
+#             gui_set(gui.GOSTOP,
+#                     text='pause' if paused else 'continue',
+#                     button_color=('white', 'red' if paused else 'green')
+#                     )
+#             paused = not paused
+#             SimEngine.draw_world()
+#         if not paused:
+#             lnk = links.pop(0)
+#             if lnk in world_links_set:
+#                 world_links_set.remove(lnk)
+#             world_links_set.add(lnk)
+#             print(f'Drawing {lnk} (width, color): {(lnk.width, lnk.color)}')
+#             SimEngine.draw_world()
+#         if sleep_time:
+#             sleep(sleep_time)
+#     gui_set(SimEngine.simple_gui.EXIT, enabled=True)
+#     gui_set(gui.GOSTOP, text='stop', button_color=('white', 'red'), enabled=True)
+#     print()
+#
+#
 def gui_get(key):
     """
     Widgets typically have a 'disabled' property. The following makes
