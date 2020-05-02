@@ -1,16 +1,17 @@
 
 from copy import copy
-from random import random, uniform
+from random import choices, random, uniform
 from typing import List
 
 from pygame import Color
 
 from core.agent import Agent
 from core.ga import GA_World
-from core.link import Link
+from core.link import Link, hash_object
 from core.pairs import Velocity
 from core.sim_engine import gui_get
 from core.world_patch_block import World
+
 from ga_and_aco_examples.ga_tsp import order_elements
 
 

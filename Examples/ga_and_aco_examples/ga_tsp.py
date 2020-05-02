@@ -9,10 +9,24 @@ from pygame import Color
 import core.gui as gui
 from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
-from core.link import Link, minimum_spanning_tree, seq_to_links
+from core.link import draw_links, Link, minimum_spanning_tree, seq_to_links
 from core.pairs import Velocity
-from core.sim_engine import draw_links, gui_get, gui_set, SimEngine
+from core.sim_engine import gui_get, gui_set, SimEngine
 from core.world_patch_block import World
+
+
+def order_elements(elt_list):
+    """
+    Rotate and possibly reverse the elt_list so that city A comes first
+    and the city that follows city A is less than the city that precedes it.
+    """
+    first_index = min(range(len(elt_list)), key=lambda i: elt_list[i])
+    # In the second case, must leave the end index as None. If set to -1, it will
+    # be taken as len(chromo)-1. The slice will produce the empty list.
+    revised = elt_list[first_index:] + elt_list[:first_index] \
+        if elt_list[(first_index + 1) % len(elt_list)] < elt_list[(first_index - 1)] else \
+        elt_list[first_index::-1] + elt_list[len(elt_list) - 1:first_index:-1]
+    return revised
 
 
 class TSP_Agent(Agent):
@@ -54,17 +68,13 @@ class TSP_Chromosome(Chromosome):
     """
     @staticmethod
     def factory(chromo):
-        first_index = min(range(len(chromo)), key=lambda i: chromo[i])
-        # In the second case, must leave the end index as None. If set to -1, it will
-        # be taken as len(chromo)-1. The slice will produce the empty list.
-        revised = chromo[first_index:] + chromo[:first_index] \
-                      if chromo[(first_index+1) % len(chromo)] < chromo[(first_index-1)] else \
-                  chromo[first_index::-1] + chromo[len(chromo)-1:first_index:-1]
-        new_chromo = TSP_Chromosome(revised)
+        ordered_chromo = order_elements(chromo)
+        new_chromo = TSP_Chromosome(ordered_chromo)
         return new_chromo
 
     def __str__(self):
         return TSP_Chromosome.chromo_str(self)
+
 
     # Functions to generate initial TSP paths
 
@@ -75,9 +85,8 @@ class TSP_Chromosome(Chromosome):
         and extends that path to the nearest neighboring point until all the points
         are included.
 
-        Currently written to call random_path. You should replace that with an actual greedy algorithm.
+        Currently written to call random_path. You should replace that with a greedy algorithm.
         """
-
         return TSP_Chromosome.random_path()
 
     @staticmethod
@@ -100,9 +109,12 @@ class TSP_Chromosome(Chromosome):
         Generates a path derived from a minimum spanning tree of the Genes.
         Constructs a minimum spanning tree. Then does a DFS of the tree, adding
         elements in the order encountered as long as they were not added earlier.
+
+        Currently written to call random_path. You should replace that with a spanning_tree algorithm.
         """
         return TSP_Chromosome.random_path()
 
+    # End functions to generate initial TSP paths
 
 
     def add_gene_to_chromosome(self, orig_fitness: float, gene):
@@ -299,8 +311,9 @@ class TSP_World(GA_World):
                 if gui_get('Animate construction'):
                     for lnk in path_links:
                         lnk.set_color(Color('yellow' if lnk in msp_links else 'red'))
-                    World.links = set()
-                    draw_links(msp_links + path_links, World.links)
+                    # World.links = set()
+                    # draw_links(msp_links + path_links, World.links)
+                    draw_links(msp_links + path_links)
             self.population.append(new_individual)
 
     def handle_event(self, event):
