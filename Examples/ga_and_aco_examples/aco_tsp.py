@@ -232,7 +232,7 @@ class ACO_World(GA_World):
         """
         Update the links in this tour based on how good the tour is.
 
-        The following is an outline of what I did. You don't have to follow thay approach.
+        The following is an outline of what I did. You don't have to follow this approach.
         """
 
         # noinspection PyUnusedLocal
