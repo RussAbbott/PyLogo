@@ -190,8 +190,8 @@ class ACO_World(GA_World):
         start_city = link_0.agent_1 if link_1.includes(link_0.agent_1) else link_0.agent_2
         city_sequence = [start_city]
         for lnk in best_tour_links[1:]:
-            next_link = lnk.other_side(city_sequence[-1])
-            city_sequence.append(next_link)
+            next_city = lnk.other_side(city_sequence[-1])
+            city_sequence.append(next_city)
         best_tour_cities = order_elements(city_sequence)
         # Is this tour better than the one on the previous step?
         if ACO_World.best_tour_cities != best_tour_cities:
