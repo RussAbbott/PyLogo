@@ -1,5 +1,6 @@
 
 from copy import copy
+# noinspection PyUnresolvedReferences
 from random import choices, random, uniform
 from typing import List
 
@@ -7,6 +8,7 @@ from pygame import Color
 
 from core.agent import Agent
 from core.ga import GA_World
+# noinspection PyUnresolvedReferences
 from core.link import Link, hash_object
 from core.pairs import Velocity
 from core.sim_engine import gui_get
@@ -36,13 +38,13 @@ class ACO_Agent(Agent):
 class ACO_Link(Link):
 
     # The following are all very similar colors. Take your pick. Or select another one.
-    best_link_color = (100, 150, 255)
+    # best_link_color = (100, 150, 255)
     # best_link_color = Color('steelblue1')      # (99, 184, 255, 255)
     # best_link_color = Color('steelblue2')      # (92, 172, 238, 255)
     # best_link_color = Color('skyblue')         # (135, 206, 235, 255)
     # best_link_color = Color('skyblue1')        # (135, 206, 255, 255)
     # best_link_color = Color('skyblue2')        # (126, 192, 238, 255)
-    # best_link_color = Color('skyblue3')        # (108, 166, 205, 255)
+    best_link_color = Color('skyblue3')        # (108, 166, 205, 255)
     # best_link_color = Color('cornflowerblue')  # (100, 149, 237, 255)
     # best_link_color = Color('deepskyblue2')    # (0, 178, 238, 255)
     # best_link_color = Color('lightskyblue2')   # (164, 211, 238, 255)
@@ -50,18 +52,10 @@ class ACO_Link(Link):
     # best_link_color = Color('cadetblue2')      # (142, 229, 238, 255)
     # best_link_color = Color('cadetblue3')      # (122, 197, 205, 255)
 
-    def __init__(self, *args, from_city=None, to_city=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_best = False
         self.pheromone_level = 50
-
-        # The Link is not directed. But we want to keep track
-        # of which cities it is being used to link together.
-        self.from_city = from_city
-        self.to_city = to_city
-
-    def __str__(self):
-        return f'{self.from_city}-->{self.to_city}'
 
     def draw(self):
         if self.is_best:
@@ -78,7 +72,7 @@ class ACO_Link(Link):
             red = min(255, max(0, round(150*(range - (phero_level-min_pheromone))/range)))
             green = min(100, max(0, round(255*(phero_level-min_pheromone)/range)))
 
-            # This is a valid call to Color
+            # This is a valid call to Color. PyCharm doesn't like it.
             # noinspection PyArgumentList
             color = Color(red, green, 0, 0)
             self.set_color(color)
@@ -102,6 +96,7 @@ class ACO_World(GA_World):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.best_tour_length = None
+        self.prev_max_speed = self.max_speed = gui_get('Max_speed')
 
     @property
     def cities(self):
@@ -128,7 +123,8 @@ class ACO_World(GA_World):
 
         # To create the links, make cities indexible.
         cities = list(self.cities)
-        World.links = set(ACO_Link(cities[i], cities[j]) for i in range(len(cities)-1) for j in range(i+1, len(cities)))
+        World.links = set(ACO_Link(cities[i], cities[j]) for i in range(len(cities)-1)
+                                                         for j in range(i+1, len(cities)))
 
     # noinspection PyUnusedLocal
     def generate_a_tour(self, best=False) -> List[ACO_Link]:
@@ -142,8 +138,8 @@ class ACO_World(GA_World):
         alpha = gui_get('alpha')
         beta = gui_get('beta')
         unvisited_cities = copy(self.cities)
-        # pop remove start_city from unvisited_cities. We want to
-        # return to start_city only after all the other cities.
+        # We want to return to start_city only after all the other cities are visited.
+        # So remove start_city from unvisited_cities. (pop removes the city it pops.)
         current_city = start_city = unvisited_cities.pop()
 
         tour = []
@@ -158,21 +154,34 @@ class ACO_World(GA_World):
         final_link = ...
         tour.append(final_link)
 
-        (final_link.from_city, final_link.to_city) = (current_city, start_city)
         tour_length = round(self.total_dist(tour))
         if tour_length < self.best_tour_length:
             self.best_tour_length = tour_length
         return tour
 
+    def handle_event(self, event):
+        if event == 'Max_speed':
+            self.prev_max_speed = self.max_speed
+            self.max_speed = gui_get('Max_speed')/100
+        else:
+            super().handle_event(event)
+
     def mark_best_tour(self):
         """ Mark the links in the best tour. """
+        # Generate a number of "best" tours in case best tours starting at different start cities are different.
         best_tour_links_list = [self.generate_a_tour(best=True) for _ in range(5)]
         best_tour_links = min(best_tour_links_list, key=lambda tour: self.total_dist(tour) )
         self.best_tour_length = round(self.total_dist(best_tour_links))
 
-        city_sequence = [lnk.from_city for lnk in best_tour_links]
+        # To get the start city, find the city that appears in the first two links.
+        (link_0, link_1) = best_tour_links[:2]
+        start_city = link_0.agent_1 if link_1.includes(link_0.agent_1) else link_0.agent_2
+        city_sequence = [start_city]
+        for lnk in best_tour_links[1:]:
+            next_city = lnk.other_side(city_sequence[-1])
+            city_sequence.append(next_city)
         best_tour_cities = order_elements(city_sequence)
-        # Is this tour better than the one on the previous step?
+        # Is this tour better than the one current best_tour?
         if ACO_World.best_tour_cities != best_tour_cities:
             for lnk in World.links:
                 lnk.is_best = False
@@ -182,12 +191,26 @@ class ACO_World(GA_World):
             ACO_World.best_tour_cities = best_tour_cities
 
     def move_cities(self):
-        """ Max_speed limits city speed only when velocity is re-assigned."""
-        if gui_get('Max_speed') > 0:
+        speed_change_factor = None if self.prev_max_speed == 0 else self.max_speed / self.prev_max_speed
+
+        # self.max_speed has changed <==> speed_change_factor != 1
+        if speed_change_factor != 1:
+
             for city in self.cities:
-                city.move_by_velocity()
-                if random() < 0.001:
-                    city.set_velocity(ACO_World.random_velocity())
+                # If the prev max speed was 0 (i.e., speed_change_factor is None), generate a new velocity.
+                # Otherwise adjust the current velocity.
+                new_velocity = ACO_World.random_velocity() if speed_change_factor is None else \
+                               city.velocity * speed_change_factor
+                city.set_velocity(new_velocity)
+
+            # We've dealt with the change in self.max_speed. Set self.prev_max_speed = self.max_speed
+            self.prev_max_speed = self.max_speed
+
+        for city in self.cities:
+            # Don't generate a new random velocity if we just did that (speed_change_factor == None).
+            if speed_change_factor is not None and random() < 0.001:
+                city.set_velocity(ACO_World.random_velocity())
+            city.move_by_velocity()
 
     @staticmethod
     def normalize_pheromone_levels():
@@ -207,10 +230,13 @@ class ACO_World(GA_World):
         self.gen_cities_and_links()
         average_link_length = self.total_dist(World.links) / len(World.links)
         self.best_tour_length = round( len(self.cities) * average_link_length )
+        # call step once
+        self.step()
 
     def step(self):
 
-        self.move_cities()
+        if self.max_speed > 0:
+            self.move_cities()
 
         self.discount_pheromone_values()
 
@@ -229,12 +255,7 @@ class ACO_World(GA_World):
         return sum(lnk.length for lnk in links)
 
     def update_pheromone_levels(self, tour: List[ACO_Link]):
-        """
-        Update the links in this tour based on how good the tour is.
-
-        The following is an outline of what I did. You don't have to follow this approach.
-        """
-
+        """ Update the links in this tour based on how good the tour is. """
         # noinspection PyUnusedLocal
         tour_length = round(self.total_dist(tour))
 
@@ -263,9 +284,8 @@ path_controls = [[sg.Checkbox('Show city labels', key='show_labels', default=Tru
 
                  [sg.Checkbox('Show pheromone levels', key='show_phero_levels', default=True, pad=((0, 0), (10, 0)))],
 
-                 [sg.Text('Max speed', pad=(None, (10, 0))),
-                  sg.Slider(range=(0, 100), default_value=50, pad=(None, None), key='Max_speed', size=(10, 20),
-                            orientation='horizontal')]
+                 [sg.Text('Max speed', pad=((0, 0), (10, 0))),
+                  sg.Combo(values=[i*10 for i in range(11)], default_value=50, key='Max_speed', enable_events=True)]
                  ]
 
 aco_gui_left_upper = [
@@ -297,7 +317,7 @@ aco_gui_left_upper = [
                                  size=(10, 20))],
 
                       [sg.Text('Min pheromone level', pad=((0, 5), (10, 0))),
-                       sg.Slider(key='Min_pheromone', range=(0, 75), default_value=30, orientation='horizontal',
+                       sg.Slider(key='Min_pheromone', range=(0, 85), default_value=70, orientation='horizontal',
                                  size=(10, 20))],
 
                       [sg.Text('Min display level', pad=((0, 5), (10, 0))),
