@@ -185,6 +185,9 @@ class Agent(Block):
         self.set_velocity(velocity)
         self.move_by_velocity()
 
+    def get_speed(self):
+        return max(abs(self.velocity[0]), abs(self.velocity[1]))
+
     def heading_toward(self, target):
         """ The heading required to face the target """
         from_pixel = self.center_pixel
@@ -269,6 +272,11 @@ class Agent(Block):
     def set_target_by_dxdy(self, velocity):
         self.animation_target = self.center_pixel + velocity
 
+    def set_velocity(self, velocity: Velocity):
+        self.velocity = velocity
+        # noinspection PyTypeChecker
+        self.face_xy(self.center_pixel + velocity)
+
     # noinspection PyTypeChecker
     def take_animation_step(self):
         if not self.animation_target:
@@ -288,10 +296,6 @@ class Agent(Block):
 
     def turn_right(self, delta_angles):
         self.set_heading(utils.normalize_360(self.heading + delta_angles))
-
-    def set_velocity(self, velocity):
-        self.velocity = velocity
-        self.face_xy(self.center_pixel + velocity)
 
     def undirected_links(self):
         return [lnk for lnk in self.all_links() if not lnk.directed]
