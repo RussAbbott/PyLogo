@@ -22,6 +22,7 @@ class Braess_Link(Link):
 
     def __init__(self, node_1: Braess_Node, node_2: Braess_Node, **kwargs):
         # The link must be directed because we depend on the order of the nodes.
+        # Typically node_1 is fixed and node_2 moves.
         super().__init__(node_1, node_2, directed=True, **kwargs)
 
         # This is the resting length. All springs have this as their default length.
