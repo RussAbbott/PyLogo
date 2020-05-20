@@ -10,7 +10,7 @@ from core.graph_framework import Graph_Node
 from core.gui import CIRCLE, NODE, SCREEN_PIXEL_WIDTH
 from core.link import Link
 from core.pairs import Pixel_xy, Velocity
-from core.sim_engine import GOSTOP, GO_ONCE, gui_get, gui_set, SimEngine
+from core.sim_engine import GOSTOP, GO_ONCE, SimEngine, gui_get, gui_set
 from core.world_patch_block import World
 
 
@@ -21,7 +21,8 @@ class Braess_Link(Link):
     """
 
     def __init__(self, node_1: Braess_Node, node_2: Braess_Node, **kwargs):
-        super().__init__(node_1, node_2, **kwargs)
+        # The link must be directed because we depend on the order of the nodes.
+        super().__init__(node_1, node_2, directed=True, **kwargs)
 
         # This is the resting length. All springs have this as their default length.
         self.resting_length = Braess_World.dist_unit
