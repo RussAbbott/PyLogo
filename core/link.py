@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from random import sample
 from time import sleep
 
 from pygame.color import Color
@@ -18,7 +19,7 @@ class Link:
                  color: Color = Color('white'), width: int = 1):
         if None in {agent_1, agent_2}:
             raise Exception(f"Can't link to None: agent_1: {agent_1}, agent_2: {agent_2}.")
-        (self.agent_1, self.agent_2) = (agent_1, agent_2) if directed or agent_1 < agent_2 else (agent_2, agent_1)
+        (self.agent_1, self.agent_2) = (agent_1, agent_2) if directed else sample((agent_1, agent_2), 2)
         self.both_sides = {agent_1, agent_2}
         if len(self.both_sides) != 2:
             raise Exception(f"Can't have a link from a node to itself: {agent_1} == {agent_2}.")
