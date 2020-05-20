@@ -41,7 +41,7 @@ class CA_World(OnOffWorld):
         self.rule_nbr = 110
         # Set the switches and the binary representation of self.rule_nbr.
         self.set_switches_from_rule_nbr()
-        self.set_binary_nbr_from_rule_nbr()
+        self.set_slider_and_binary_nbr_from_rule_nbr()
 
         # self.ca_lines is a list of lines, each of which is a list or string of 0/1. Each line
         # representsa state of the CA, i.e., all the symbols in the line. self.ca_list contains
@@ -182,9 +182,6 @@ class CA_World(OnOffWorld):
         This is called when a GUI widget is changed and the change isn't handled by the system.
         The key of the widget that changed is in event.
         """
-        # Handle color change requests.
-        super().handle_event(event)
-
         # Handle rule nbr change events, either switches or rule_nbr slider
         if event in ['Rule_nbr'] + CA_World.bin_0_to_7:
             self.make_switches_and_rule_nbr_consistent()
@@ -195,19 +192,27 @@ class CA_World(OnOffWorld):
             disabled = gui_get('Random?')
             gui_set('init_line', visible=not disabled, value='1')
 
+        # Handle color change (and any other) requests.
+        else:
+            super().handle_event(event)
+
     def make_switches_and_rule_nbr_consistent(self):
         """
         Make the Slider, the switches, and the bin number consistent: all should contain self.rule_nbr.
         """
         new_switches_nbr = self.get_rule_nbr_from_switches()
+
+        # The switches changed
         if self.rule_nbr != new_switches_nbr:
             self.rule_nbr = new_switches_nbr
+
+        # The slider changed
         else:
             self.rule_nbr = gui_get('Rule_nbr')
             self.set_switches_from_rule_nbr()
-        self.set_binary_nbr_from_rule_nbr()
+        self.set_slider_and_binary_nbr_from_rule_nbr()
 
-    def set_binary_nbr_from_rule_nbr(self):
+    def set_slider_and_binary_nbr_from_rule_nbr(self):
         """
         Translate self.rule_nbr into a binary string and put it into the
         gui.WINDOW['bin_string'] widget. For example, if self.rule_nbr is 110,
@@ -216,8 +221,8 @@ class CA_World(OnOffWorld):
 
         Use gui_set('bin_string', value=new_value) to update the value of the widget.
         """
-        binary_rule_nbr = bin_str(self.rule_nbr, 8)
         gui_set('Rule_nbr', value=self.rule_nbr)
+        binary_rule_nbr = bin_str(self.rule_nbr, 8)
         new_bin_value = binary_rule_nbr + ' (binary)'
         gui_set('bin_string', value=new_bin_value)
 
