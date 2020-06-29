@@ -153,16 +153,11 @@ class SegregationWorld(World):
         self.empty_patches = set()
         self.max_agents_per_step = gui_get('max_agents_per_step')
         for patch in self.patches:
-            # patch.patch_color = self.patch_color
-            # patch.set_color(self.patch_color)
-            # Calling neighbors_8 stores it as a cached value.
-            # So this computes neighbors_8 for all the patches.
             patch.neighbors_8()
 
-            # Create the Agents. The density is approximate.
+            # Create an Agent for this Patch. The density is approximate.
             if randint(0, 100) <= density:
                 agent = SegregationAgent(color=choice([color_a, color_b]))
-                # agent.pct_similar_wanted = pct_similar_wanted
                 agent.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
