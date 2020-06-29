@@ -16,7 +16,6 @@ class SegregationAgent(Agent):
         super().__init__(color=color)
         self.is_happy = None
         self.pct_similar = None
-        # self.pct_similar_wanted = None
 
     def find_new_spot(self, empty_patches):
         """
@@ -71,13 +70,26 @@ class SegregationAgent(Agent):
         self.is_happy = self.pct_similar >= SegregationAgent.pct_similar_wanted
 
 
+class SegregationPatch(Patch):
+
+    def draw(self, shape_name=None):
+        if self.agents:
+            # self.agents is a set. This is the only way to access its member: pop it and add it back.
+            agent = self.agents.pop()
+            self.agents.add(agent)
+            self.set_color(agent.color)
+        else:
+            self.set_color(self.base_color)
+        super().draw(shape_name)
+
+
 class SegregationWorld(World):
     """
       percent-similar: on the average, what percent of a agent's neighbors are the same color as that agent?
       percent-unhappy: what percent of the agents are unhappy?
     """
     def __init__(self, patch_class=Patch, agent_class=SegregationAgent):
-        super().__init__(patch_class=patch_class, agent_class=agent_class)
+        super().__init__(patch_class=patch_class, agent_class=agent_class, patch_color=Color('white'))
 
         self.empty_patches = None
         self.percent_similar = None
@@ -85,21 +97,18 @@ class SegregationWorld(World):
         self.unhappy_agents = None
         # This is an experimental number.
         self.max_agents_per_step = None
-        self.patch_color = Color('white')
         self.color_items = None
 
     def colors_string(self):
         return f'{self.parse_color(self.color_items[0])} and {self.parse_color(self.color_items[1])}.'
 
     def draw(self):
-        for patch in self.patches:
-            if not patch.agents:
-                patch.draw()
-        for agent in World.agents:
-            current_patch = agent.current_patch()
-            current_patch.set_color(agent.color)
-            current_patch.draw()
-            current_patch.set_color(self.patch_color)
+        """
+        Draw the world by drawing just the patches.
+        Should check to see which really need to be re-drawn.
+        """
+        for patch in World.patches:
+            patch.draw()
 
     def final_thoughts(self):
         print(f'\n\t Again, the colors: {self.colors_string()}')
@@ -144,8 +153,11 @@ class SegregationWorld(World):
         self.empty_patches = set()
         self.max_agents_per_step = gui_get('max_agents_per_step')
         for patch in self.patches:
-            patch.set_color(self.patch_color)
-            patch.neighbors_8()  # Calling neighbors_8 stores it as a cached value
+            # patch.patch_color = self.patch_color
+            # patch.set_color(self.patch_color)
+            # Calling neighbors_8 stores it as a cached value.
+            # So this computes neighbors_8 for all the patches.
+            patch.neighbors_8()
 
             # Create the Agents. The density is approximate.
             if randint(0, 100) <= density:
@@ -185,18 +197,18 @@ class SegregationWorld(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
+print(sg)
+print(f'sg.version: {sg.version}')
+tooltip_1 = 'The percentage of similar people among the occupied 8 neighbors required to make someone happy.'
+
 gui_left_upper = [[sg.Text('density'),
                    sg.Slider(key='density', range=(50, 95), resolution=5, size=(10, 20),
                              default_value=90, orientation='horizontal', pad=((0, 0), (0, 20)),
                              tooltip='The ratio of households to housing units')],
 
-                  [sg.Text('% similar wanted',
-                           tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
-                                   'to make someone happy.'),
-                  sg.Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-                           default_value=100,
-                           tooltip='The percentage of similar people among the occupied 8 neighbors required ' 
-                                   'to make someone happy.')],
+                  [sg.Text('% similar wanted', tooltip=tooltip_1),
+                   sg.Combo(key='% similar wanted', values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                            default_value=100, tooltip=tooltip_1)],
 
                   [sg.Text('Max agents per step'),
                    sg.Slider(key='max_agents_per_step', range=(10, 2000), resolution=10, size=(10, 20),
@@ -206,4 +218,4 @@ gui_left_upper = [[sg.Text('density'),
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(SegregationWorld, "Schelling's segregation model", gui_left_upper)
+    PyLogo(SegregationWorld, "Schelling's segregation model", gui_left_upper, patch_class=SegregationPatch)
