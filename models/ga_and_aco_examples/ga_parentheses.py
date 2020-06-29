@@ -5,7 +5,7 @@ from itertools import count
 from random import randint, sample
 from typing import List, Sequence, Tuple
 
-from Examples.ga_examples.ga_segregation import Gene, Segregation_Chromosome
+from models.ga_and_aco_examples.ga_segregation import Gene, Segregation_Chromosome
 from core.ga import GA_World, Individual, gui_left_upper
 from core.sim_engine import gui_get, gui_set
 
