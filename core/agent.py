@@ -5,6 +5,7 @@ from statistics import mean
 
 import pygame as pg
 import pygame.transform as pgt
+from colour import COLOR_NAME_TO_RGB
 from pygame import Surface
 from pygame.color import Color
 from pygame.colordict import THECOLORS
@@ -30,11 +31,12 @@ def is_acceptable_color(rgb):
 
 # These are colors defined by pygame that satisfy is_acceptable_color() above.
 PYGAME_COLORS = [(name, rgba[:3]) for (name, rgba) in THECOLORS.items() if is_acceptable_color(rgba[:3])]
+PYGAME_COLORS_1 = [(name, rgba[:3]) for (name, rgba) in COLOR_NAME_TO_RGB.items() if is_acceptable_color(rgba[:3])]
 
 # These are NetLogo primary colors -- more or less.
 NETLOGO_PRIMARY_COLORS = [(color_name, Color(color_name))
                           for color_name in ['gray', 'red', 'orange', 'brown', 'yellow', 'green', 'limegreen',
-                                             'turquoise', 'cyan', 'skyblue3', 'blue', 'violet', 'magenta', 'pink']]
+                                             'turquoise', 'cyan', 'skyblue', 'blue', 'violet', 'magenta', 'pink']]
 
 SQRT_2 = sqrt(2)
 
@@ -336,4 +338,5 @@ def PyLogo(world_class=World, caption=None, gui_left_upper=None, gui_right_upper
     the_world = world_class(patch_class, agent_class)
 
     gui.WINDOW.read(timeout=10)
+
     sim_engine.top_loop(the_world, auto_setup=auto_setup)

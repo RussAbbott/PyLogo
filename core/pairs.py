@@ -44,6 +44,7 @@ class XY(tuple):
         new_y = copysign(min(magnitude_max, abs(self.y)), self.y)
         return self.restore_type((new_x, new_y))
 
+    # noinspection PyArgumentList
     def restore_type(self, tuple):
         cls = type(self)
         return cls(tuple)

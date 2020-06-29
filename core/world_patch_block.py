@@ -76,8 +76,8 @@ class Block:
 
 
 class Patch(Block):
-    def __init__(self, row_col: RowCol, color=Color('black')):
-        super().__init__(row_col.patch_to_center_pixel(), color)
+    def __init__(self, row_col: RowCol, patch_color=Color('black')):
+        super().__init__(row_col.patch_to_center_pixel(), color=patch_color)
         self.row_col = row_col
         self.agents = None
         self._neighbors_4 = None
@@ -155,13 +155,13 @@ class World:
 
     world = None
 
-    def __init__(self, patch_class, agent_class):
+    def __init__(self, patch_class, agent_class, patch_color=Color('black')):
 
         World.ticks = 0
         World.world = self
 
         self.patch_class = patch_class
-        self.create_patches_array()
+        self.create_patches_array(patch_color=patch_color)
 
         self.agent_class = agent_class
         self.done = False
@@ -191,8 +191,8 @@ class World:
                 agent.forward(radius)
         return agent_list
 
-    def create_patches_array(self):
-        patch_pseudo_array = [[self.patch_class(RowCol((r, c))) for c in range(gui.PATCH_COLS)]
+    def create_patches_array(self, patch_color):
+        patch_pseudo_array = [[self.patch_class(RowCol((r, c)), patch_color=patch_color) for c in range(gui.PATCH_COLS)]
                               for r in range(gui.PATCH_ROWS)]
         World.patches_array = np.array(patch_pseudo_array)
         # .flat is an iterator. Can't use it more than once.

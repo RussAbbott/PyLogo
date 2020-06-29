@@ -35,7 +35,7 @@ GO = 'go'
 GO_ONCE = 'go once'
 GOSTOP = 'GoStop'
 
-# Since it's used as a default value, can't be a list. A tuple works just as well.
+# Since these shapes are used as default values, they can't be lists. Tuples work just as well.
 SHAPES = {NETLOGO_FIGURE: ((1, 1), (0.5, 0), (0, 1), (0.5, 3/4)),
           SQUARE: ((1, 1), (1, 0), (0, 0), (0, 1)),
           STAR: ((1, 1), (0, 0), (0.5, 0.5), (0, 1), (1, 0), (0.5, 0.5), (0, 0.5), (1, 0.5), (0.5, 0.5),
@@ -88,26 +88,6 @@ def SCREEN_PIXEL_HEIGHT():
 FPS_VALUES = values = [1, 3, 6, 10, 15, 25, 40, 60]
 
 
-# def gui_set(key, **kwargs):
-#     """
-#     Widgets typically have a 'disabled' property. The following makes
-#     it possible to use 'enabled' as the negation of 'disabled'.
-#     """
-#     if 'enabled' in kwargs:
-#         value = kwargs.get('enabled')
-#         kwargs['disabled'] = not bool(value)
-#         kwargs.pop('enabled')
-#     widget = WINDOW[key]
-#     widget.update(**kwargs)
-#
-
-# def set_fps(val):
-#     # Select the value in FPS_VALUES closest to val.
-#     new_val = min(FPS_VALUES, key=lambda v: abs(v - val))
-#     gui_set(gui.FPS, value=new_val)
-#     return new_val
-
-
 # The WINDOW variable will be available to refer to the WINDOW object from elsewhere in the code.
 # Neither the WINDOW nor the SCREEN can be imported directly because imports occur before they are created.
 WINDOW: sg.PySimpleGUI.Window
@@ -127,7 +107,6 @@ def blit(image: Surface, rect: Union[Rect, Tuple]):
 def draw(agent, shape_name):
     if shape_name in ['circle', 'node']:
         radius = round(BLOCK_SPACING()/2)*agent.scale if shape_name == 'circle' else 3
-        # pg.draw.circle(gui.SCREEN, agent.color, agent.rect.center, int(radius), 0)
         pg.draw.circle(gui.SCREEN, agent.color, agent.center_pixel.as_int(), int(radius), 0)
     else:
         print(f"Don't know how to draw a {shape_name}.")
@@ -138,7 +117,6 @@ def draw_label(label, text_center, obj_center, line_color, background='white'):
     # offset = Block.patch_text_offset if isinstance(self, Patch) else Block.agent_text_offset
     # text_center = Pixel_xy((self.rect.x + offset, self.rect.y + offset))
     gui.blit(text, text_center)
-    # line_color = Color('white') if isinstance(self, Patch) and self.color == Color('black') else self.color
     if line_color is not None:
         gui.draw_line(start_pixel=obj_center, end_pixel=text_center, line_color=line_color)
 
