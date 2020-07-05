@@ -181,6 +181,10 @@ class Flocking_Agent(Agent):
 
 class Flocking_World(World):
 
+    def final_thoughts(self):
+        """ Print the @lru results """
+        self.print_lru_results()
+
     def setup(self):
         nbr_agents = gui_get('population')
         self.create_agents(nbr_agents)

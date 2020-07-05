@@ -1,7 +1,7 @@
 from random import randint
 
 from core.graph_framework import (CLUSTER_COEFF, Graph_Node, Graph_World, LINK_PROB, PATH_LENGTH, RANDOM, RING,
-                                  TBD, WHEEL, graph_left_upper, graph_right_upper)
+                                  WHEEL, graph_left_upper, graph_right_upper)
 from core.gui import STAR
 from core.link import Link
 from core.pairs import center_pixel
@@ -10,9 +10,9 @@ from core.sim_engine import gui_get, gui_set
 
 class Graph_Algorithms_World(Graph_World):
 
-    # noinspection PyMethodMayBeStatic
-    def average_path_length(self):
-        return TBD
+    # # noinspection PyMethodMayBeStatic
+    # def average_path_length(self):
+    #     return TBD
 
     @staticmethod
     def build_ring_star_or_wheel_graph(graph_type, ring_node_list):
@@ -45,10 +45,10 @@ class Graph_Algorithms_World(Graph_World):
         if graph_type in [RING, WHEEL]:
             Link(ring_node_list[-1], ring_node_list[0])
 
-    # noinspection PyMethodMayBeStatic
-    def clustering_coefficient(self):
-        return TBD
-
+    # # noinspection PyMethodMayBeStatic
+    # def clustering_coefficient(self):
+    #     return TBD
+    #
     def compute_metrics(self):
         cluster_coefficient = self.clustering_coefficient()
         gui_set(CLUSTER_COEFF, value=cluster_coefficient)
@@ -94,4 +94,4 @@ class Graph_Algorithms_World(Graph_World):
 if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Graph_Algorithms_World, 'Network test', gui_left_upper=graph_left_upper,
-           gui_right_upper=graph_right_upper, agent_class=Graph_Node, clear=True, bounce=True, auto_setup=True)
+           gui_right_upper=graph_right_upper, agent_class=Graph_Node, clear=True, auto_setup=True)
