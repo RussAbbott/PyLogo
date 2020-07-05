@@ -10,6 +10,7 @@ from pygame.rect import Rect
 from pygame.surface import Surface
 
 import core.gui as gui
+import core.utils as utils
 # Importing the file itself eliminates the need for a globals declaration
 # noinspection PyUnresolvedReferences
 import core.world_patch_block as world
@@ -236,13 +237,13 @@ class World:
     def final_thoughts(self):
         """ Add any final tests, data gathering, summarization, etc. here. """
         pass
-        # Uncomment this code to see how well the (@lru) caches work.
-        # print()
-        # for fn in [utils._heading_to_dxdy_int, utils._dx_int, utils._dy_int,
-        #            utils.atan2_normalized, utils._cos_int, utils._sin_int]:
-        #     if fn == utils.atan2:
-        #         print()
-        #     print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
+
+    @staticmethod
+    def print_lru_results():
+        """ Print how well the @lru caches worked. """
+        print('\n@lru results')
+        for fn in [utils.atan2_normalized, utils._cos, utils._sin, utils._dx, utils._dy]:
+            print(f'{str(fn.__wrapped__).split(" ")[1]}: {fn.cache_info()}')
 
     def handle_event(self, _event):
         pass

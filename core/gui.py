@@ -167,9 +167,10 @@ class SimpleGUI:
                      [sg.Checkbox('Clear before setup?', key='Clear?', default=clear, pad=((0, 0), (10, 0)),
                                   tooltip='Bounce back from the edges of the screen?')]
 
+        (value, visibility) = bounce if isinstance(bounce, tuple) else (bounce, True)
         bounce_checkbox_line = [] if bounce is None else \
-                               [sg.Checkbox('Bounce?', key='Bounce?', default=bounce, pad=((20, 0), (10, 0)),
-                                            tooltip='Bounce back from the edges of the screen?')]
+                               [sg.Checkbox('Bounce?', key='Bounce?', default=value, pad=((20, 0), (10, 0)),
+                                            visible=visibility, tooltip='Bounce back from the edges of the screen?')]
 
         clear_line += bounce_checkbox_line
 

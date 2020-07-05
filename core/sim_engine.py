@@ -190,14 +190,15 @@ class SimEngine:
             self.clock.tick(self.idle_fps)
 
 
-def gui_get(key):
+def gui_get(key, default=None):
     """
+    Get the values associated with the key. If None, return default.
     Widgets typically have a 'disabled' property. The following makes
     it possible to use 'enabled' as the negation of 'disabled'.
     """
     if SimEngine.values is None:
         (SimEngine.event, SimEngine.values) = gui.WINDOW.read(timeout=10)
-    value = SimEngine.values.get(key, None) if key != 'enabled' else not SimEngine.values.get('disabled', None)
+    value = SimEngine.values.get(key, default) if key != 'enabled' else not SimEngine.values.get('disabled', default)
     return int(value) if value != float('inf') and isinstance(value, float) and value == int(value) else value
 
 

@@ -11,10 +11,35 @@ from core.agent import Agent, PYGAME_COLORS
 from core.gui import (BLOCK_SPACING, CIRCLE, HOR_SEP, KNOWN_FIGURES, NETLOGO_FIGURE, SCREEN_PIXEL_HEIGHT,
                       SCREEN_PIXEL_WIDTH, STAR)
 from core.link import Link, link_exists
-from core.pairs import Pixel_xy, Velocity
+from core.pairs import ATT_COEFF, ATT_EXPONENT, force_as_dxdy, Pixel_xy, REP_COEFF, REP_EXPONENT, Velocity
+
 from core.sim_engine import gui_get, gui_set
 from core.utils import normalize_dxdy
 from core.world_patch_block import World
+
+
+# def force_as_dxdy(pixel_a: Pixel_xy, pixel_b: Pixel_xy, screen_distance_unit=8, repulsive=True):
+#     """
+#     Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
+#     """
+#     direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
+#     d = max(1, pixel_a.distance_to(pixel_b))
+#     if repulsive:
+#         dist = max(1, pixel_a.distance_to(pixel_b) / screen_distance_unit)  #, wrap=False)
+#         rep_coefficient = gui_get(REP_COEFF, 1)
+#         rep_exponent = gui_get(REP_EXPONENT, 2)
+#         force = direction * ((10**rep_coefficient)/10) * dist**rep_exponent
+#         return force
+#     else:  # attraction
+#         dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
+#         att_exponent = gui_get(ATT_EXPONENT, 2)
+#         force = direction*dist**att_exponent
+#         # If the link is too short, push away instead of attracting.
+#         if d < screen_distance_unit:
+#             force = force*(-1)
+#         att_coefficient = gui_get(ATT_COEFF, 1)
+#         final_force = force * 10**(att_coefficient-1)
+#         return final_force
 
 
 class Graph_Node(Agent):
@@ -44,8 +69,7 @@ class Graph_Node(Agent):
         repulsive_force: Velocity = Velocity((0, 0))
 
         for node in (World.agents - {self}):
-            repulsive_force += self.force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
-                                                  repulsive=True)
+            repulsive_force += force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit)
 
         # Also consider repulsive force from walls.
         repulsive_wall_force: Velocity = Velocity((0, 0))
@@ -53,17 +77,17 @@ class Graph_Node(Agent):
         horizontal_walls = [Pixel_xy((0, 0)), Pixel_xy((SCREEN_PIXEL_WIDTH(), 0))]
         x_pixel = Pixel_xy((self.center_pixel.x, 0))
         for h_wall_pixel in horizontal_walls:
-            repulsive_wall_force += self.force_as_dxdy(x_pixel, h_wall_pixel, screen_distance_unit, repulsive=True)
+            repulsive_wall_force += force_as_dxdy(x_pixel, h_wall_pixel, screen_distance_unit)
 
         vertical_walls = [Pixel_xy((0, 0)), Pixel_xy((0, SCREEN_PIXEL_HEIGHT()))]
         y_pixel = Pixel_xy((0, self.center_pixel.y))
         for v_wall_pixel in vertical_walls:
-            repulsive_wall_force += self.force_as_dxdy(y_pixel, v_wall_pixel, screen_distance_unit, repulsive=True)
+            repulsive_wall_force += force_as_dxdy(y_pixel, v_wall_pixel, screen_distance_unit)
 
         attractive_force: Velocity = Velocity((0, 0))
         for node in (World.agents - {self}):
             if link_exists(self, node):
-                attractive_force += self.force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
+                attractive_force += force_as_dxdy(self.center_pixel, node.center_pixel, screen_distance_unit,
                                                        repulsive=False)
 
         # noinspection PyTypeChecker
@@ -90,30 +114,6 @@ class Graph_Node(Agent):
         if self.selected:
             radius = round((BLOCK_SPACING() / 2) * self.scale * 1.5)
             circle(gui.SCREEN, Color('red'), self.rect.center, radius, 1)
-
-    @staticmethod
-    def force_as_dxdy(pixel_a: Pixel_xy, pixel_b: Pixel_xy, screen_distance_unit, repulsive):
-        """
-        Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
-        """
-        direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
-        d = max(1, pixel_a.distance_to(pixel_b))  #, wrap=False))
-        if repulsive:
-            dist = max(1, pixel_a.distance_to(pixel_b) / screen_distance_unit)  #, wrap=False)
-            rep_coefficient = gui_get(REP_COEFF)
-            rep_exponent = gui_get(REP_EXPONENT)
-            force = direction * ((10**rep_coefficient)/10) * dist**rep_exponent
-            return force
-        else:  # attraction
-            dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
-            att_exponent = gui_get(ATT_EXPONENT)
-            force = direction*dist**att_exponent
-            # If the link is too short, push away instead of attracting.
-            if d < screen_distance_unit:
-                force = force*(-1)
-            att_coefficient = gui_get(ATT_COEFF)
-            final_force = force * 10**(att_coefficient-1)
-            return final_force
 
 
 class Graph_World(World):
@@ -245,9 +245,6 @@ class Graph_World(World):
         This is called when a GUI widget is changed and the change isn't handled by the system.
         The key of the widget that changed is in event.
         """
-        # Handle color change requests.
-        super().handle_event(event)
-
         # Handle link/node creation/deletion request events.
         if event == CREATE_NODE:
             self.agent_class()
@@ -261,6 +258,11 @@ class Graph_World(World):
             World.links.pop()
         elif event == DELETE_SHORTEST_PATH_LINK:
             self.delete_a_shortest_path_link()
+
+        else:
+            # Handle color change requests.
+            super().handle_event(event)
+
 
     @staticmethod
     def link_nodes_for_graph(graph_type, nbr_nodes, ring_node_list):
@@ -312,6 +314,10 @@ class Graph_World(World):
         self.compute_metrics()
 
     def shortest_path(self) -> Optional[List[Link]]:
+        """
+        Create and return a shortest path (if any) between the selected nodes.
+        Uses a breadth-first search.
+        """
         (node1, node2) = self.selected_nodes
         # Start with the node with the smaller number of neighbors.
         if len(node1.lnk_nbrs()) > len(node2.lnk_nbrs()):
@@ -397,10 +403,10 @@ CLUSTER_COEFF = 'cluster_coeff'
 PATH_LENGTH = 'path_length'
 TBD = 'TBD'
 
-REP_COEFF = 'rep_coeff'
-REP_EXPONENT = 'rep_exponent'
-ATT_COEFF = 'att_coeff'
-ATT_EXPONENT = 'att_exponent'
+# REP_COEFF = 'rep_coeff'
+# REP_EXPONENT = 'rep_exponent'
+# ATT_COEFF = 'att_coeff'
+# ATT_EXPONENT = 'att_exponent'
 DIST_UNIT = 'dist_unit'
 SHOW_NODE_IDS = "Show node id's"
 PRINT_FORCE_VALUES = 'Print force values'
@@ -534,4 +540,4 @@ graph_right_upper = [
 if __name__ == '__main__':
     from core.agent import PyLogo
     PyLogo(Graph_World, 'Force test', gui_left_upper=graph_left_upper, gui_right_upper=graph_right_upper,
-           agent_class=Graph_Node, clear=True, bounce=True, auto_setup=True)
+           agent_class=Graph_Node, clear=True, auto_setup=True)

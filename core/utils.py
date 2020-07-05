@@ -150,9 +150,9 @@ def normalize_180(angle):
     return normalized_angle if normalized_angle <= 180 else normalized_angle - 360
 
 
-def normalize_dxdy(dxdy):
+def normalize_dxdy(dxdy, factor=1):
     mx = max(abs(dxdy.x), abs(dxdy.y))
-    return dxdy if mx == 0 else dxdy/mx
+    return (dxdy if mx == 0 else dxdy/mx) * factor
 
 
 def rgb_to_hex(rgb):
@@ -160,7 +160,7 @@ def rgb_to_hex(rgb):
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
-def subtract_headings(a, b):
+def subtract_headings(heading_a, heading_b):
     """
     subtract heading b from heading a.
     To get from heading b to heading a we must turn by a-b.
@@ -176,10 +176,10 @@ def subtract_headings(a, b):
     Normalize to values between -180 and +180 to ensure that larger numbers are to the right, i.e., clockwise.
     No jump from 360 to 0.
     """
-    return normalize_180(a - b)
+    return normalize_180(heading_a - heading_b)
 
 
-def turn_away_amount(new_heading, old_heading, max_turn):
+def turn_away_amount(anti_target_heading, start_heading, max_turn):
     """
     turn_toward_amount(new_heading, old_heading, max_turn) finds the direction to turn
     starting at new_heading to get to old-heading -- limited by max_turn. If we reverse
@@ -188,15 +188,15 @@ def turn_away_amount(new_heading, old_heading, max_turn):
     we are starting at old_heading, turning in that direction turns us (farther) away
     from new_heading.
     """
-    return turn_toward_amount(old_heading, new_heading, max_turn)
+    return turn_toward_amount(start_heading, anti_target_heading, max_turn)
 
 
-def turn_toward_amount(old_heading, new_heading, max_turn):
+def turn_toward_amount(start_heading, target_heading, max_turn):
     """
-    heading_delta will the amount old_heading should turn (positive or negative)
-    to face more in the direction of new_heading.
+    heading_delta will the amount start_heading should turn (positive or negative)
+    to face more in the direction of target_heading.
     """
-    heading_delta = subtract_headings(new_heading, old_heading)
+    heading_delta = subtract_headings(target_heading, start_heading)
     # To take max_turn (an abs value) into consideration, we want to turn the
     # smaller (in absolute terms) of abs(heading_delta) and max_turn. But no
     # matter how much we turn, we want to turn in the direction indicated by

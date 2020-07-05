@@ -197,6 +197,7 @@ class GA_World(World):
         self.population[dest_2_indx] = min([child_2, child_2_mutated], key=lambda c: c.discrepancy)
 
     def gen_gene_pool(self):
+        """ Override in subclass. """
         pass
 
     @staticmethod
@@ -220,7 +221,6 @@ class GA_World(World):
         i.e., not already in the population. If that's not possible (because the population
         is too large for the gene pool and virtually all gene combinations are already in
          use) generate a random new individual and warn the user.
-
         """
         # Try for a unique individual.
         for _ in range(10):

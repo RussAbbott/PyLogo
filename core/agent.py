@@ -203,7 +203,7 @@ class Agent(Block):
         """
         Return a list of links from this node and the nodes to which they attach.
         """
-        lns = [(lnk, lnk.other_side()) for lnk in World.links if lnk.includes(self)]
+        lns = [(lnk, lnk.other_side(self)) for lnk in World.links if lnk.includes(self)]
         return lns
 
     def move_by_dxdy(self, dxdy: Velocity):
@@ -325,14 +325,15 @@ from core.sim_engine import SimEngine
 
 
 def PyLogo(world_class=World, caption=None, gui_left_upper=None, gui_right_upper=None,
-           agent_class=Agent, patch_class=Patch, auto_setup=True,
-           patch_size=11, board_rows_cols=(51, 51), clear=None, bounce=None, fps=None):
+           agent_class=Agent, patch_class=Patch, auto_setup=True, patch_size=11, board_rows_cols=(51, 51),
+           clear=None, bounce=None, fps=None):
     if gui_left_upper is None:
         gui_left_upper = []
     if caption is None:
         caption = utils.extract_class_name(world_class)
     sim_engine = SimEngine(gui_left_upper, caption=caption, gui_right_upper=gui_right_upper,
-                           patch_size=patch_size, board_rows_cols=board_rows_cols, clear=clear, bounce=bounce, fps=fps)
+                           patch_size=patch_size, board_rows_cols=board_rows_cols,
+                           clear=clear, bounce=bounce, fps=fps)
     gui.WINDOW.read(timeout=10)
 
     the_world = world_class(patch_class, agent_class)

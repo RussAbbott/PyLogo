@@ -8,6 +8,7 @@ from random import randint
 import core.gui as gui
 import core.utils as utils
 from core.sim_engine import gui_get
+from core.utils import normalize_dxdy
 
 
 class XY(tuple):
@@ -73,11 +74,11 @@ class Pixel_xy(XY):
     def __str__(self):
         return f'Pixel_xy{self.x, self.y}'
 
-    def closest_block(self, blocks):  #  , wrap=True):
+    def closest_block(self, blocks):
         closest = min(blocks, key=lambda block: self.distance_to(block.center_pixel))
         return closest
 
-    def distance_to(self, other):
+    def distance_to(self, other: Pixel_xy):
         # Try all ways to get there possibly including wrapping around.
         bounce = gui_get('Bounce?')
         wrap = bounce is not None and not bounce
@@ -165,8 +166,15 @@ class Velocity(XY):
     def __str__(self):
         return f'Velocity{self.dx, self.dy}'
 
+    # def bound(self, min_x, min_y, max_x, max_y):
+    #     abs_x = abs(self.dx)
+    #     abs_y = abs(self.dy)
+    #     new_x = self.dx if min_x <= abs_x < max_x else copysign(uniform(min_x, max_x), self.dx)
+    #     new_y = self.dy if min_y <= abs_y < max_y else copysign(uniform(min_y, max_y), self.dy)
+    #     return Velocity( (new_x, new_y) )
+
     # The @property decorator allows you to call the function without parentheses:
-    # v = Velocity(3, 4)
+    # v = Velocity( (3, 4) )
     # v.dx => 3
     @property
     def dx(self):
@@ -177,13 +185,44 @@ class Velocity(XY):
         return self.y
 
 
-Velocity.velocity_00 = Velocity((0, 0))
+Velocity.velocity_00 = Velocity( (0, 0) )
 
 
 def center_pixel():
     rect = gui.SCREEN.get_rect()
     cp = Pixel_xy((rect.centerx, rect.centery))
     return cp
+
+
+REP_COEFF = 'rep_coeff'
+REP_EXPONENT = 'rep_exponent'
+ATT_COEFF = 'att_coeff'
+ATT_EXPONENT = 'att_exponent'
+
+
+# noinspection PyTypeChecker
+def force_as_dxdy(pixel_a: Pixel_xy, pixel_b: Pixel_xy, screen_distance_unit=8, repulsive=True):
+    """
+    Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
+    """
+    direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
+    d = max(1, pixel_a.distance_to(pixel_b))
+    if repulsive:
+        dist = max(1, pixel_a.distance_to(pixel_b) / screen_distance_unit)  #, wrap=False)
+        rep_coefficient = gui_get(REP_COEFF, 1)
+        rep_exponent = gui_get(REP_EXPONENT, 2)
+        force = direction * ((10**rep_coefficient)/10) * dist**rep_exponent
+        return force
+    else:  # attraction
+        dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
+        att_exponent = gui_get(ATT_EXPONENT, 2)
+        force = direction*dist**att_exponent
+        # If the link is too short, push away instead of attracting.
+        if d < screen_distance_unit:
+            force = force*(-1)
+        att_coefficient = gui_get(ATT_COEFF, 1)
+        final_force = force * 10**(att_coefficient-1)
+        return final_force
 
 
 def heading_and_speed_to_velocity(heading, speed) -> Velocity:
@@ -208,19 +247,15 @@ if __name__ == "__main__":
     # Various tests and experiments
     print('\n-----XY-----')
     tuple_3_4 = (3, 4)
-    print(f'tuple_3_4: {tuple_3_4}')
-    xy_3_4 = XY((3, 4))
-    print(f'xy_3_4: {xy_3_4}')
-    print(f'Can you explain why this is the case?  tuple_3_4 == xy_3_4: {tuple_3_4 == xy_3_4}!')
-
-    print(f'tuple_3_4 + tuple_3_4: {tuple_3_4 + tuple_3_4}')
-    print(f'xy_3_4 + xy_3_4: {xy_3_4 + xy_3_4}')
-    concat_3_4_5 = tuple_3_4 * 5
-    print(f'concat_3_4_5: {concat_3_4_5}')
-    product_3_4_5 = xy_3_4 * 5
-    print(f'product_3_4_5: {product_3_4_5}')
-    product_5_3_4 = 5 * xy_3_4
-    print(f'product_5_3_4: {product_5_3_4}')
+    # Note that the argument to XY is a tuple, not two elements.
+    xy_3_4 = XY( (3, 4) )
+    print(f'a. {tuple_3_4} == {xy_3_4}: {tuple_3_4 == xy_3_4}')
+    print(f'b. {tuple_3_4} + {tuple_3_4}: {tuple_3_4 + tuple_3_4}')
+    print(f'c. {xy_3_4} + {xy_3_4}: {xy_3_4 + xy_3_4}')
+    print(f'd. {tuple_3_4} * 5: {tuple_3_4 * 5}')
+    print(f'e. {xy_3_4} * 5: {xy_3_4 * 5}')
+    # product_5_3_4 = 5 * xy_3_4
+    # print(f'product_5_3_4: {product_5_3_4}')
     # print('\n-----Pixel_xy-----')
     # a = Pixel_xy((3, 4))
     # print(f'a: {a}')
