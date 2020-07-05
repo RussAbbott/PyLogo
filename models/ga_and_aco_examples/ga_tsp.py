@@ -9,9 +9,9 @@ from pygame import Color
 import core.gui as gui
 from core.agent import Agent
 from core.ga import Chromosome, GA_World, Gene, Individual, gui_left_upper
-from core.link import draw_links, Link, minimum_spanning_tree, seq_to_links
+from core.link import Link, draw_links, minimum_spanning_tree, seq_to_links
 from core.pairs import Velocity
-from core.sim_engine import gui_get, gui_set, SimEngine
+from core.sim_engine import SimEngine, gui_get, gui_set
 from core.world_patch_block import World
 
 
@@ -271,7 +271,7 @@ class TSP_World(GA_World):
         node.delete()
 
     def gen_gene_pool(self):
-        # The gene_pool in this case are the point on the grid, which are agents.
+        # The gene_pool in this case consists of the point on the grid, which are agents.
         nbr_points = gui_get('nbr_points')
         self.create_random_agents(nbr_points, color=Color('white'), shape_name='node', scale=1)
         GA_World.gene_pool = World.agents
@@ -443,4 +443,4 @@ tsp_gui_left_upper = gui_left_upper + [
 if __name__ == "__main__":
     from core.agent import PyLogo
     PyLogo(TSP_World, 'TSP', tsp_gui_left_upper, gui_right_upper=tsp_right_upper,
-           agent_class=TSP_Agent, bounce=True)
+           agent_class=TSP_Agent, bounce=(True, False))

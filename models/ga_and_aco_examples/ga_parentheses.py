@@ -1,13 +1,12 @@
 
 from __future__ import annotations
 
-from itertools import count
 from random import randint, sample
 from typing import List, Sequence, Tuple
 
-from models.ga_and_aco_examples.ga_segregation import Gene, Segregation_Chromosome
 from core.ga import GA_World, Individual, gui_left_upper
 from core.sim_engine import gui_get, gui_set
+from models.ga_and_aco_examples.ga_segregation import Gene, Segregation_Chromosome
 
 
 class Parentheses_Chromosome(Segregation_Chromosome):
@@ -114,7 +113,7 @@ class Parentheses_World(GA_World):
     @staticmethod
     def gen_individual():
         chromosome_tuple: Tuple[Gene] = GA_World.chromosome_class(Gene(id, val)
-                                                                  for (id, val) in zip(count(), GA_World.gene_pool))
+                                                                  for (id, val) in enumerate(GA_World.gene_pool))
         individual = GA_World.individual_class(chromosome_tuple)
         return individual
 

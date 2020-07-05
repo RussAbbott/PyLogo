@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from itertools import count
 from math import ceil
 from random import choice, randint, sample
 from typing import List, Sequence, Tuple
@@ -177,7 +176,7 @@ class Segregation_World(GA_World):
     @staticmethod
     def gen_individual():
         chromosome_tuple: Tuple[Gene] = GA_World.chromosome_class(Gene(id, val)
-                                                                  for (id, val) in zip(count(), GA_World.gene_pool))
+                                                                  for (id, val) in enumerate(GA_World.gene_pool))
         individual = GA_World.individual_class(chromosome_tuple)
         return individual
 

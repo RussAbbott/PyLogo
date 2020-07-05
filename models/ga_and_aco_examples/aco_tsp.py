@@ -12,7 +12,7 @@ from core.pairs import Velocity
 from core.sim_engine import gui_get
 from core.world_patch_block import World
 
-from ga_and_aco_examples.ga_tsp import order_elements
+from models.ga_and_aco_examples.ga_tsp import order_elements
 
 
 class ACO_Agent(Agent):
@@ -195,7 +195,7 @@ class ACO_World(GA_World):
             next_city = lnk.other_side(city_sequence[-1])
             city_sequence.append(next_city)
         best_tour_cities = order_elements(city_sequence)
-        # Is this tour better than the one current best_tour?
+        # Is this tour better than the current best_tour?
         if ACO_World.best_tour_cities != best_tour_cities:
             for lnk in World.links:
                 lnk.is_best = False
