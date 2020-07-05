@@ -11,8 +11,8 @@ from core.world_patch_block import Patch, World
 
 class CollisionTest_Patch(Patch):
 
-    def __init__(self, row_col: RowCol):
-        super().__init__(row_col)
+    def __init__(self, *args, **kw_args):
+        super().__init__(*args, **kw_args)
         # Each patch gets a hit_color
         self.hit_color = Color('white')
 
