@@ -11,35 +11,9 @@ from core.agent import Agent, PYGAME_COLORS
 from core.gui import (BLOCK_SPACING, CIRCLE, HOR_SEP, KNOWN_FIGURES, NETLOGO_FIGURE, SCREEN_PIXEL_HEIGHT,
                       SCREEN_PIXEL_WIDTH, STAR)
 from core.link import Link, link_exists
-from core.pairs import ATT_COEFF, ATT_EXPONENT, force_as_dxdy, Pixel_xy, REP_COEFF, REP_EXPONENT, Velocity
-
+from core.pairs import ATT_COEFF, ATT_EXPONENT, Pixel_xy, REP_COEFF, REP_EXPONENT, Velocity, force_as_dxdy
 from core.sim_engine import gui_get, gui_set
-from core.utils import normalize_dxdy
 from core.world_patch_block import World
-
-
-# def force_as_dxdy(pixel_a: Pixel_xy, pixel_b: Pixel_xy, screen_distance_unit=8, repulsive=True):
-#     """
-#     Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
-#     """
-#     direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
-#     d = max(1, pixel_a.distance_to(pixel_b))
-#     if repulsive:
-#         dist = max(1, pixel_a.distance_to(pixel_b) / screen_distance_unit)  #, wrap=False)
-#         rep_coefficient = gui_get(REP_COEFF, 1)
-#         rep_exponent = gui_get(REP_EXPONENT, 2)
-#         force = direction * ((10**rep_coefficient)/10) * dist**rep_exponent
-#         return force
-#     else:  # attraction
-#         dist = max(1, max(d, screen_distance_unit) / screen_distance_unit)
-#         att_exponent = gui_get(ATT_EXPONENT, 2)
-#         force = direction*dist**att_exponent
-#         # If the link is too short, push away instead of attracting.
-#         if d < screen_distance_unit:
-#             force = force*(-1)
-#         att_coefficient = gui_get(ATT_COEFF, 1)
-#         final_force = force * 10**(att_coefficient-1)
-#         return final_force
 
 
 class Graph_Node(Agent):

@@ -254,6 +254,7 @@ if __name__ == "__main__":
     print(f'c. {xy_3_4} + {xy_3_4}: {xy_3_4 + xy_3_4}')
     print(f'd. {tuple_3_4} * 5: {tuple_3_4 * 5}')
     print(f'e. {xy_3_4} * 5: {xy_3_4 * 5}')
+
     # product_5_3_4 = 5 * xy_3_4
     # print(f'product_5_3_4: {product_5_3_4}')
     # print('\n-----Pixel_xy-----')
