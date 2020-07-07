@@ -15,7 +15,7 @@ class Starburst_Agent(Agent):
     No special Patches or Agents.
     """
 
-    forces = None
+    forces_cache = None
 
     def dont_hit_neighbors(self):
         """ Back away from to close neighbors """
@@ -23,14 +23,12 @@ class Starburst_Agent(Agent):
         influence_radius = gui_get('Influence radius')
         neighbors = self.agents_in_radius(influence_radius * BLOCK_SPACING())
         for neighbor in neighbors:
-            force = Starburst_Agent.forces.get((neighbor, self), None)
+            force = Starburst_Agent.forces_cache.get((neighbor, self), None)
             if force is None:
                 force = force_as_dxdy(self.center_pixel, neighbor.center_pixel)
-                # Add force to forces dictionary so that when we look for the same pair
-                # in reverse we will get the inverted force, which we then use directly.
-                Starburst_Agent.forces[(neighbor, self)] = force * (-1)
+                # Add inverse force to forces_cache so that we look for the same pair in reverse.
+                Starburst_Agent.forces_cache[(neighbor, self)] = force * (-1)
             velocity = velocity + force
-        #  self.set_velocity(velocity.bound(1, 1, 1.5, 1.5))
         speed_factor = gui_get('Speed factor')
         self.set_velocity(normalize_dxdy(velocity, 1.5*speed_factor/100))
 
@@ -57,18 +55,15 @@ class Starburst_World(World):
             # More generallly, though, you can use the agent_class the system knows about.
             self.agent_class(scale=1)
 
-        initial_velocities = cycle([Velocity((-1, -1)), Velocity((-1, 1)),
-                                    Velocity((0, 0)),
-                                    Velocity((1, -1)), Velocity((1, 1))])
-        for (agent, vel) in zip(World.agents, initial_velocities):
+        vs = [Velocity((-1, -1)), Velocity((-1, 1)), Velocity((0, 0)), Velocity((1, -1)), Velocity((1, 1))]
+        for (agent, vel) in zip(World.agents, cycle(vs)):
             agent.set_velocity(vel)
 
     def step(self):
         """
         Update the world by moving the agents.
         """
-        # forces = {}
-        Starburst_Agent.forces = {}
+        Starburst_Agent.forces_cache = {}
         for agent in World.agents:
             agent.move()
 
