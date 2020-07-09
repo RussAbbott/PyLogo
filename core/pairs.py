@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from math import copysign, hypot
-from random import randint
+from random import choice, randint
 
 import core.gui as gui
 import core.utils as utils
@@ -206,6 +206,8 @@ def force_as_dxdy(pixel_a: Pixel_xy, pixel_b: Pixel_xy, screen_distance_unit=8, 
     Compute the force between pixel_a pixel and pixel_b and return it as a velocity: direction * force.
     """
     direction: Velocity = normalize_dxdy( (pixel_a - pixel_b) if repulsive else (pixel_b - pixel_a) )
+    if direction.x + direction.y == 0:
+        direction = Velocity( (choice([-1, 0, 1]), choice([-1, 0, 1])) )
     d = max(1, pixel_a.distance_to(pixel_b))
     if repulsive:
         dist = max(1, pixel_a.distance_to(pixel_b) / screen_distance_unit)  #, wrap=False)

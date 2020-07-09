@@ -302,6 +302,11 @@ class Agent(Block):
     def undirected_links(self):
         return [lnk for lnk in self.all_links() if not lnk.directed]
 
+    @staticmethod
+    def update_agent_positions():
+        for agent in World.agents:
+            agent.move_by_velocity()
+
     @property
     def x_y(self):
         return self.center_pixel.round().as_tuple()
