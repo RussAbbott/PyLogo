@@ -10,25 +10,18 @@ from core.world_patch_block import World
 
 class Starburst_Agent(Agent):
 
-    def turn_away_from_neighbors(self, forces_cache):
-        """ Back away from to close neighbors """
+    def update_velocity(self):
         velocity = self.velocity
         influence_radius = gui_get('Influence radius')
         neighbors = self.agents_in_radius(influence_radius * BLOCK_SPACING())
         for neighbor in neighbors:
-            force = forces_cache.get((neighbor, self), None)
+            force = Agent.forces_cache.get((neighbor, self), None)
             if force is None:
                 force = force_as_dxdy(self.center_pixel, neighbor.center_pixel)
-                forces_cache[(neighbor, self)] = force * (-1)
+                Agent.forces_cache[(neighbor, self)] = force * (-1)
             velocity = velocity + force
         speed_factor = gui_get('Speed factor')
         self.set_velocity(normalize_dxdy(velocity, 1.5*speed_factor/100))
-
-    @staticmethod
-    def update_agent_velocities():
-        forces_cache = {}
-        for agent in World.agents:
-            agent.turn_away_from_neighbors(forces_cache)
 
 
 class Starburst_World(World):
@@ -45,14 +38,13 @@ class Starburst_World(World):
     def step(self):
         burst_tick = gui_get('Burst tick')
         if World.ticks >= burst_tick:
-            Starburst_Agent.update_agent_velocities()
+            Agent.update_agent_velocities()
 
         Agent.update_agent_positions()
 
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-
 gui_left_upper = [ [sg.Text('Number of agents', pad=((0, 5), (20, 0))),
                     sg.Slider(key='nbr_agents', range=(1, 101), resolution=25, default_value=25,
                               orientation='horizontal', size=(10, 20))],

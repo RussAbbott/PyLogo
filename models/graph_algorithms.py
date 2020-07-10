@@ -10,10 +10,6 @@ from core.sim_engine import gui_get, gui_set
 
 class Graph_Algorithms_World(Graph_World):
 
-    # # noinspection PyMethodMayBeStatic
-    # def average_path_length(self):
-    #     return TBD
-
     @staticmethod
     def build_ring_star_or_wheel_graph(graph_type, ring_node_list):
         # Create a center_node variable if a STAR and WHEEL graph.

@@ -1,4 +1,3 @@
-
 from random import randint
 
 from core.gui import HOR_SEP
@@ -12,12 +11,12 @@ class Life_Patch(OnOffPatch):
         super().__init__(*args, **kw_args)
         self.live_neighbors = 0
 
-    def is_alive(self):
-        return self.is_on
-
     def count_live_neighbors(self):
         self.live_neighbors = sum([1 for p in self.neighbors_8() if p.is_alive()])
         
+    def is_alive(self):
+        return self.is_on
+
     def set_alive_or_dead(self, alive_or_dead: bool):
         self.set_on_off(alive_or_dead)
 
@@ -49,7 +48,9 @@ gol_left_upper = [[sg.Text('Initial density'),
                    sg.Slider(key='density', range=(0, 80), resolution=5, size=(10, 20),
                              default_value=35, orientation='horizontal', pad=((0, 0), (0, 20)),
                              tooltip='The ratio of alive cells to all cells')],
+
                   HOR_SEP(pad=((0, 0), (0, 0))),
+
                   [sg.Text('Cells can be toggled when\nthe system is stopped.')],
                   HOR_SEP(pad=((0, 0), (0, 0))),
                   ] + \

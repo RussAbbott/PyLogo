@@ -8,7 +8,7 @@ from core.sim_engine import gui_get
 from core.world_patch_block import World
 
 
-class Synchronized_Agent_World(World):
+class Synchronized_World(World):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -112,16 +112,13 @@ class Synchronized_Agent_World(World):
 
 # ############################################## Define GUI ############################################## #
 import PySimpleGUI as sg
-gui_left_upper = [[
-                   sg.Combo(KNOWN_FIGURES, key='shape',
+gui_left_upper = [
+                  [sg.Combo(KNOWN_FIGURES, key='shape',
                             default_value='netlogo_figure', pad=((0, 9), (0, 0)),
                             tooltip='Shape of element'),
                    sg.Slider(key='nbr_agents', range=(1, 100), default_value=18, size=(10, 20),
                              orientation='horizontal', pad=((0, 0), (0, 20)),
-                             tooltip='Number of elements'),
-                   ],
-                    # sg.Slider(range=(3, 10), key='sides', default_value=5, size=(8, 20),
-                    #           orientation='horizontal', pad=((0, 0), (0, 20)))],
+                             tooltip='Number of elements')],
 
                   [sg.Text('Figure to trace'),
                    sg.Combo(['breathe', 'clockwise', 'counter-clockwise', 'twitchy'], key='figure',
@@ -130,4 +127,4 @@ gui_left_upper = [[
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(Synchronized_Agent_World, 'Synchronized agents', gui_left_upper)
+    PyLogo(Synchronized_World, 'Synchronized agents', gui_left_upper)

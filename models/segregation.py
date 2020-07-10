@@ -8,7 +8,7 @@ from core.sim_engine import gui_get
 from core.world_patch_block import Patch, World
 
 
-class SegregationAgent(Agent):
+class Segregation_Agent(Agent):
 
     pct_similar_wanted = None
 
@@ -59,7 +59,7 @@ class SegregationAgent(Agent):
         Doesn't favor patches with more similar neighbors over patches with just a
         sufficient number of similar neighbors.
         """
-        return min(1.0, self.pct_similar_here(patch)/SegregationAgent.pct_similar_wanted)
+        return min(1.0, self.pct_similar_here(patch)/Segregation_Agent.pct_similar_wanted)
 
 
     def update(self):
@@ -67,10 +67,10 @@ class SegregationAgent(Agent):
         Determine pct_similar and whether this agent is happy.
         """
         self.pct_similar = self.pct_similar_here(self.current_patch())
-        self.is_happy = self.pct_similar >= SegregationAgent.pct_similar_wanted
+        self.is_happy = self.pct_similar >= Segregation_Agent.pct_similar_wanted
 
 
-class SegregationPatch(Patch):
+class Segregation_Patch(Patch):
 
     def draw(self, shape_name=None):
         if self.agents:
@@ -83,12 +83,12 @@ class SegregationPatch(Patch):
         super().draw(shape_name)
 
 
-class SegregationWorld(World):
+class Segregation_World(World):
     """
       percent-similar: on the average, what percent of a agent's neighbors are the same color as that agent?
       percent-unhappy: what percent of the agents are unhappy?
     """
-    def __init__(self, patch_class=Patch, agent_class=SegregationAgent):
+    def __init__(self, patch_class=Patch, agent_class=Segregation_Agent):
         super().__init__(patch_class=patch_class, agent_class=agent_class, patch_color=Color('white'))
 
         self.empty_patches = None
@@ -146,7 +146,7 @@ class SegregationWorld(World):
 
     def setup(self):
         density = gui_get('density')
-        SegregationAgent.pct_similar_wanted = gui_get('% similar wanted')
+        Segregation_Agent.pct_similar_wanted = gui_get('% similar wanted')
         self.color_items = self.select_the_colors()
         (color_a, color_b) = [color_item[1] for color_item in self.color_items]
         print(f'\n\t The colors: {self.colors_string()}')
@@ -157,7 +157,7 @@ class SegregationWorld(World):
 
             # Create an Agent for this Patch. The density is approximate.
             if randint(0, 100) <= density:
-                agent = SegregationAgent(color=choice([color_a, color_b]))
+                agent = Segregation_Agent(color=choice([color_a, color_b]))
                 agent.move_to_patch(patch)
             else:
                 self.empty_patches.add(patch)
@@ -213,4 +213,4 @@ gui_left_upper = [[sg.Text('density'),
 
 if __name__ == "__main__":
     from core.agent import PyLogo
-    PyLogo(SegregationWorld, "Schelling's segregation model", gui_left_upper, patch_class=SegregationPatch)
+    PyLogo(Segregation_World, "Schelling's segregation model", gui_left_upper, patch_class=Segregation_Patch)
