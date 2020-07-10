@@ -45,6 +45,8 @@ class Agent(Block):
 
     color_palette = choice([NETLOGO_PRIMARY_COLORS, PYGAME_COLORS])
 
+    forces_cache = None
+
     half_patch_pixel = pairs.Pixel_xy((HALF_PATCH_SIZE(), HALF_PATCH_SIZE()))
 
     id = 0
@@ -306,6 +308,15 @@ class Agent(Block):
     def update_agent_positions():
         for agent in World.agents:
             agent.move_by_velocity()
+
+    @staticmethod
+    def update_agent_velocities():
+        Agent.forces_cache = {}
+        for agent in World.agents:
+            agent.update_velocity()
+
+    def update_velocity(self):
+        ...
 
     @property
     def x_y(self):
