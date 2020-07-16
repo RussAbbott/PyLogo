@@ -27,9 +27,9 @@ class Minority_Game_Agent(Agent):
         only what's needed to restart a race once one has already been run.
         """
         self.strategy_scores = [0] * len(self.strategies)
-        # Could also use:          randint(0, len(self.strategies)-1)
+        # Could also use: randint(0, len(self.strategies)-1)
         self.best_strategy_index = choice(range(len(self.strategies)))
-        self.right = 0
+        self.nbr_right = 0
         # Must do this because the system removes all agents from their patches when setup is called.
         # If this is called from reset_agents(), the agent's current_patch will not have it in its agents set.
         # Must add it so that move_to_patch() can remove it.
@@ -46,12 +46,10 @@ class Minority_Game_Agent(Agent):
         return self.guess
 
     def update(self, history_as_index, winner):
-        """
-        Update this agent.
-        """
+        """ Update this agent. """
         # Move winning agents forward one step.
         if self.guess == winner:
-            self.right += 1
+            self.nbr_right += 1
             self.forward(Minority_Game_World.one_step)
 
         self.update_strategy_scores(history_as_index, winner)
@@ -68,6 +66,7 @@ class Minority_Game_Agent(Agent):
 
 
 class Minority_Game_Random_Agent(Minority_Game_Agent):
+    """ Always choose a random move. """
 
     def __init__(self, strategies, starting_patch):
         super().__init__(strategies, starting_patch)
@@ -78,64 +77,6 @@ class Minority_Game_Random_Agent(Minority_Game_Agent):
 
     def make_selection(self, _history_index):
         self.guess = choice([0, 1])
-        return self.guess
-
-    def update_strategy_scores(self, _history_as_index, _winner):
-        # No strategies to update
-        pass
-
-
-class Minority_Game_Prev_Best_Strat_Agent(Minority_Game_Agent):
-    """
-    If there was a previous game, this agent uses its best strategy
-    from that previous game throughout this game.
-    If this is the first game, this agent does nothing special.
-    """
-
-    def __init__(self, strategies, starting_patch):
-        super().__init__(strategies, starting_patch)
-        self.label += '-PB'
-        self.prev_game_best_strategy_index = None
-
-    def init_agent(self, starting_patch):
-        """
-        A continuation of __init__ called also from reset_agents(), i.e., for second and
-        subsequent games. Includes what's needed to restart a race once one has already
-        been run. This agent must save the best strategy from the previous game, if there
-        was one, and use it throughout this game.
-        """
-        super().init_agent(starting_patch)
-        ...
-
-    def make_selection(self, history_index):
-        """
-        You fill in this part. Instead of using self.best_strategy_index
-        use the final best_strategy_index from the previous game.
-        """
-        self.guess = ...
-        return self.guess
-
-
-class Minority_Game_Spying_Agent(Minority_Game_Agent):
-    """
-    Before deciding on a selection, this agent spies on the other agents to see what they are going to do.
-    """
-
-    def __init__(self, strategies, starting_patch):
-        super().__init__(strategies, starting_patch)
-        self.label += '-Spy'
-
-    def get_best_strategy_score(self):
-        return None
-
-    def make_selection(self, history_index):
-        """
-        You fill in this part.
-        Find out what the other agents are going to do and do the opposite of the majority.
-        """
-        # noinspection PyUnusedLocal
-        all_agents = World.agents
-        self.guess = ...
         return self.guess
 
     def update_strategy_scores(self, _history_as_index, _winner):
@@ -203,7 +144,7 @@ class Minority_Game_World(World):
 
     @staticmethod
     def max_agent_right():
-        return max(agent.right for agent in World.agents)
+        return max(agent.nbr_right for agent in World.agents)
 
     def print_final_scores(self):
         print('\n\t       % right '
@@ -212,14 +153,14 @@ class Minority_Game_World(World):
               )
         for agent in sorted(World.agents, key=lambda agent: agent.id):
             best_strategy_score = agent.get_best_strategy_score()
-            print(f'{agent.id:2}.\t  {int_round(100 * agent.right / self.ticks):3}'
+            print(f'{agent.id:2}.\t  {int_round(100 * agent.nbr_right / self.ticks):3}'
                   f'       {"--" if not best_strategy_score else int_round(100 * best_strategy_score / self.ticks)}'
                   )
 
     def print_step_info(self, history_as_index, winner):
         leading_agent_right = self.max_agent_right()
-        leading_agent_strings = [f'{agent.id}: {agent.right}/{Minority_Game_World.steps_to_win}'
-                                 for agent in World.agents if agent.right == leading_agent_right]
+        leading_agent_strings = [f'{agent.id}: {agent.nbr_right}/{Minority_Game_World.steps_to_win}'
+                                 for agent in World.agents if agent.nbr_right == leading_agent_right]
         leading_agents = '{' + ", ".join(leading_agent_strings) + '}'
         print(f'{self.ticks}. {self.history}, {history_as_index:2}, {winner}, {leading_agents}')
 
@@ -249,6 +190,7 @@ class Minority_Game_World(World):
 
         # This is the normal setup.
         Minority_Game_World.nbr_agents = gui_get(NBR_AGENTS)
+        # Ensure an odd number of agents so that there will always be a majority.
         if Minority_Game_World.nbr_agents % 2 == 0:
             Minority_Game_World.nbr_agents += (1 if Minority_Game_World.nbr_agents < gui.WINDOW[NBR_AGENTS].Range[1]
                                                else (-1))
@@ -265,6 +207,7 @@ class Minority_Game_World(World):
     def step(self):
         history_as_index = self.history_to_index()
         one_votes = sum(agent.make_selection(history_as_index) for agent in World.agents)
+        #  In setup we ensured that there is an odd number of agents.
         winner = 0 if one_votes > Minority_Game_World.nbr_agents/2 else 1
         for agent in World.agents:
             agent.update(history_as_index, winner)
